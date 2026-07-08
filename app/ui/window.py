@@ -15,6 +15,7 @@ from ..core import config, preflight
 from .about_page import AboutPage
 from .backups_page import BackupsPage
 from .characters_page import CharactersPage
+from .grimoire_page import GrimoirePage
 from .invite_page import InvitePage
 from .main_screen import MainPage
 from .note_overlay import NoteOverlay
@@ -75,9 +76,10 @@ class MainWindow(QWidget):
         self.about_page = AboutPage()
         self.preflight_page = PreflightPage()
         self.characters_page = CharactersPage()
+        self.grimoire_page = GrimoirePage()
         for p in (self.main_page, self.settings_page, self.onboarding_page,
                   self.invite_page, self.backups_page, self.about_page,
-                  self.preflight_page, self.characters_page):
+                  self.preflight_page, self.characters_page, self.grimoire_page):
             self.pages.addWidget(p)
         self._backup_ctx = None
 
@@ -123,6 +125,16 @@ class MainWindow(QWidget):
         self.characters_page.backups_requested.connect(self._open_char_backups)
         self.characters_page.travel_toggled.connect(c.set_character_travel)
 
+        # the secret
+        self.titlebar.secret_awakened.connect(self._awaken_secret)
+        self.main_page.grimoire_clicked.connect(self._open_grimoire)
+        self.grimoire_page.back_requested.connect(
+            lambda: self._show_page(self.characters_page))
+        self.grimoire_page.bargain_requested.connect(self._strike_bargain)
+        self.grimoire_page.ritual_started.connect(self._start_ritual)
+        self.grimoire_page.ritual_finished.connect(self._finish_ritual)
+        self.grimoire_page.label_saved.connect(c.save_skill_label)
+
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
         c.status_changed.connect(self.main_page.set_status)
@@ -167,6 +179,7 @@ class MainWindow(QWidget):
         cfg = self.controller.cfg or {}
         self.main_page.set_player_name(cfg.get("player_name", ""))
         self.main_page.set_worlds(config.worlds(cfg), cfg.get("active_world"))
+        self.main_page.set_grimoire(self.controller.grimoire_unlocked())
 
     def _on_confirm_request(self, request):
         answer = self.confirm.ask(request["title"], request["body"],
@@ -364,6 +377,60 @@ class MainWindow(QWidget):
                                   set((self.controller.cfg or {}).get(
                                       "travel_characters") or []))
         self._show_page(self.characters_page)
+
+    # -- the secret --------------------------------------------------------------------
+    def _awaken_secret(self):
+        if not self.controller.has_config:
+            return
+        if self.controller.grimoire_unlocked():
+            self._open_grimoire()
+            return
+        self.controller.unlock_grimoire()
+        self.main_page.set_grimoire(True)
+        self.toasts.show_toast(
+            "success", "The dragon's eye opens. Something old has been added "
+                       "to the world menu…")
+
+    def _open_grimoire(self):
+        self.grimoire_page.load(self.controller.list_characters(),
+                                self.controller.skill_labels(),
+                                self.controller.pending_ritual())
+        self._show_page(self.grimoire_page)
+
+    def _strike_bargain(self, char_path, plan):
+        wants = []
+        if plan.skill_xp:
+            wants.append(f"rewrite {len(plan.skill_xp)} skill"
+                         f"{'s' if len(plan.skill_xp) != 1 else ''}")
+        if plan.heal_vitals:
+            wants.append("restore vitals")
+        if plan.repair_all:
+            wants.append("repair everything")
+        if not self.confirm.ask(
+                "Seal the bargain?",
+                "The dragon will " + ", ".join(wants) + ".\n\n"
+                "A checkpoint of the current character is taken first. This is "
+                "experimental — if the game refuses the changed file, restore "
+                "the checkpoint from Characters → Backups.",
+                danger_label="Seal it", safe_label="Not yet"):
+            return
+        self.controller.apply_bargain(char_path, plan, done=self._open_grimoire)
+
+    def _start_ritual(self, char_path):
+        self.controller.start_ritual(char_path)
+        self.toasts.show_toast(
+            "info", "The ritual has begun. Go train exactly one skill for a "
+                    "minute, quit to the menu, then return and finish it.")
+        self._open_grimoire()
+
+    def _finish_ritual(self):
+        _char, gains = self.controller.finish_ritual()
+        if not gains:
+            self.toasts.show_toast("info", "The ritual saw nothing change — "
+                                           "train a skill in game first.")
+        else:
+            self.grimoire_page.offer_ritual_labels(gains)
+        self._open_grimoire()
 
     def _open_backups(self):
         world = self.controller.active_world()
