@@ -7,7 +7,7 @@
 
 [Setup]
 AppName=Dragonwilds Sync
-AppVersion=1.0.0
+AppVersion=1.1.0
 AppPublisher=Andor & friends
 DefaultDirName={autopf}\Dragonwilds Sync
 DefaultGroupName=Dragonwilds Sync
