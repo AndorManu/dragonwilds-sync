@@ -4,45 +4,57 @@
 *RuneScape: Dragonwilds* world without renting a server — whoever plays next
 always picks up the newest save, automatically.
 
-![Main screen](docs/screenshots/5_main_new_save.png)
+![Main screen](docs/screenshots/06_main_up_to_date.png)
 
 ## How it works
 
 Everyone in the group points the app at the **same shared folder** — any
 folder inside a cloud drive that each of you syncs to your own PC (Google
-Drive, Dropbox, OneDrive… the app doesn't care which, and it never needs a
-paid server).
+Drive, Dropbox, OneDrive… the app doesn't care which, and nothing ever needs
+a paid server).
 
-- **Play** pulls the newest save from the shared folder, launches the game
-  through Steam, and — once you close the game — shares your progress back
-  automatically.
-- A tiny `version.json` manifest in the shared folder tracks a version
-  number, who played last, and when. Every share bumps the version; every
-  pull checks it.
-- If your local save changed without being shared (you played offline) *and*
-  someone else has since shared a newer version, you get an unmissable
-  warning before anything is overwritten — in **both** directions (pulling
-  over your progress, or sharing over theirs). Whatever gets replaced is
-  first backed up to `%APPDATA%\DragonwildsSync\backups`, just in case.
+- **Play** pulls the newest save, launches the game through Steam, and —
+  once you close the game — shares your progress back automatically.
+- A tiny `version.json` manifest tracks a version number, who played last,
+  and when. Every share bumps the version; every pull checks it.
+- If your local save changed without being shared *and* someone else has
+  since shared a newer version, you get an unmissable warning before
+  anything is overwritten — in **both** directions. Whatever gets replaced
+  is backed up first (browse and restore under *world menu → Backups*).
+- The app shows **who's playing right now**, lets you call **"I've got
+  next"**, pings you from the tray when it's your turn, and can post to a
+  Discord/Slack/ntfy **webhook** when someone shares a save.
 
-## For friends: using the app
+## Joining a friend's world (the 60-second version)
 
-1. Download `DragonwildsSync.exe` (from whoever built it — dropping it in the
-   shared folder itself works great) and double-click it. No install, no
-   Python, no account.
-   - Windows SmartScreen may warn because the exe isn't code-signed. Click
+1. Get `DragonwildsSync.exe` from your friend and double-click it.
+   No install, no Python, no account.
+   - SmartScreen may warn because the exe isn't code-signed:
      **More info → Run anyway**.
-2. Answer three questions: your name, which world (auto-detected from your
-   save folder), and the shared folder (the app suggests your OneDrive /
-   Dropbox / Google Drive automatically).
-3. From then on: open the app, hit **Play**. That's it. When you quit the
-   game, your session is shared and the next person's Play picks it up.
+2. Type your name, pick **“Join with an invite code”**, paste the code your
+   friend sent you.
+3. The app opens their share link — sign in to Google and click
+   **“Add shortcut to Drive”**. That's the one click we can't do for you.
+4. Done. The app spots the folder as soon as Google Drive syncs it and drops
+   you on the main screen. Hit **Play**.
 
-If the app ever can't detect the game closing, the **“Save my progress
-now”** button does the same thing manually.
+You do need [Google Drive for desktop](https://www.google.com/drive/download/)
+(or Dropbox/OneDrive) installed and signed in — the app tells you if it's
+missing.
 
-**House rule:** one person plays at a time. The app warns loudly if two
-sessions collide, but the polite fix is a message in the group chat.
+## Hosting a world & inviting friends
+
+1. Pick **“Create a new world”** during setup: choose your world and a shared
+   folder inside your cloud drive.
+2. Hit **“Invite friends”** on the main screen. Share the folder once in the
+   Drive UI (right-click → Share → *Anyone with the link* → Copy link),
+   paste the link, and copy the generated invite code into your group chat.
+3. Each friend follows the three steps above. New invites for the same world
+   are one click — the link is remembered.
+
+**House rule:** one person plays at a time. The app warns loudly (before
+*and* after the fact) if two sessions collide, but the polite fix is a
+message in the group chat.
 
 ## For the maintainer: building from source
 
@@ -52,45 +64,48 @@ cd dragonwilds-sync
 .\build.ps1        # creates .venv, runs tests, builds dist\DragonwildsSync.exe
 ```
 
-That single `.exe` is the whole distribution. Optionally, compile
-`installer.iss` with [Inno Setup](https://jrsoftware.org/isinfo.php)
-(`iscc installer.iss`) to get a `DragonwildsSync-Setup.exe` wizard with Start
-Menu/Desktop shortcuts.
+That single `.exe` is the whole distribution — dropping it in the shared
+folder works great. Optionally compile `installer.iss` with
+[Inno Setup](https://jrsoftware.org/isinfo.php) for a setup wizard.
 
 Development:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\pip install -r requirements.txt -r requirements-dev.txt
-.\.venv\Scripts\python -m app          # run from source
-.\.venv\Scripts\python -m pytest tests # sync-protocol test suite
-.\.venv\Scripts\python tools\screenshots.py  # re-render docs/screenshots
+.\.venv\Scripts\python -m app                # run from source
+.\.venv\Scripts\python -m pytest tests      # protocol + services test suite
+.\.venv\Scripts\python tools\screenshots.py # re-render docs/screenshots
 ```
 
 ## Layout
 
 ```
 app/
-  core/        sync protocol, game launch/watch, config, logging — no Qt
+  core/        sync protocol, config schema, invites, presence, webhooks,
+               backups, game launch/watch, cloud/Steam detection — no Qt
   ui/          theme, widgets, screens (PySide6)
   controller.py  worker threads in, Qt signals out
-  main.py      entry point
-tests/         pytest suite for the sync protocol
+  main.py      entry point (--tray starts quietly in the tray)
+tests/         pytest suite (52 tests)
 tools/         icon generator, screenshot harness
 ```
 
-Per-user data lives in `%APPDATA%\DragonwildsSync\` (config, state, logs,
-safety backups). Configs from the old CLI/Tkinter prototype
-(`~/.dragonwilds_sync`) are migrated automatically on first run.
+Per-user data lives in `%APPDATA%\DragonwildsSync\` (config, per-world state,
+logs, safety backups). v1.0 configs migrate automatically; the originals are
+kept as `config.v1.bak` / `state.v1.bak`.
 
 ## Troubleshooting
 
 - **“Shared folder not found”** — your cloud client isn't running or the
   folder moved; fix the path in Settings.
-- **The newest save “hasn't finished syncing”** — the manifest arrived
-  before the save files; give the cloud client a few seconds and hit the
-  refresh arrow.
+- **The newest save “hasn't finished syncing”** — the manifest arrived before
+  the save files; give the cloud client a few seconds and hit refresh.
+- **Joining: the folder never appears** — make sure you clicked *Add shortcut
+  to Drive* (not just opened the link), and that Google Drive for desktop is
+  running. “Browse for it manually” always works as a fallback.
 - **Game never detected** — Steam sometimes takes ages; the app waits two
   minutes, then falls back to the manual save button.
-- Logs: **Settings → Open log folder** (or
-  `%APPDATA%\DragonwildsSync\logs`).
+- **App won't quit** — it lives in the tray by default so it can ping you;
+  right-click the tray icon → Quit, or turn it off in Settings.
+- Logs: **Settings → Open log folder**.

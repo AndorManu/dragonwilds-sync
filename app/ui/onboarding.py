@@ -313,6 +313,16 @@ class OnboardingPage(QWidget):
                 chip_row.addWidget(chip)
             chip_row.addStretch(1)
             content.addLayout(chip_row)
+        else:
+            warn = QLabel("No cloud drive found on this PC — you'll need one "
+                          "(free) to link everyone's saves together.")
+            warn.setWordWrap(True)
+            warn.setStyleSheet(f"color: {theme.AMBER}; font-size: 12.5px;")
+            content.addWidget(warn)
+            dl = widgets.make_button("Download Google Drive", "ghost",
+                                     "download-cloud", height=38)
+            dl.clicked.connect(lambda: webbrowser.open(clouds.GOOGLE_DRIVE_DOWNLOAD_URL))
+            content.addWidget(dl)
 
         self.shared_field = widgets.FormField(
             "Shared folder", "", browse="dir",
