@@ -31,6 +31,7 @@ GLOBAL_DEFAULTS = {
     "steam_app_id": paths.STEAM_APP_ID,
     "close_to_tray": True,
     "launch_on_startup": False,
+    "publish_status_page": True,
     "active_world": None,
     "worlds": [],
 }

@@ -6,12 +6,12 @@ import threading
 from PySide6.QtCore import QPropertyAnimation, Qt
 from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (QFrame, QGraphicsDropShadowEffect,
-                               QGraphicsOpacityEffect, QStackedWidget,
+                               QGraphicsOpacityEffect, QMenu, QStackedWidget,
                                QVBoxLayout, QWidget)
 
 from ..controller import Controller
 from ..core import backups as backups_core
-from ..core import config
+from ..core import config, preflight
 from .about_page import AboutPage
 from .backups_page import BackupsPage
 from .invite_page import InvitePage
@@ -19,7 +19,9 @@ from .main_screen import MainPage
 from .note_overlay import NoteOverlay
 from .onboarding import OnboardingPage
 from .overlay import ConfirmOverlay
+from .preflight_page import PreflightPage
 from .settings import SettingsPage
+from . import icons, theme
 from .titlebar import TitleBar
 from .toast import ToastHost
 from .tray import TrayManager
@@ -35,6 +37,7 @@ class MainWindow(QWidget):
         super().__init__(parent)
         self.controller = controller
         self._really_quit = False
+        self._pending_update = None
         self.setWindowFlags(Qt.Window | Qt.FramelessWindowHint
                             | Qt.WindowMinimizeButtonHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -69,8 +72,10 @@ class MainWindow(QWidget):
         self.invite_page = InvitePage()
         self.backups_page = BackupsPage()
         self.about_page = AboutPage()
+        self.preflight_page = PreflightPage()
         for p in (self.main_page, self.settings_page, self.onboarding_page,
-                  self.invite_page, self.backups_page, self.about_page):
+                  self.invite_page, self.backups_page, self.about_page,
+                  self.preflight_page):
             self.pages.addWidget(p)
 
         self.toasts = ToastHost(self.chrome)
@@ -104,6 +109,8 @@ class MainWindow(QWidget):
         self.main_page.add_world_clicked.connect(self._open_add_world)
         self.main_page.backups_clicked.connect(self._open_backups)
         self.main_page.next_claim_clicked.connect(c.toggle_next_claim)
+        self.main_page.pass_turn_clicked.connect(self._pass_turn)
+        self.main_page.update_clicked.connect(self._apply_update)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -114,6 +121,9 @@ class MainWindow(QWidget):
         c.worlds_changed.connect(self._sync_world_header)
         c.friend_pushed.connect(self._on_friend_pushed)
         c.note_prompt.connect(self._on_note_prompt)
+        c.update_available.connect(self._on_update_available)
+        c.nudge_received.connect(self._on_nudge_received)
+        c.quit_for_update.connect(self._quit_for_update)
         self.note_overlay.submitted.connect(c.save_session_note)
 
         # onboarding / settings / sub-pages
@@ -124,12 +134,18 @@ class MainWindow(QWidget):
         self.settings_page.remove_world_requested.connect(self._remove_world)
         self.settings_page.about_requested.connect(
             lambda: self._show_page(self.about_page))
+        self.settings_page.preflight_requested.connect(self._open_preflight)
+        self.settings_page.publish_update_requested.connect(self._publish_update)
         self.invite_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.invite_page.share_link_saved.connect(
             lambda wid, link: c.update_world(wid, {"share_link": link or None}))
         self.backups_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.backups_page.restore_requested.connect(self._restore_backup)
+        self.backups_page.checkpoint_requested.connect(self._create_checkpoint)
+        self.backups_page.delete_requested.connect(self._delete_checkpoint)
         self.about_page.back_requested.connect(lambda: self._show_page(self.settings_page))
+        self.preflight_page.back_requested.connect(lambda: self._show_page(self.settings_page))
+        self.preflight_page.run_requested.connect(self._run_preflight)
 
         # tray
         self.tray.open_requested.connect(self._show_from_tray)
@@ -157,6 +173,107 @@ class MainWindow(QWidget):
     def _on_note_prompt(self, world_id, version):
         if self.isVisible() and not self.isMinimized():
             self.note_overlay.open(world_id, version)
+
+    # -- auto update -------------------------------------------------------------------
+    def _on_update_available(self, info, world_name):
+        self._pending_update = info
+        self.main_page.show_update_bar(info.version, info.published_by)
+        if not (self.isVisible() and not self.isMinimized()):
+            self.tray.notify_update(info.version)
+
+    def _apply_update(self):
+        info = self._pending_update
+        if not info:
+            return
+        if self.confirm.ask(
+                f"Update to v{info.version}?",
+                f"{info.published_by} published a new version"
+                + (f":\n\n“{info.notes}”" if info.notes else ".")
+                + "\n\nThe app will close, update itself, and reopen. Your worlds "
+                  "and settings are kept.",
+                danger_label="Update & restart", safe_label="Not now"):
+            self.main_page.hide_update_bar()
+            self.controller.apply_update(info)
+
+    def _quit_for_update(self):
+        self._really_quit = True
+        from PySide6.QtWidgets import QApplication
+        QApplication.instance().quit()
+
+    def _on_nudge_received(self, from_player, world_name):
+        if self.isVisible() and not self.isMinimized():
+            self.toasts.show_toast("info", f"{from_player} says it's your turn in {world_name}.")
+        else:
+            self.tray.notify_nudge(from_player, world_name)
+
+    # -- turn nudge ----------------------------------------------------------------------
+    def _pass_turn(self):
+        players = self.controller.known_players()
+        if not players:
+            self.toasts.show_toast("info", "No friends have played this world yet — "
+                                           "once they do, you can pass them the turn.")
+            return
+        menu = QMenu(self)
+        header = menu.addAction("Tell a friend it's their turn")
+        header.setEnabled(False)
+        menu.addSeparator()
+        for name in players:
+            act = menu.addAction(icons.icon("send", theme.TEXT_DIM, 14), name)
+            act.triggered.connect(lambda _=False, n=name: self.controller.send_turn_nudge(n))
+        menu.exec(self.main_page.pass_btn.mapToGlobal(
+            self.main_page.pass_btn.rect().bottomLeft()))
+
+    # -- preflight -----------------------------------------------------------------------
+    def _open_preflight(self):
+        self._show_page(self.preflight_page)
+        self._run_preflight()
+
+    def _run_preflight(self):
+        world = self.controller.active_world()
+        if not world:
+            return
+        self.preflight_page.set_running()
+        cfg = self.controller.cfg
+
+        def worker():
+            try:
+                checks = preflight.run(cfg, world)
+            except Exception:
+                log.exception("Preflight failed")
+                checks = []
+            self.preflight_page.show_results(checks)
+
+        threading.Thread(target=worker, daemon=True, name="preflight").start()
+
+    def _publish_update(self):
+        if self.confirm.ask(
+                "Publish this version to friends?",
+                f"This copies the running app (v{self.controller.app_version}) into "
+                f"the shared folder so everyone in this world is offered the update. "
+                f"Only do this after testing the new build yourself.",
+                danger_label="Publish", safe_label="Cancel"):
+            self.controller.publish_update()
+
+    def _create_checkpoint(self, name):
+        self.controller.create_checkpoint(name, done=self._reload_backups)
+
+    def _delete_checkpoint(self, info):
+        if self.confirm.ask(
+                f"Delete “{info.name}”?",
+                "This removes the checkpoint from this PC. Your current save and "
+                "other backups are untouched.",
+                danger_label="Delete", safe_label="Keep it"):
+            backups_core.delete_backup(info.path)
+            self._reload_backups()
+
+    def _reload_backups(self):
+        world = self.controller.active_world()
+        if not world:
+            return
+        root = config.backup_root_for(world["id"])
+        self.backups_page.load(world["world_name"],
+                               backups_core.list_checkpoints(root),
+                               backups_core.list_backups(root))
 
     # -- onboarding & worlds -----------------------------------------------------------
     def _finish_onboarding(self, payload):
@@ -230,8 +347,7 @@ class MainWindow(QWidget):
         world = self.controller.active_world()
         if not world:
             return
-        infos = backups_core.list_backups(config.backup_root_for(world["id"]))
-        self.backups_page.load(world["world_name"], infos)
+        self._reload_backups()
         self._show_page(self.backups_page)
 
     def _restore_backup(self, info):

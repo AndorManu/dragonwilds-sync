@@ -17,6 +17,8 @@ class SettingsPage(QWidget):
     cancelled = Signal()
     remove_world_requested = Signal(str)   # world_id
     about_requested = Signal()
+    preflight_requested = Signal()
+    publish_update_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -119,6 +121,13 @@ class SettingsPage(QWidget):
             placeholder="https://discord.com/api/webhooks/…")
         form.addWidget(self.webhook_field)
 
+        test_row = QHBoxLayout()
+        test_btn = widgets.make_button("Test my setup", "ghost", "check-circle", height=34)
+        test_btn.clicked.connect(self.preflight_requested.emit)
+        test_row.addWidget(test_btn)
+        test_row.addStretch(1)
+        form.addLayout(test_row)
+
         # -- app behavior --------------------------------------------------------------
         form.addWidget(self._section("APP"))
         self.tray_check = QCheckBox("Keep running in the tray when the window closes")
@@ -127,6 +136,27 @@ class SettingsPage(QWidget):
         if not autostart.available():
             self.startup_check.setVisible(False)
         form.addWidget(self.startup_check)
+        self.statuspage_check = QCheckBox(
+            "Publish a phone-checkable status page to the shared folder")
+        self.statuspage_check.setToolTip(
+            "Writes status.html into the shared folder so anyone can check "
+            "who's playing from their phone's cloud-drive app.")
+        form.addWidget(self.statuspage_check)
+
+        # -- host tools --------------------------------------------------------------------
+        form.addWidget(self._section("SHARE AN UPDATE"))
+        pub_hint = QLabel("Built a new version? Publish it to this world's shared "
+                          "folder and everyone is offered the update automatically.")
+        pub_hint.setWordWrap(True)
+        pub_hint.setProperty("role", "hint")
+        form.addWidget(pub_hint)
+        pub_row = QHBoxLayout()
+        pub_btn = widgets.make_button("Publish this version to friends", "ghost",
+                                      "rocket", height=34)
+        pub_btn.clicked.connect(self.publish_update_requested.emit)
+        pub_row.addWidget(pub_btn)
+        pub_row.addStretch(1)
+        form.addLayout(pub_row)
 
         # -- footer ------------------------------------------------------------------------
         divider = QFrame()
@@ -197,6 +227,7 @@ class SettingsPage(QWidget):
         self.detect_result.setText("")
         self.tray_check.setChecked(bool(cfg.get("close_to_tray", True)))
         self.startup_check.setChecked(autostart.is_enabled())
+        self.statuspage_check.setChecked(bool(cfg.get("publish_status_page", True)))
 
         self._world_id = world["id"] if world else None
         has_world = world is not None
@@ -270,6 +301,7 @@ class SettingsPage(QWidget):
             "exe_path": exe or None,
             "close_to_tray": self.tray_check.isChecked(),
             "launch_on_startup": self.startup_check.isChecked(),
+            "publish_status_page": self.statuspage_check.isChecked(),
         }
         world_fields = {}
         if self._world_id:

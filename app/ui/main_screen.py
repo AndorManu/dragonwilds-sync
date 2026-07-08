@@ -157,6 +157,8 @@ class MainPage(QWidget):
     add_world_clicked = Signal()
     backups_clicked = Signal()
     next_claim_clicked = Signal()
+    pass_turn_clicked = Signal()
+    update_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -179,9 +181,33 @@ class MainPage(QWidget):
 
         body = QWidget()
         body_box = QVBoxLayout(body)
-        body_box.setContentsMargins(24, 16, 24, 16)
+        body_box.setContentsMargins(24, 14, 24, 16)
         body_box.setSpacing(13)
         root.addWidget(body, 1)
+
+        # -- update bar (hidden until an update is published) ---------------
+        self.update_bar = QFrame()
+        self.update_bar.setObjectName("UpdateBar")
+        self.update_bar.setStyleSheet(
+            f"#UpdateBar {{ background: rgba(232,162,61,0.12);"
+            f"border: 1px solid rgba(232,162,61,0.40); border-radius: 10px; }}")
+        ub = QHBoxLayout(self.update_bar)
+        ub.setContentsMargins(12, 8, 8, 8)
+        ub.setSpacing(9)
+        ub_icon = QLabel()
+        ub_icon.setPixmap(icons.pixmap("rocket", theme.EMBER, 17))
+        ub_icon.setStyleSheet("background: transparent; border: none;")
+        ub.addWidget(ub_icon, 0, Qt.AlignVCenter)
+        self.update_label = QLabel("")
+        self.update_label.setWordWrap(True)
+        self.update_label.setStyleSheet(
+            f"background: transparent; border: none; color: {theme.GOLD_TEXT}; font-size: 12px;")
+        ub.addWidget(self.update_label, 1)
+        update_btn = widgets.make_button("Update", "primary", height=30)
+        update_btn.clicked.connect(self.update_clicked.emit)
+        ub.addWidget(update_btn, 0, Qt.AlignVCenter)
+        self.update_bar.setVisible(False)
+        body_box.addWidget(self.update_bar)
 
         # -- status readout -------------------------------------------------
         status_row = QHBoxLayout()
@@ -220,6 +246,10 @@ class MainPage(QWidget):
         self.claim_label.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12px;")
         claim_row.addWidget(self.claim_label)
         claim_row.addStretch(1)
+        self.pass_btn = widgets.make_button("Pass turn", "subtle", "send", height=28)
+        self.pass_btn.setToolTip("Ping a friend that it's their turn")
+        self.pass_btn.clicked.connect(self.pass_turn_clicked.emit)
+        claim_row.addWidget(self.pass_btn)
         self.claim_btn = widgets.make_button("I've got next", "subtle", "flag", height=28)
         self.claim_btn.clicked.connect(self.next_claim_clicked.emit)
         claim_row.addWidget(self.claim_btn)
@@ -290,6 +320,15 @@ class MainPage(QWidget):
         menu.exec(self.header.title_btn.mapToGlobal(
             self.header.title_btn.rect().bottomLeft()))
 
+    # -- update bar ----------------------------------------------------------
+    def show_update_bar(self, version, published_by):
+        who = f" from {published_by}" if published_by else ""
+        self.update_label.setText(f"Version {version} is ready{who}.")
+        self.update_bar.setVisible(True)
+
+    def hide_update_bar(self):
+        self.update_bar.setVisible(False)
+
     # -- state ---------------------------------------------------------------
     def set_player_name(self, name):
         self._me = name or ""
@@ -311,6 +350,7 @@ class MainPage(QWidget):
         self.save_btn.setEnabled(not busy)
         self.header.refresh_btn.setEnabled(not busy)
         self.claim_btn.setEnabled(not busy)
+        self.pass_btn.setEnabled(not busy)
 
         if phase == "idle":
             self.play_btn.setText("PLAY")
