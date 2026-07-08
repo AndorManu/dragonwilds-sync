@@ -5,7 +5,12 @@ a = Analysis(
     ["run.py"],
     pathex=[],
     binaries=[],
-    datas=[("app/assets/icon.ico", "app/assets")],
+    datas=[
+        ("app/assets/icon.ico", "app/assets"),
+        ("app/assets/fonts/Cinzel.ttf", "app/assets/fonts"),
+        ("app/assets/fonts/CinzelDecorative-Bold.ttf", "app/assets/fonts"),
+        ("app/assets/fonts/EBGaramond.ttf", "app/assets/fonts"),
+    ],
     hiddenimports=[],
     excludes=[
         "tkinter",
