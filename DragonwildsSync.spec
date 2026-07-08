@@ -7,6 +7,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ("app/assets/icon.ico", "app/assets"),
+        ("app/assets/chime.wav", "app/assets"),
         ("app/assets/fonts/Cinzel.ttf", "app/assets/fonts"),
         ("app/assets/fonts/CinzelDecorative-Bold.ttf", "app/assets/fonts"),
         ("app/assets/fonts/EBGaramond.ttf", "app/assets/fonts"),

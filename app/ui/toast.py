@@ -94,7 +94,10 @@ class ToastHost(QWidget):
         QTimer.singleShot(TOAST_LIFETIME_MS, lambda: self.dismiss(toast))
 
     def dismiss(self, toast):
-        if toast.parent() is not self:
+        try:
+            if toast.parent() is not self:
+                return
+        except RuntimeError:   # already deleted (clicked away before the timer)
             return
         fade = QPropertyAnimation(toast._fx, b"opacity", toast)
         fade.setDuration(170)

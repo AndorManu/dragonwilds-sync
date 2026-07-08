@@ -67,8 +67,10 @@ class GrimoirePage(QWidget):
         root.addSpacing(10)
 
         pick_row = QHBoxLayout()
+        pick_row.setSpacing(10)
         pick_label = QLabel("Character")
         pick_label.setProperty("role", "fieldLabel")
+        pick_label.setMinimumWidth(70)
         pick_row.addWidget(pick_label)
         self.char_combo = QComboBox()
         self.char_combo.setFixedHeight(34)

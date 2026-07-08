@@ -17,8 +17,9 @@ from PySide6.QtCore import QObject, QTimer, Signal
 import re
 
 from . import __version__
-from .core import (backups, characters, config, game, health, paths, presence,
-                   statuspage, storage, sync, update, webhook)
+from .core import (backups, characters, chime, config, discordrp, game, health,
+                   paths, presence, saga, statuspage, storage, sync, update,
+                   webhook, worldhistory)
 from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
 
 
@@ -67,6 +68,8 @@ class Controller(QObject):
         self._busy = threading.Lock()
         self._seen_versions: dict[str, int] = {}
         self._update_offered = False
+        self._rp = discordrp.RichPresence(
+            (self.cfg or {}).get("discord_app_id", ""))
 
         self._poll = QTimer(self)
         self._poll.setInterval(STATUS_POLL_MS)
@@ -151,6 +154,7 @@ class Controller(QObject):
     def update_globals(self, fields):
         self.cfg.update(fields)
         self._save_all()
+        self._rp = discordrp.RichPresence(self.cfg.get("discord_app_id", ""))
         self.worlds_changed.emit()
         self.refresh_status()
 
@@ -573,6 +577,8 @@ class Controller(QObject):
                                         "your progress when you close it.")
             else:
                 self._set_phase("launching")
+                if self.cfg.get("play_chime", True):
+                    chime.play()
                 log.info("Game launched via %s", game.launch_game(flat))
 
             if not game.process_watch_available():
@@ -592,7 +598,13 @@ class Controller(QObject):
                 return
 
             self._set_phase("ingame")
+            try:
+                self._rp.set_playing(world["world_name"],
+                                     recent.name if recent else "")
+            except Exception:
+                log.debug("Rich presence failed", exc_info=True)
             game.wait_for_game_exit(proc)
+            self._rp.clear()
 
             self._set_phase("pushing")
             duration = int(time.monotonic() - started_at) if started_at else None
@@ -666,6 +678,14 @@ class Controller(QObject):
                     if played_char else "")
             except Exception:
                 log.exception("Could not annotate history entry")
+            try:
+                worldhistory.archive_version(world["sync_dir"],
+                                             world["world_name"], version)
+                saga.bump_stats(world["sync_dir"], self.player_name, duration_s)
+                saga.write_saga(world["sync_dir"], world["world_name"],
+                                sync.get_shared_manifest(world["sync_dir"]))
+            except Exception:
+                log.exception("Post-push extras failed")
             self._write_status(world)
             self.toast.emit("success", f"Shared your progress as v{version} — "
                                        f"your friends are up to date.")
@@ -779,6 +799,52 @@ class Controller(QObject):
                 done()
 
         threading.Thread(target=worker, daemon=True, name="checkpoint").start()
+
+    # -- saga & group history -----------------------------------------------------------
+    def saga_data(self):
+        """(world, manifest, stats, all_time) for the saga page."""
+        world = self.active_world()
+        if not world:
+            return None, None, {}, False
+        try:
+            manifest = sync.get_shared_manifest(world["sync_dir"])
+            stats, all_time = saga.combined_stats(world["sync_dir"], manifest)
+            return world, manifest, stats, all_time
+        except Exception:
+            log.exception("Saga read failed")
+            return world, None, {}, False
+
+    def export_saga(self):
+        world = self.active_world()
+        if not world:
+            return
+
+        def worker():
+            try:
+                manifest = sync.get_shared_manifest(world["sync_dir"])
+                path = saga.write_saga(world["sync_dir"], world["world_name"], manifest)
+                if path:
+                    import os as _os
+                    _os.startfile(str(path))  # noqa: S606
+                    self.toast.emit("success", "The chronicle is written — it lives "
+                                               "in the shared folder for everyone.")
+                else:
+                    self.toast.emit("warning", "Couldn't write the chronicle just now.")
+            except Exception:
+                log.exception("Saga export failed")
+                self.toast.emit("error", "Couldn't write the chronicle just now.")
+
+        threading.Thread(target=worker, daemon=True, name="saga").start()
+
+    def group_history(self):
+        world = self.active_world()
+        if not world:
+            return []
+        try:
+            return worldhistory.list_versions(world["sync_dir"])
+        except Exception:
+            log.exception("Group history listing failed")
+            return []
 
     @property
     def app_version(self) -> str:

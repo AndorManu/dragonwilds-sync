@@ -13,8 +13,12 @@ def _pretty_label(label: str) -> str:
         return f"Your save, before pulling a newer one (was v{label[7:]})"
     if label.startswith("shared_v"):
         return f"A friend's session you replaced (v{label[8:]})"
+    if label.startswith("group_v"):
+        return f"v{label[7:]} — kept in the shared folder for everyone"
     if label == "pre_restore":
         return "Automatic copy taken before a restore"
+    if label == "session":
+        return "After a play session"
     return label
 
 
@@ -79,14 +83,14 @@ class BackupsPage(QWidget):
             self.checkpoint_requested.emit(name.strip())
 
     def load(self, world_name: str, checkpoints: list[BackupInfo],
-             backups: list[BackupInfo]):
+             backups: list[BackupInfo], group_history: list[BackupInfo] = ()):
         self.title.setText(f"Backups — {world_name}")
         while self.box.count():
             item = self.box.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
-        if not checkpoints and not backups:
+        if not checkpoints and not backups and not group_history:
             empty = QLabel("Nothing here yet. Make a checkpoint before something "
                            "risky, or let auto-backups build up as you play.")
             empty.setWordWrap(True)
@@ -97,12 +101,20 @@ class BackupsPage(QWidget):
             self.box.addStretch(1)
             return
 
+        first = True
         if checkpoints:
-            self.box.addWidget(self._subhead("CHECKPOINTS", first=True))
+            self.box.addWidget(self._subhead("CHECKPOINTS", first=first))
+            first = False
             for info in checkpoints:
                 self.box.addWidget(self._row(info))
+        if group_history:
+            self.box.addWidget(self._subhead("GROUP HISTORY (SHARED FOLDER)",
+                                             first=first))
+            first = False
+            for info in group_history:
+                self.box.addWidget(self._row(info))
         if backups:
-            self.box.addWidget(self._subhead("AUTO-BACKUPS", first=not checkpoints))
+            self.box.addWidget(self._subhead("AUTO-BACKUPS", first=first))
             for info in backups:
                 self.box.addWidget(self._row(info))
         self.box.addStretch(1)

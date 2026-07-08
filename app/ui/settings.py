@@ -121,6 +121,21 @@ class SettingsPage(QWidget):
             placeholder="https://discord.com/api/webhooks/…")
         form.addWidget(self.webhook_field)
 
+        accent_col = QVBoxLayout()
+        accent_col.setSpacing(6)
+        accent_label = QLabel("Banner color")
+        accent_label.setProperty("role", "fieldLabel")
+        accent_col.addWidget(accent_label)
+        self.accent_combo = QComboBox()
+        self.accent_combo.setFixedHeight(38)
+        self.accent_combo.addItem("Auto (from the world's name)")
+        for c in theme.AVATAR_COLORS:
+            self.accent_combo.addItem(self._swatch(c), "")
+        accent_col.addWidget(self.accent_combo)
+        self.accent_row = QWidget()
+        self.accent_row.setLayout(accent_col)
+        form.addWidget(self.accent_row)
+
         test_row = QHBoxLayout()
         test_btn = widgets.make_button("Test my setup", "ghost", "check-circle", height=34)
         test_btn.clicked.connect(self.preflight_requested.emit)
@@ -142,6 +157,15 @@ class SettingsPage(QWidget):
             "Writes status.html into the shared folder so anyone can check "
             "who's playing from their phone's cloud-drive app.")
         form.addWidget(self.statuspage_check)
+        self.chime_check = QCheckBox("A soft chime when the wilds open")
+        form.addWidget(self.chime_check)
+
+        self.discord_field = widgets.FormField(
+            "Discord application ID (optional)",
+            hint="Enables “In the wilds of…” Discord Rich Presence. Create a "
+                 "free application at discord.com/developers and paste its ID.",
+            placeholder="e.g. 1123456789012345678")
+        form.addWidget(self.discord_field)
 
         # -- host tools --------------------------------------------------------------------
         form.addWidget(self._section("SHARE AN UPDATE"))
@@ -228,17 +252,23 @@ class SettingsPage(QWidget):
         self.tray_check.setChecked(bool(cfg.get("close_to_tray", True)))
         self.startup_check.setChecked(autostart.is_enabled())
         self.statuspage_check.setChecked(bool(cfg.get("publish_status_page", True)))
+        self.chime_check.setChecked(bool(cfg.get("play_chime", True)))
+        self.discord_field.edit.setText(cfg.get("discord_app_id") or "")
 
         self._world_id = world["id"] if world else None
         has_world = world is not None
         for w in (self.world_section, self.world_field, self.shared_field,
-                  self.webhook_field, self.forget_btn):
+                  self.webhook_field, self.forget_btn, self.accent_row):
             w.setVisible(has_world)
         if world:
             self.world_field.refresh(self.save_dir_field.value(), keep_current=False)
             self.world_field.combo.setCurrentText(world.get("world_name", ""))
             self.shared_field.edit.setText(world.get("sync_dir", ""))
             self.webhook_field.edit.setText(world.get("webhook_url") or "")
+            accent = world.get("accent") or ""
+            self.accent_combo.setCurrentIndex(
+                theme.AVATAR_COLORS.index(accent) + 1
+                if accent in theme.AVATAR_COLORS else 0)
 
         for f in (self.name_field, self.save_dir_field, self.shared_field,
                   self.exe_field, self.webhook_field):
@@ -302,14 +332,18 @@ class SettingsPage(QWidget):
             "close_to_tray": self.tray_check.isChecked(),
             "launch_on_startup": self.startup_check.isChecked(),
             "publish_status_page": self.statuspage_check.isChecked(),
+            "play_chime": self.chime_check.isChecked(),
+            "discord_app_id": self.discord_field.value(),
         }
         world_fields = {}
         if self._world_id:
+            accent_i = self.accent_combo.currentIndex()
             world_fields = {
                 "id": self._world_id,
                 "world_name": self.world_field.value(),
                 "sync_dir": self.shared_field.value(),
                 "webhook_url": webhook_url or None,
+                "accent": theme.AVATAR_COLORS[accent_i - 1] if accent_i > 0 else None,
             }
         if autostart.available():
             autostart.set_enabled(self.startup_check.isChecked())

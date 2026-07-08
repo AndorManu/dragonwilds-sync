@@ -161,6 +161,7 @@ class MainPage(QWidget):
     update_clicked = Signal()
     characters_clicked = Signal()
     grimoire_clicked = Signal()
+    saga_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -305,7 +306,8 @@ class MainPage(QWidget):
         self._active_id = active_id
         active = next((w for w in worlds if w["id"] == active_id), None)
         name = active["world_name"] if active else "No world"
-        self.header.set_world(name, fmt.name_color(name))
+        accent = (active or {}).get("accent") or fmt.name_color(name)
+        self.header.set_world(name, accent)
 
     def _open_world_menu(self):
         menu = QMenu(self)
@@ -320,6 +322,8 @@ class MainPage(QWidget):
         add.triggered.connect(self.add_world_clicked.emit)
         chars = menu.addAction(icons.icon("dragon", theme.TEXT_DIM, 14), "Characters…")
         chars.triggered.connect(self.characters_clicked.emit)
+        saga = menu.addAction(icons.icon("map", theme.TEXT_DIM, 14), "The Saga…")
+        saga.triggered.connect(self.saga_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
         backups.triggered.connect(self.backups_clicked.emit)
         if self._grimoire:
