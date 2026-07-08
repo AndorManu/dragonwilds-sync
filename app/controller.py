@@ -1,20 +1,23 @@
 """Bridges the sync core and the UI: worker threads in, Qt signals out.
 
-v1.1: multi-world. The controller owns the v2 config; every call into the
-sync core goes through ``config.effective_cfg`` + ``config.world_state`` so
-the validated core keeps its original flat interface.
+Multi-world, and the home of the v1.2 feature glue. Everything that could
+affect save integrity — health gating, sync-state checks, richer conflict
+detail — happens here, *around* the frozen sync core, never inside it.
 """
 
 import logging
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
 from . import __version__
-from .core import config, game, presence, storage, sync, webhook
-from .core.sync import MANIFEST_SCHEMA, SyncResult
+from .core import (backups, config, game, health, paths, presence, statuspage,
+                   storage, sync, update, webhook)
+from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
 
 log = logging.getLogger("dwsync.controller")
 
@@ -29,24 +32,26 @@ class ErrorSnapshot:
 
 @dataclass
 class WorldStatus:
-    """Everything the main screen needs about the active world."""
     world_id: str
     world_name: str
-    snapshot: object                      # StatusSnapshot | ErrorSnapshot
-    playing: dict | None = None           # someone's live presence (not me)
-    next_claim: dict | None = None        # current "I've got next" holder
+    snapshot: object
+    playing: dict | None = None
+    next_claim: dict | None = None
     newer_app_needed: bool = False
 
 
 class Controller(QObject):
     status_checking = Signal()
-    status_changed = Signal(object)          # WorldStatus
-    phase_changed = Signal(str)              # idle/checking/launching/waiting/ingame/pushing
-    toast = Signal(str, str)                 # kind, message
-    confirm_requested = Signal(object)       # {"title","body","danger","event","answer"}
-    worlds_changed = Signal()                # world list or active world changed
-    friend_pushed = Signal(str, str, int)    # world_name, editor, version (for tray)
-    note_prompt = Signal(str, int)           # world_id, version — offer a session note
+    status_changed = Signal(object)
+    phase_changed = Signal(str)
+    toast = Signal(str, str)
+    confirm_requested = Signal(object)
+    worlds_changed = Signal()
+    friend_pushed = Signal(str, str, int)
+    note_prompt = Signal(str, int)
+    update_available = Signal(object, str)     # UpdateInfo, world_name
+    nudge_received = Signal(str, str)           # from_player, world_name
+    quit_for_update = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -54,6 +59,7 @@ class Controller(QObject):
         self.phase = "idle"
         self._busy = threading.Lock()
         self._seen_versions: dict[str, int] = {}
+        self._update_offered = False
 
         self._poll = QTimer(self)
         self._poll.setInterval(STATUS_POLL_MS)
@@ -61,6 +67,7 @@ class Controller(QObject):
         if self.cfg:
             self._prime_seen_versions()
             self._poll.start()
+            self.check_updates()
 
     # -- config & worlds --------------------------------------------------------
     @property
@@ -75,23 +82,19 @@ class Controller(QObject):
         return config.active_world(self.cfg) if self.cfg else None
 
     def _flat_cfg(self, world=None) -> dict:
-        world = world or self.active_world()
-        return config.effective_cfg(self.cfg, world)
+        return config.effective_cfg(self.cfg, world or self.active_world())
 
     def _wstate(self, world=None) -> dict:
-        world = world or self.active_world()
-        return config.world_state(self.state, world["id"])
+        return config.world_state(self.state, (world or self.active_world())["id"])
 
     def _backup_root(self, world=None):
-        world = world or self.active_world()
-        return config.backup_root_for(world["id"])
+        return config.backup_root_for((world or self.active_world())["id"])
 
     def _save_all(self):
         storage.save_config(self.cfg)
         storage.save_state(self.state)
 
-    def setup_first_config(self, player_name: str, local_save_dir: str, world: dict):
-        """Called once from onboarding (create or join path)."""
+    def setup_first_config(self, player_name, local_save_dir, world):
         self.cfg = self.cfg or {}
         base, _ = config.migrate_config(self.cfg if config.worlds(self.cfg) else {})
         base.update({"player_name": player_name, "local_save_dir": local_save_dir})
@@ -104,16 +107,16 @@ class Controller(QObject):
         self.worlds_changed.emit()
         self.refresh_status()
 
-    def add_world(self, world: dict, activate=True):
+    def add_world(self, world, activate=True):
         self.cfg["worlds"] = config.worlds(self.cfg) + [world]
         if activate:
             self.cfg["active_world"] = world["id"]
         self._save_all()
         self.worlds_changed.emit()
         self.refresh_status()
+        self.check_updates()
 
-    def remove_world(self, world_id: str):
-        """Forgets the world locally; shared folder and saves stay untouched."""
+    def remove_world(self, world_id):
         self.cfg["worlds"] = [w for w in config.worlds(self.cfg) if w["id"] != world_id]
         self.state.get("worlds", {}).pop(world_id, None)
         if self.cfg.get("active_world") == world_id:
@@ -123,7 +126,7 @@ class Controller(QObject):
         self.worlds_changed.emit()
         self.refresh_status()
 
-    def set_active_world(self, world_id: str):
+    def set_active_world(self, world_id):
         if self.cfg.get("active_world") == world_id:
             return
         self.cfg["active_world"] = world_id
@@ -131,14 +134,14 @@ class Controller(QObject):
         self.worlds_changed.emit()
         self.refresh_status()
 
-    def update_world(self, world_id: str, fields: dict):
+    def update_world(self, world_id, fields):
         world = config.world_by_id(self.cfg, world_id)
         if world:
             world.update(fields)
             self._save_all()
             self.worlds_changed.emit()
 
-    def update_globals(self, fields: dict):
+    def update_globals(self, fields):
         self.cfg.update(fields)
         self._save_all()
         self.worlds_changed.emit()
@@ -163,12 +166,11 @@ class Controller(QObject):
         except Exception:
             log.exception("Status check failed")
             snapshot = ErrorSnapshot()
-        playing = None
-        next_claim = None
+        playing = next_claim = None
         try:
             playing = presence.who_is_playing(world["sync_dir"])
             if playing and playing.get("player") == self.player_name:
-                playing = None  # my own marker (other machine/crash) isn't a warning
+                playing = None
             next_claim = presence.who_has_next(world["sync_dir"])
         except Exception:
             log.exception("Presence check failed")
@@ -191,16 +193,22 @@ class Controller(QObject):
             return
         if self.phase == "idle":
             self.refresh_status(silent=True)
-        threading.Thread(target=self._scan_all_worlds, daemon=True,
-                         name="world-scan").start()
+        threading.Thread(target=self._scan_all_worlds, daemon=True, name="world-scan").start()
 
     def _scan_all_worlds(self):
-        """Notify (tray/toast) when any configured world gets a new save."""
         for w in config.worlds(self.cfg):
             try:
                 manifest = sync.get_shared_manifest(w["sync_dir"])
             except Exception:
                 continue
+            # nudges addressed to me
+            try:
+                nudge = presence.read_nudge_for(w["sync_dir"], self.player_name)
+                if nudge:
+                    presence.clear_nudge(w["sync_dir"])
+                    self.nudge_received.emit(nudge.get("player", "A friend"), w["world_name"])
+            except Exception:
+                pass
             if not manifest:
                 continue
             last = self._seen_versions.get(w["id"], 0)
@@ -209,21 +217,115 @@ class Controller(QObject):
                 editor = manifest.get("last_editor", "Someone")
                 if last and editor != self.player_name:
                     self.friend_pushed.emit(w["world_name"], editor, manifest["version"])
+        self.check_updates()
 
-    # -- helpers used by workers ----------------------------------------------------
+    # -- auto update ---------------------------------------------------------------
+    def check_updates(self):
+        if self._update_offered:
+            return
+
+        def worker():
+            for w in config.worlds(self.cfg or {}):
+                try:
+                    info = update.check(w["sync_dir"], __version__)
+                except Exception:
+                    continue
+                if info:
+                    self._update_offered = True
+                    self.update_available.emit(info, w["world_name"])
+                    return
+
+        threading.Thread(target=worker, daemon=True, name="update-check").start()
+
+    def apply_update(self, info):
+        try:
+            if update.apply_update(info, paths.APP_DIR / "update"):
+                self.quit_for_update.emit()
+            else:
+                self.toast.emit("info", "Updates apply from the installed app — "
+                                        "grab the new build from the shared folder’s "
+                                        "_app folder for now.")
+        except Exception:
+            log.exception("apply_update failed")
+            self.toast.emit("error", "Couldn't apply the update. You can copy the new "
+                                     "exe from the shared folder’s _app folder manually.")
+
+    def publish_update(self):
+        world = self.active_world()
+        if not world:
+            return
+
+        def worker():
+            try:
+                if not update.is_frozen():
+                    self.toast.emit("info", "Publishing works from the installed app "
+                                            "(the .exe), not when running from source.")
+                    return
+                update.publish(world["sync_dir"], __version__, update.current_exe(),
+                               self.player_name, notes="")
+                self.toast.emit("success", f"Published v{__version__} to {world['world_name']}. "
+                                           f"Friends will be offered the update automatically.")
+            except Exception:
+                log.exception("publish_update failed")
+                self.toast.emit("error", "Couldn't publish the update to the shared folder.")
+
+        threading.Thread(target=worker, daemon=True, name="publish").start()
+
+    # -- worker helpers ------------------------------------------------------------
     def _set_phase(self, phase):
         self.phase = phase
         self.phase_changed.emit(phase)
 
     def _confirm(self, title, body, danger="Overwrite") -> bool:
+        if "Overwrite" in title or "saved while" in title:
+            detail = self._conflict_details()
+            if detail:
+                body = body + "\n\n" + detail
         request = {"title": title, "body": body, "danger": danger,
                    "event": threading.Event(), "answer": False}
         self.confirm_requested.emit(request)
         request["event"].wait()
         return request["answer"]
 
+    def _conflict_details(self) -> str:
+        """Sizes + times of the two saves, so a conflict choice is informed."""
+        try:
+            world = self.active_world()
+            wn = world["world_name"]
+            local = world_files(Path(self.cfg["local_save_dir"]), wn)
+            shared = world_files(Path(world["sync_dir"]), wn)
+
+            def describe(files):
+                prim = next((f for f in files if f.suffix.lower() == ".sav"), None)
+                if not prim:
+                    return None
+                st = prim.stat()
+                when = datetime.fromtimestamp(st.st_mtime).strftime("%d %b %H:%M")
+                return f"{st.st_size // 1024} KB · saved {when}"
+
+            li, si = describe(local), describe(shared)
+            lines = []
+            if li:
+                lines.append(f"Your save:  {li}")
+            if si:
+                lines.append(f"Their save: {si}")
+            return "\n".join(lines)
+        except Exception:
+            return ""
+
     def _log(self, message):
         log.info(message)
+
+    def _write_status(self, world):
+        if not (self.cfg or {}).get("publish_status_page", True):
+            return
+        try:
+            manifest = sync.get_shared_manifest(world["sync_dir"])
+            statuspage.write(world["sync_dir"], world["world_name"], manifest,
+                             presence.who_is_playing(world["sync_dir"]),
+                             presence.who_has_next(world["sync_dir"]))
+        except Exception:
+            log.exception("status page write failed")
 
     # -- play workflow -------------------------------------------------------------
     def start_play(self):
@@ -236,18 +338,14 @@ class Controller(QObject):
         flat = self._flat_cfg(world)
         wstate = self._wstate(world)
         sync_dir = world["sync_dir"]
+        world_name = world["world_name"]
         started_at = None
         try:
-            # Presence: warn up front if a friend is mid-session right now.
             playing = presence.who_is_playing(sync_dir)
             if playing and playing.get("player") != self.player_name:
                 minutes = int((playing.get("age_s") or 0) // 60)
-                if minutes < 1:
-                    since = "moments"
-                elif minutes < 120:
-                    since = f"{minutes} min"
-                else:
-                    since = f"{minutes // 60} h"
+                since = "moments" if minutes < 1 else (
+                    f"{minutes} min" if minutes < 120 else f"{minutes // 60} h")
                 if not self._confirm(
                         f"{playing['player']} is in this world right now",
                         f"They started about {since} ago. If you both play, one "
@@ -259,23 +357,26 @@ class Controller(QObject):
                     return
 
             self._set_phase("checking")
-            result, wstate = sync.do_pull(flat, wstate, self._log, self._confirm,
-                                          self._backup_root(world))
-            storage.save_state(self.state)
+            if health.shared_still_syncing(sync_dir, world_name):
+                self.toast.emit("warning", "The shared folder is still downloading the "
+                                           "latest save — launching your current copy for now.")
+            else:
+                result, wstate = sync.do_pull(flat, wstate, self._log, self._confirm,
+                                              self._backup_root(world))
+                storage.save_state(self.state)
+                if result == SyncResult.PULLED:
+                    self.toast.emit("success", "Latest save pulled in — you're starting "
+                                               "fresh off your friends' progress.")
+                elif result == SyncResult.CONFLICT_CANCELLED:
+                    self.toast.emit("info", "Kept your local progress. It'll be shared "
+                                            "when you finish this session.")
+                elif result == SyncResult.MISSING_FILES:
+                    self.toast.emit("warning", "The newest save hasn't finished syncing to "
+                                               "this PC — you're playing your current local copy.")
 
-            if result == SyncResult.PULLED:
-                self.toast.emit("success", "Latest save pulled in — you're starting "
-                                           "fresh off your friends' progress.")
-            elif result == SyncResult.CONFLICT_CANCELLED:
-                self.toast.emit("info", "Kept your local progress. It'll be shared "
-                                        "when you finish this session.")
-            elif result == SyncResult.MISSING_FILES:
-                self.toast.emit("warning", "The newest save hasn't finished syncing to "
-                                           "this PC — you're playing your current local copy.")
-
-            presence.start_playing(sync_dir, self.player_name,
-                                   self.cfg.get("player_emoji", ""))
-            presence.clear_next(sync_dir, self.player_name)  # my turn is now
+            presence.start_playing(sync_dir, self.player_name, self.cfg.get("player_emoji", ""))
+            presence.clear_next(sync_dir, self.player_name)
+            self._write_status(world)
             started_at = time.monotonic()
 
             if game.find_game_process():
@@ -283,8 +384,7 @@ class Controller(QObject):
                                         "your progress when you close it.")
             else:
                 self._set_phase("launching")
-                how = game.launch_game(flat)
-                log.info("Game launched via %s", how)
+                log.info("Game launched via %s", game.launch_game(flat))
 
             if not game.process_watch_available():
                 self._set_phase("idle")
@@ -296,6 +396,7 @@ class Controller(QObject):
             proc = game.find_game_process() or game.wait_for_game_start()
             if proc is None:
                 presence.stop_playing(sync_dir, self.player_name)
+                self._write_status(world)
                 self._set_phase("idle")
                 self.toast.emit("warning", "Never saw the game start. If you are playing, "
                                            "use “Save my progress now” when you're done.")
@@ -305,11 +406,8 @@ class Controller(QObject):
             game.wait_for_game_exit(proc)
 
             self._set_phase("pushing")
-            result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
-                                          self._backup_root(world))
-            storage.save_state(self.state)
             duration = int(time.monotonic() - started_at) if started_at else None
-            self._after_push(world, result, duration)
+            self._do_push_guarded(world, flat, wstate, duration)
         except Exception:
             log.exception("Play flow failed")
             self.toast.emit("error", "Something went wrong during the session. Your save "
@@ -317,6 +415,7 @@ class Controller(QObject):
         finally:
             try:
                 presence.stop_playing(sync_dir, self.player_name)
+                self._write_status(world)
             except Exception:
                 pass
             self._set_phase("idle")
@@ -333,10 +432,7 @@ class Controller(QObject):
         world = self.active_world()
         try:
             self._set_phase("pushing")
-            result, _ = sync.do_push(self._flat_cfg(world), self._wstate(world),
-                                     self._log, self._confirm, self._backup_root(world))
-            storage.save_state(self.state)
-            self._after_push(world, result, None)
+            self._do_push_guarded(world, self._flat_cfg(world), self._wstate(world), None)
         except Exception:
             log.exception("Manual push failed")
             self.toast.emit("error", "Couldn't share your save. Check that your cloud "
@@ -346,19 +442,34 @@ class Controller(QObject):
             self.status_changed.emit(self._world_status(world))
             self._busy.release()
 
+    def _do_push_guarded(self, world, flat, wstate, duration_s):
+        """Health-gate the push so a corrupt save can't poison the group."""
+        save_dir = Path(flat["local_save_dir"])
+        world_name = flat["world_name"]
+        if world_files(save_dir, world_name):
+            hp = health.check_local_save(save_dir, world_name)
+            if not hp.ok:
+                self.toast.emit("warning", f"Your save looks {hp.reason}, so I didn't share "
+                                           f"it — that protects everyone from a bad file. "
+                                           f"Your friends keep the last good save.")
+                return
+        result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
+                                      self._backup_root(world))
+        storage.save_state(self.state)
+        self._after_push(world, result, duration_s)
+
     def _after_push(self, world, result, duration_s):
         if result == SyncResult.PUSHED:
             version = self._wstate(world).get("last_applied_version")
             self._seen_versions[world["id"]] = version
             try:
                 sync.amend_history_entry(
-                    world["sync_dir"], version,
-                    duration_s=duration_s,
+                    world["sync_dir"], version, duration_s=duration_s,
                     emoji=self.cfg.get("player_emoji", ""),
-                    color=self.cfg.get("player_color", ""),
-                )
+                    color=self.cfg.get("player_color", ""))
             except Exception:
                 log.exception("Could not annotate history entry")
+            self._write_status(world)
             self.toast.emit("success", f"Shared your progress as v{version} — "
                                        f"your friends are up to date.")
             if world.get("webhook_url"):
@@ -377,22 +488,22 @@ class Controller(QObject):
             self.toast.emit("info", "Didn't share. Hit Play to pick up the newer save first.")
 
     # -- session notes ---------------------------------------------------------------
-    def save_session_note(self, world_id: str, version: int, note: str):
+    def save_session_note(self, world_id, version, note):
         world = config.world_by_id(self.cfg, world_id)
         if not world or not note.strip():
             return
 
         def worker():
             try:
-                if sync.amend_history_entry(world["sync_dir"], version,
-                                            note=note.strip()[:200]):
+                if sync.amend_history_entry(world["sync_dir"], version, note=note.strip()[:200]):
+                    self._write_status(world)
                     self.status_changed.emit(self._world_status(world))
             except Exception:
                 log.exception("Could not save session note")
 
         threading.Thread(target=worker, daemon=True, name="note").start()
 
-    # -- turn claims -------------------------------------------------------------------
+    # -- turn claims + nudges ----------------------------------------------------------
     def toggle_next_claim(self):
         world = self.active_world()
 
@@ -410,11 +521,67 @@ class Controller(QObject):
                                         self.cfg.get("player_emoji", ""))
                     self.toast.emit("success", "Next turn is yours — friends will "
                                                "see it before they hit Play.")
+                self._write_status(world)
                 self.status_changed.emit(self._world_status(world))
             except Exception:
                 log.exception("Turn claim failed")
 
         threading.Thread(target=worker, daemon=True, name="next").start()
+
+    def known_players(self) -> list[str]:
+        """Other players seen in the active world's history — for the nudge picker."""
+        world = self.active_world()
+        names = []
+        try:
+            manifest = sync.get_shared_manifest(world["sync_dir"])
+            for entry in (manifest or {}).get("history", []):
+                who = entry.get("editor")
+                if who and who != self.player_name and who not in names:
+                    names.append(who)
+        except Exception:
+            pass
+        return list(reversed(names))
+
+    def send_turn_nudge(self, to_player):
+        world = self.active_world()
+
+        def worker():
+            try:
+                presence.send_nudge(world["sync_dir"], self.player_name, to_player,
+                                    self.cfg.get("player_emoji", ""))
+                self.toast.emit("success", f"Nudged {to_player} — they'll get a ping "
+                                           f"that it's their turn.")
+                if world.get("webhook_url"):
+                    webhook.send_async(
+                        world["webhook_url"],
+                        f"🐉 {self.player_name} passed the turn to {to_player} "
+                        f"in {world['world_name']}.")
+            except Exception:
+                log.exception("Nudge failed")
+
+        threading.Thread(target=worker, daemon=True, name="nudge").start()
+
+    # -- checkpoints -------------------------------------------------------------------
+    def create_checkpoint(self, name, done=None):
+        world = self.active_world()
+
+        def worker():
+            info = None
+            try:
+                info = backups.create_checkpoint(
+                    self.cfg["local_save_dir"], world["world_name"], name,
+                    self._backup_root(world))
+            except Exception:
+                log.exception("Checkpoint failed")
+            if info:
+                self.toast.emit("success", f"Checkpoint “{info.name}” saved. Restore it "
+                                           f"any time from Backups.")
+            else:
+                self.toast.emit("warning", "No local save to checkpoint yet.")
+            if done:
+                done()
+
+        threading.Thread(target=worker, daemon=True, name="checkpoint").start()
 
     @property
     def app_version(self) -> str:

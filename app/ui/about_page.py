@@ -7,6 +7,15 @@ from .. import __version__
 from . import icons, theme, widgets
 
 CHANGELOG = [
+    ("1.2.0", [
+        "A whole new look — a fantasy game-launcher, world-art and all",
+        "Update the app in one click, straight from the shared folder",
+        "“Test my setup” checks everything's wired up right",
+        "Name and keep checkpoints; restore any of them",
+        "Pass the turn to a friend with a tray ping",
+        "Won't share a corrupt or half-synced save — the group stays safe",
+        "Optional phone-checkable status page in the shared folder",
+    ]),
     ("1.1.0", [
         "Invite codes — friends join a world by pasting one code",
         "Multiple worlds with a quick switcher",

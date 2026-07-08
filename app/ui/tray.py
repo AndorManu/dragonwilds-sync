@@ -47,6 +47,20 @@ class TrayManager(QObject):
                 f"{editor} shared v{version} — the wilds await.",
                 QSystemTrayIcon.Information, 8000)
 
+    def notify_nudge(self, from_player: str, world_name: str):
+        if self.available:
+            self.tray.showMessage(
+                f"It's your turn in {world_name}",
+                f"{from_player} passed you the world — jump in when you're ready.",
+                QSystemTrayIcon.Information, 8000)
+
+    def notify_update(self, version: str):
+        if self.available:
+            self.tray.showMessage(
+                "Update available",
+                f"Version {version} is ready. Open Dragonwilds Sync to update.",
+                QSystemTrayIcon.Information, 7000)
+
     def show_minimized_tip(self):
         if self.available and not self._tip_shown:
             self._tip_shown = True

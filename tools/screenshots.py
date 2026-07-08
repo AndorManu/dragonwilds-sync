@@ -197,6 +197,29 @@ def main():
     shoot(window2, "16_note_prompt")
     window2.note_overlay._skip()
 
+    # preflight page
+    from app.core import preflight
+    window2._show_page(window2.preflight_page)
+    window2.preflight_page.show_results(preflight.run(cfg, world))
+    shoot(window2, "18_preflight")
+
+    # backups with a checkpoint
+    from app.core.sync import _backup_files as _bk
+    root = config.backup_root_for(world["id"])
+    from app.core import backups as bkmod
+    bkmod.create_checkpoint(save_dir, WORLD, "Before the dragon", root)
+    window2._reload_backups()
+    window2._show_page(window2.backups_page)
+    shoot(window2, "19_backups_checkpoints")
+
+    # update bar on the main screen
+    window2._show_page(window2.main_page)
+    window2.main_page.set_status(controller2._world_status(world))
+    window2.main_page.show_update_bar("1.2.0", "Bram")
+    QTest.qWait(150)
+    shoot(window2, "20_update_bar")
+    window2.main_page.hide_update_bar()
+
     # conflict overlay
     ov = window2.confirm
     ov.title_label.setText("Overwrite your local progress?")

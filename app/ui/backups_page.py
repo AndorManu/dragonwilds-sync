@@ -1,8 +1,8 @@
 """Backup browser: every safety net the sync core has woven, restorable."""
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QScrollArea,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QInputDialog, QLabel,
+                               QLineEdit, QScrollArea, QVBoxLayout, QWidget)
 
 from ..core.backups import BackupInfo
 from . import icons, theme, widgets
@@ -21,6 +21,8 @@ def _pretty_label(label: str) -> str:
 class BackupsPage(QWidget):
     back_requested = Signal()
     restore_requested = Signal(object)     # BackupInfo
+    checkpoint_requested = Signal(str)     # name
+    delete_requested = Signal(object)      # BackupInfo (checkpoint)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -37,12 +39,17 @@ class BackupsPage(QWidget):
         header.addSpacing(6)
         header.addWidget(self.title)
         header.addStretch(1)
+        self.checkpoint_btn = widgets.make_button("New checkpoint", "ghost",
+                                                  "flag", height=32)
+        self.checkpoint_btn.clicked.connect(self._new_checkpoint)
+        header.addWidget(self.checkpoint_btn)
         root.addLayout(header)
         root.addSpacing(6)
 
-        intro = QLabel("Whenever a save is about to be replaced, a copy lands "
-                       "here first. Restoring brings one back to this PC — "
-                       "share it afterwards if the whole group should return to it.")
+        intro = QLabel("Checkpoints are snapshots you name and keep. Auto-backups "
+                       "are taken whenever a save would be overwritten. Restoring "
+                       "brings one back to this PC — share it afterwards if the "
+                       "whole group should return to it.")
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
         root.addWidget(intro)
@@ -64,16 +71,24 @@ class BackupsPage(QWidget):
         wrap.addWidget(scroll)
         root.addWidget(card, 1)
 
-    def load(self, world_name: str, backups: list[BackupInfo]):
+    def _new_checkpoint(self):
+        name, ok = QInputDialog.getText(
+            self, "New checkpoint", "Name this snapshot of your current save:",
+            QLineEdit.Normal, "Before the dragon")
+        if ok and name.strip():
+            self.checkpoint_requested.emit(name.strip())
+
+    def load(self, world_name: str, checkpoints: list[BackupInfo],
+             backups: list[BackupInfo]):
         self.title.setText(f"Backups — {world_name}")
         while self.box.count():
             item = self.box.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
-        if not backups:
-            empty = QLabel("No backups yet. They appear automatically the first "
-                           "time a save would be overwritten.")
+        if not checkpoints and not backups:
+            empty = QLabel("Nothing here yet. Make a checkpoint before something "
+                           "risky, or let auto-backups build up as you play.")
             empty.setWordWrap(True)
             empty.setAlignment(Qt.AlignCenter)
             empty.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 12.5px;"
@@ -82,26 +97,38 @@ class BackupsPage(QWidget):
             self.box.addStretch(1)
             return
 
-        for i, info in enumerate(backups):
-            self.box.addWidget(self._row(info, first=(i == 0)))
+        if checkpoints:
+            self.box.addWidget(self._subhead("CHECKPOINTS", first=True))
+            for info in checkpoints:
+                self.box.addWidget(self._row(info))
+        if backups:
+            self.box.addWidget(self._subhead("AUTO-BACKUPS", first=not checkpoints))
+            for info in backups:
+                self.box.addWidget(self._row(info))
         self.box.addStretch(1)
+
+    def _subhead(self, text, first=False):
+        lbl = QLabel(text)
+        lbl.setObjectName("SectionLabel")
+        lbl.setContentsMargins(6, 4 if first else 14, 0, 6)
+        return lbl
 
     def _row(self, info: BackupInfo, first=False):
         row = QWidget()
-        if not first:
-            row.setStyleSheet(f"border-top: 1px solid {theme.BORDER_SOFT};")
         lay = QHBoxLayout(row)
         lay.setContentsMargins(6, 10, 6, 10)
         lay.setSpacing(10)
 
         ic = QLabel()
-        ic.setPixmap(icons.pixmap("clock", theme.TEXT_FAINT, 18))
+        ic.setPixmap(icons.pixmap("flag" if info.is_checkpoint else "clock",
+                                  theme.EMBER if info.is_checkpoint else theme.TEXT_FAINT, 18))
         ic.setStyleSheet("border: none;")
         lay.addWidget(ic, 0, Qt.AlignTop)
 
         col = QVBoxLayout()
         col.setSpacing(2)
-        title = QLabel(_pretty_label(info.label))
+        heading = info.name if info.is_checkpoint else _pretty_label(info.label)
+        title = QLabel(heading)
         title.setStyleSheet("border: none; font-size: 12.5px; font-weight: 600;")
         title.setWordWrap(True)
         when = info.stamp.strftime("%a %d %b, %H:%M") if info.stamp else "unknown time"
@@ -111,6 +138,11 @@ class BackupsPage(QWidget):
         col.addWidget(meta)
         lay.addLayout(col, 1)
 
+        if info.is_checkpoint:
+            delete = widgets.icon_button("trash", theme.TEXT_FAINT,
+                                         tooltip="Delete checkpoint")
+            delete.clicked.connect(lambda _=False, i=info: self.delete_requested.emit(i))
+            lay.addWidget(delete, 0, Qt.AlignVCenter)
         restore = widgets.make_button("Restore", "ghost", "rotate-ccw", height=30)
         restore.clicked.connect(lambda _=False, i=info: self.restore_requested.emit(i))
         lay.addWidget(restore, 0, Qt.AlignVCenter)
