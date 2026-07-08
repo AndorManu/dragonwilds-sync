@@ -1,5 +1,7 @@
 # Design rationale
 
+*(v1.1 additions at the bottom; the v1.0 rationale below still holds.)*
+
 ## Stack: Python + PySide6 (Qt), PyInstaller
 
 Three things decided it:
@@ -71,10 +73,38 @@ Additions, all protocol-compatible:
   syncs a half-written `version.json`; a corrupt/deleted manifest can't
   reset the version counter backwards.
 
+## v1.1 additions
+
+**Invites.** The joining floor we can't remove without a full Google OAuth
+integration is exactly one click ("Add shortcut to Drive"). Everything
+around it is automated: the code (compressed JSON, `DWS1.` prefix, decoded
+locally) carries world name + folder name + share link; the app opens the
+link, then polls every cloud root on the machine until a folder with that
+name (and a matching or absent manifest) appears, and finishes setup itself.
+Honesty over magic: the join screen says out loud which click is yours.
+
+**Multi-world.** Config schema v2 keeps `player_name`, save folder, and exe
+global (one game install per machine) and gives each world its own shared
+folder, share link, and webhook. The sync core still receives the same flat
+v1-shaped dict it was validated against — `effective_cfg()` is the entire
+boundary, which is how every v1.1 feature shipped without touching the
+protocol code.
+
+**Presence and turn claims** are advisory files (`playing.json` /
+`next.json`) in the shared folder — stale-tolerant, fail-soft, and never a
+substitute for the conflict checks; they just move the warning *before* the
+session instead of after it.
+
+**Feed as story.** Session notes, session lengths, and per-player
+emblem/color ride as optional fields on existing history entries (amended
+after push, whitelisted, never touching protocol fields). The feed is meant
+to read like a campaign log, not a sync ledger.
+
 ## Screenshots
 
 | | |
 |---|---|
-| ![Welcome](docs/screenshots/1_onboarding_welcome.png) | ![Shared folder](docs/screenshots/3_onboarding_shared.png) |
-| ![Up to date](docs/screenshots/4_main_up_to_date.png) | ![New save](docs/screenshots/5_main_new_save.png) |
-| ![In game](docs/screenshots/6_main_in_game.png) | ![Conflict](docs/screenshots/9_conflict.png) |
+| ![Welcome](docs/screenshots/01_onboarding_welcome.png) | ![Choice](docs/screenshots/03_onboarding_choice.png) |
+| ![Join watch](docs/screenshots/05_onboarding_join_watch.png) | ![Up to date](docs/screenshots/06_main_up_to_date.png) |
+| ![Friend playing](docs/screenshots/08_main_friend_playing.png) | ![Invite](docs/screenshots/12_invite.png) |
+| ![Backups](docs/screenshots/13_backups.png) | ![Conflict](docs/screenshots/17_conflict.png) |
