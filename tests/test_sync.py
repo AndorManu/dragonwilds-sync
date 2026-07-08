@@ -293,6 +293,58 @@ def test_status_transitions(env):
     assert get_status(cfg2, state).kind == "folder_missing"
 
 
+def test_push_stamps_manifest_schema(env):
+    cfg, state, save_dir, sync_dir, backups = env
+    write_save(save_dir, "s1")
+    _, log = logs()
+    do_push(cfg, state, log, confirm_yes, backups)
+    from app.core.sync import MANIFEST_SCHEMA
+    assert read_manifest(sync_dir)["app_schema"] == MANIFEST_SCHEMA
+    assert get_status(cfg, state).manifest_schema == MANIFEST_SCHEMA
+
+
+# ---------------------------------------------------------------------------
+# history amendments (session notes / duration / flair)
+# ---------------------------------------------------------------------------
+
+def test_amend_history_adds_note_and_duration(env):
+    from app.core.sync import amend_history_entry
+    cfg, state, save_dir, sync_dir, backups = env
+    write_save(save_dir, "s1")
+    _, log = logs()
+    _, state = do_push(cfg, state, log, confirm_yes, backups)
+
+    assert amend_history_entry(sync_dir, 1, note="Built the gatehouse", duration_s=4520)
+    manifest = read_manifest(sync_dir)
+    entry = manifest["history"][0]
+    assert entry["note"] == "Built the gatehouse"
+    assert entry["duration_s"] == 4520
+    # protocol fields untouched
+    assert manifest["version"] == 1
+    assert entry["version"] == 1
+    assert (sync_dir / f"{WORLD}.sav").read_bytes() == b"s1"
+
+
+def test_amend_history_rejects_unknown_fields_and_missing_versions(env):
+    from app.core.sync import amend_history_entry
+    cfg, state, save_dir, sync_dir, backups = env
+    write_save(save_dir, "s1")
+    _, log = logs()
+    _, state = do_push(cfg, state, log, confirm_yes, backups)
+
+    before = read_manifest(sync_dir)
+    assert not amend_history_entry(sync_dir, 1, last_editor="Evil", timestamp="1999")
+    assert not amend_history_entry(sync_dir, 42, note="ghost session")
+    assert not amend_history_entry(sync_dir, 1, note="")
+    assert read_manifest(sync_dir) == before
+
+
+def test_amend_history_without_manifest(env):
+    from app.core.sync import amend_history_entry
+    cfg, state, save_dir, sync_dir, backups = env
+    assert not amend_history_entry(sync_dir, 1, note="nothing there")
+
+
 def test_backup_pruning(env):
     cfg, state, save_dir, sync_dir, backups = env
     from app.core.sync import _backup_files, BACKUPS_TO_KEEP
