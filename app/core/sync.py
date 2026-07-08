@@ -51,8 +51,9 @@ BACKUPS_TO_KEEP = 10
 MANIFEST_SCHEMA = 1
 
 # Optional per-entry annotations added after a push (session notes, duration,
-# flair). Amending these never touches save files or the version counter.
-AMENDABLE_FIELDS = {"note", "duration_s", "emoji", "color"}
+# flair, which character was played and how they look). Amending these never
+# touches save files or the version counter.
+AMENDABLE_FIELDS = {"note", "duration_s", "emoji", "color", "character", "portrait"}
 
 
 class SyncResult(Enum):

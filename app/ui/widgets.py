@@ -100,14 +100,34 @@ class PulsingDot(QWidget):
         p.drawEllipse(r)
 
 
-class Avatar(QWidget):
-    """Colored circle for the activity feed: initials, or a chosen emoji."""
+# Guessed-but-consistent palettes for portrait rendering. They won't match
+# the game's exact swatches, but every app renders a given character the
+# same way — which is what matters for recognisability.
+_SKIN_RAMP = ["#F5DCC0", "#EFD0AC", "#E6BE96", "#D9A87E", "#C79066",
+              "#AE7852", "#93613F", "#7A4E31", "#5F3B24", "#4A2C19"]
+_HAIR_RAMP = ["#181310", "#2E2117", "#4A331F", "#6B4A2A", "#8F6A3C",
+              "#B08D57", "#8C2F1E", "#77787C", "#D8D3C7", "#C9A227"]
+_EYE_RAMP = ["#3A2E1E", "#274A66", "#2F5D3A", "#5A5F66", "#6E4A2E", "#8A8F96"]
 
-    def __init__(self, name: str, size=30, emoji="", color=None, parent=None):
+
+def _ramp_pick(ramp, row_name, default_index=2):
+    digits = "".join(ch for ch in (row_name or "") if ch.isdigit())
+    index = int(digits) - 1 if digits else default_index
+    return QColor(ramp[max(0, min(index, len(ramp) - 1))])
+
+
+class Avatar(QWidget):
+    """Feed avatar: a character portrait if we know one, else emoji/initials."""
+
+    def __init__(self, name: str, size=30, emoji="", color=None, portrait="",
+                 parent=None):
         super().__init__(parent)
         self._name = name or "?"
         self._emoji = emoji or ""
         self._color = color or None
+        self._portrait = (portrait or "").split("|") if portrait else None
+        if self._portrait and len(self._portrait) < 6:
+            self._portrait = None
         self.setFixedSize(size, size)
 
     def paintEvent(self, e):
@@ -121,6 +141,10 @@ class Avatar(QWidget):
         p.setBrush(QBrush(fill))
         p.setPen(QPen(base, 1.2))
         p.drawEllipse(self.rect().adjusted(1, 1, -1, -1))
+
+        if self._portrait:
+            self._paint_portrait(p)
+            return
         f = QFont(self.font())
         if self._emoji:
             f.setPixelSize(int(self.height() * 0.5))
@@ -133,6 +157,57 @@ class Avatar(QWidget):
             p.setFont(f)
             p.setPen(QPen(base))
             p.drawText(self.rect(), Qt.AlignCenter, fmt.initials(self._name))
+
+    def _paint_portrait(self, p: QPainter):
+        """A tiny stylised bust from the descriptor: skin, hair, beard, eyes."""
+        _body, skin_row, hair_preset, hair_row, facial_row, eye_row = self._portrait[:6]
+        s = self.height()
+        skin = _ramp_pick(_SKIN_RAMP, skin_row)
+        hair = _ramp_pick(_HAIR_RAMP, hair_row)
+        eyes = _ramp_pick(_EYE_RAMP, eye_row, 1)
+
+        p.setClipRegion(self.rect().adjusted(2, 2, -2, -2), Qt.ReplaceClip)
+        p.setPen(Qt.NoPen)
+
+        # shoulders
+        p.setBrush(QBrush(QColor(theme.SURFACE_2)))
+        p.drawEllipse(int(s * 0.12), int(s * 0.72), int(s * 0.76), int(s * 0.55))
+        # head
+        p.setBrush(QBrush(skin))
+        head_x, head_y = int(s * 0.28), int(s * 0.22)
+        head_w, head_h = int(s * 0.44), int(s * 0.50)
+        p.drawEllipse(head_x, head_y, head_w, head_h)
+
+        # hair, unless the preset says none/bald
+        preset = (hair_preset or "").lower()
+        if "none" not in preset and "bald" not in preset:
+            digits = "".join(ch for ch in preset if ch.isdigit())
+            style = (int(digits) if digits else 0) % 3
+            p.setBrush(QBrush(hair))
+            if style == 0:      # short cap
+                p.drawChord(head_x - 1, head_y - int(s * 0.04),
+                            head_w + 2, int(head_h * 0.72), 0, 180 * 16)
+            elif style == 1:    # longer, falls beside the face
+                p.drawChord(head_x - int(s * 0.05), head_y - int(s * 0.05),
+                            head_w + int(s * 0.10), int(head_h * 0.95), 0, 180 * 16)
+            else:               # swept back / knot
+                p.drawChord(head_x, head_y - int(s * 0.07),
+                            head_w, int(head_h * 0.62), 0, 180 * 16)
+                p.drawEllipse(int(s * 0.44), int(s * 0.10), int(s * 0.14), int(s * 0.12))
+
+        # facial hair
+        if "none" not in (facial_row or "").lower():
+            beard = QColor(hair).darker(115)
+            p.setBrush(QBrush(beard))
+            p.drawChord(head_x + int(head_w * 0.14), head_y + int(head_h * 0.52),
+                        int(head_w * 0.72), int(head_h * 0.52), 180 * 16, 180 * 16)
+
+        # eyes
+        p.setBrush(QBrush(eyes))
+        eye_y = head_y + int(head_h * 0.42)
+        r = max(1, int(s * 0.045))
+        p.drawEllipse(head_x + int(head_w * 0.26) - r, eye_y - r, r * 2, r * 2)
+        p.drawEllipse(head_x + int(head_w * 0.72) - r, eye_y - r, r * 2, r * 2)
 
 
 class OptionCard(QWidget):
