@@ -1,5 +1,33 @@
 # Notes for Manu
 
+## v1.3.1 — the Rosetta Stone
+
+You cracked the skill names yourself by screenshotting the in-game panels —
+all 11 XP values matched the file **exactly and uniquely** (verified against
+your freshly-saved file, twice). The canonical map is now baked into the app,
+so **everyone's grimoire shows real skill names out of the box**:
+
+| Skill | GUID |
+|---|---|
+| Attack | `4pefO9k1lUqfA6mvHNi1SA` |
+| Magic | `0hreSMRVXUihq9qjDO2CFA` |
+| Ranged | `heq7u88Q2UuLXFqLGTVwQw` |
+| Mining | `jqX0Gh6QI0GFFPCDFK_CJQ` |
+| Woodcutting | `4zYUGF5u_0KbMLkWJmmBbQ` |
+| Artisan | `Wf3i7Ha-B06DH719j1vtBw` |
+| Construction | `waK-8EyQFQ2xEjCGYmuTRQ` |
+| Cooking | `Tn7t6DQyX0-Q0cM5K7B90A` |
+| Farming | `PyUi-0LU_riFY46AnnFiWg` |
+| Runecrafting | `NOqC-z-2ckqi0El22qMFlw` |
+| Fishing | `vwY5IkQJJDwb2PKEfoc8MQ` |
+
+Grimoire got easy mode: skills alphabetized under their real names, with
+**+1k / +10k** chips per skill (they stack on the current or typed value).
+The identify ritual stays as future-proofing for skills a game update adds.
+Note: the panels show XP *thresholds* per level (e.g. 6,439/6,608), but the
+level curve isn't fully derivable from these data points, so the grimoire
+deals in XP, not levels — type what the panel shows for the level you want.
+
 ## v1.3 — characters, the Secret, and the saga
 
 **Everything you greenlit shipped**, in `dist\DragonwildsSync.exe` (v1.3.0,
