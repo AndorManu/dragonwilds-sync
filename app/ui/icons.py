@@ -1,0 +1,135 @@
+"""Inline SVG icon set, rendered to pixmaps at the right DPI and color.
+
+Outline icons are from Feather (MIT); the dragon-eye mark is our own.
+"""
+
+from PySide6.QtCore import QByteArray, QRectF, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
+
+_STROKE_TEMPLATE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" '
+    'stroke="{color}" stroke-width="1.8" stroke-linecap="round" '
+    'stroke-linejoin="round">{body}</svg>'
+)
+
+_ICONS = {
+    "play": '<path d="M8 5.2v13.6L19.5 12z" fill="{color}" stroke="none"/>',
+    "gear": (
+        '<circle cx="12" cy="12" r="3"/>'
+        '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83'
+        'l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1'
+        '-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0'
+        ' 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1'
+        'H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.'
+        '06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 '
+        '0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 '
+        '0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.8'
+        '2V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+    ),
+    "x": '<path d="M18 6 6 18M6 6l12 12"/>',
+    "minus": '<path d="M5 12h14"/>',
+    "check-circle": (
+        '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>'
+        '<polyline points="22 4 12 14.01 9 11.01"/>'
+    ),
+    "alert": (
+        '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3'
+        'L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
+        '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+    ),
+    "refresh": (
+        '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>'
+        '<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>'
+    ),
+    "folder": (
+        '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9'
+        'a2 2 0 0 1 2 2z"/>'
+    ),
+    "download-cloud": (
+        '<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/>'
+        '<path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>'
+    ),
+    "upload-cloud": (
+        '<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>'
+        '<path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>'
+        '<polyline points="16 16 12 12 8 16"/>'
+    ),
+    "sparkle": (
+        '<path d="M12 2.5 13.8 8.7 20 10.5 13.8 12.3 12 18.5 10.2 12.3 4 10.5 '
+        '10.2 8.7z" fill="{color}" stroke="none"/>'
+        '<path d="M19 15.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" '
+        'fill="{color}" stroke="none" opacity="0.55"/>'
+    ),
+    "chevron-left": '<polyline points="15 18 9 12 15 6"/>',
+    "info": (
+        '<circle cx="12" cy="12" r="10"/>'
+        '<line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'
+    ),
+    # Our mark: a dragon's eye, calm and watchful.
+    "dragon": (
+        '<path d="M2.6 12 C 6.8 5.6, 17.2 5.6, 21.4 12 C 17.2 18.4, 6.8 18.4, 2.6 12 Z"/>'
+        '<path d="M12 7.6 C 13.1 9, 13.1 15, 12 16.4 C 10.9 15, 10.9 9, 12 7.6 Z" '
+        'fill="{color}" stroke="none"/>'
+    ),
+    "external": (
+        '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+        '<polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>'
+    ),
+}
+
+
+# Gradient version of the eye for hero moments (welcome screen).
+MARK_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="fire" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADD9B"/>
+      <stop offset="100%" stop-color="#1FA89B"/>
+    </linearGradient>
+    <linearGradient id="slit" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#5BE7AC"/>
+      <stop offset="100%" stop-color="#1FA89B"/>
+    </linearGradient>
+  </defs>
+  <path d="M 6 32 C 15 17.5, 49 17.5, 58 32 C 49 46.5, 15 46.5, 6 32 Z"
+        fill="#3ECF8E" fill-opacity="0.08"
+        stroke="url(#fire)" stroke-width="3.2" stroke-linejoin="round"/>
+  <path d="M 32 20.5 C 35.8 25, 35.8 39, 32 43.5 C 28.2 39, 28.2 25, 32 20.5 Z"
+        fill="url(#slit)"/>
+  <circle cx="35" cy="25.5" r="2.2" fill="#EAFBF2" fill-opacity="0.9"/>
+</svg>
+"""
+
+
+def mark_pixmap(size: int, dpr: float = 2.0) -> QPixmap:
+    renderer = QSvgRenderer(QByteArray(MARK_SVG.encode()))
+    pm = QPixmap(int(size * dpr), int(size * dpr))
+    pm.fill(Qt.transparent)
+    painter = QPainter(pm)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, size * dpr, size * dpr))
+    painter.end()
+    pm.setDevicePixelRatio(dpr)
+    return pm
+
+
+def svg_source(name: str, color: str) -> str:
+    body = _ICONS[name].format(color=color)
+    return _STROKE_TEMPLATE.format(color=color, body=body)
+
+
+def pixmap(name: str, color: str, size: int, dpr: float = 2.0) -> QPixmap:
+    renderer = QSvgRenderer(QByteArray(svg_source(name, color).encode()))
+    pm = QPixmap(int(size * dpr), int(size * dpr))
+    pm.fill(Qt.transparent)
+    painter = QPainter(pm)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, size * dpr, size * dpr))
+    painter.end()
+    pm.setDevicePixelRatio(dpr)
+    return pm
+
+
+def icon(name: str, color: str, size: int = 18) -> QIcon:
+    return QIcon(pixmap(name, color, size))
