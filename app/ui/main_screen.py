@@ -159,6 +159,7 @@ class MainPage(QWidget):
     next_claim_clicked = Signal()
     pass_turn_clicked = Signal()
     update_clicked = Signal()
+    characters_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -315,6 +316,8 @@ class MainPage(QWidget):
         menu.addSeparator()
         add = menu.addAction(icons.icon("plus", theme.TEXT_DIM, 14), "Add a world…")
         add.triggered.connect(self.add_world_clicked.emit)
+        chars = menu.addAction(icons.icon("dragon", theme.TEXT_DIM, 14), "Characters…")
+        chars.triggered.connect(self.characters_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
         backups.triggered.connect(self.backups_clicked.emit)
         menu.exec(self.header.title_btn.mapToGlobal(
@@ -421,8 +424,10 @@ class MainPage(QWidget):
             else:
                 since = f"{minutes // 60} h ago"
             self.hero_icon.show_pulse(amber=True)
+            as_char = f" as {who['character']}" if who.get("character") else ""
             self._say(f"{who['player']} is in the wilds right now",
-                      f"Started {since}. Best wait for their save — you'll see it land here.")
+                      f"Playing{as_char} — started {since}. Best wait for their "
+                      f"save; you'll see it land here.")
             self.header.set_pill(f"{who['player']} playing", theme.AMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
             self._render_feed(getattr(snap, "history", None) or [])
@@ -532,7 +537,8 @@ class MainPage(QWidget):
 
         editor = entry.get("editor") or entry.get("last_editor") or "?"
         lay.addWidget(widgets.Avatar(editor, 30, emoji=entry.get("emoji", ""),
-                                     color=entry.get("color") or None),
+                                     color=entry.get("color") or None,
+                                     portrait=entry.get("portrait", "")),
                       0, Qt.AlignTop)
 
         col = QVBoxLayout()
@@ -541,6 +547,8 @@ class MainPage(QWidget):
         name.setObjectName("FeedName")
         name.setStyleSheet("border: none;")
         meta_text = f"shared v{entry.get('version', '?')}"
+        if entry.get("character"):
+            meta_text = f"as {entry['character']} · " + meta_text
         duration = entry.get("duration_s")
         if duration:
             meta_text += f" · {self._fmt_duration(duration)} session"

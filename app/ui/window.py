@@ -14,6 +14,7 @@ from ..core import backups as backups_core
 from ..core import config, preflight
 from .about_page import AboutPage
 from .backups_page import BackupsPage
+from .characters_page import CharactersPage
 from .invite_page import InvitePage
 from .main_screen import MainPage
 from .note_overlay import NoteOverlay
@@ -73,10 +74,12 @@ class MainWindow(QWidget):
         self.backups_page = BackupsPage()
         self.about_page = AboutPage()
         self.preflight_page = PreflightPage()
+        self.characters_page = CharactersPage()
         for p in (self.main_page, self.settings_page, self.onboarding_page,
                   self.invite_page, self.backups_page, self.about_page,
-                  self.preflight_page):
+                  self.preflight_page, self.characters_page):
             self.pages.addWidget(p)
+        self._backup_ctx = None
 
         self.toasts = ToastHost(self.chrome)
         self.confirm = ConfirmOverlay(self.chrome)
@@ -111,6 +114,14 @@ class MainWindow(QWidget):
         self.main_page.next_claim_clicked.connect(c.toggle_next_claim)
         self.main_page.pass_turn_clicked.connect(self._pass_turn)
         self.main_page.update_clicked.connect(self._apply_update)
+        self.main_page.characters_clicked.connect(self._open_characters)
+
+        # characters
+        self.characters_page.back_requested.connect(lambda: self._show_page(self.main_page))
+        self.characters_page.checkpoint_requested.connect(
+            lambda stem, name: c.checkpoint_character(stem, name))
+        self.characters_page.backups_requested.connect(self._open_char_backups)
+        self.characters_page.travel_toggled.connect(c.set_character_travel)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -139,7 +150,7 @@ class MainWindow(QWidget):
         self.invite_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.invite_page.share_link_saved.connect(
             lambda wid, link: c.update_world(wid, {"share_link": link or None}))
-        self.backups_page.back_requested.connect(lambda: self._show_page(self.main_page))
+        self.backups_page.back_requested.connect(self._backups_back)
         self.backups_page.restore_requested.connect(self._restore_backup)
         self.backups_page.checkpoint_requested.connect(self._create_checkpoint)
         self.backups_page.delete_requested.connect(self._delete_checkpoint)
@@ -255,7 +266,12 @@ class MainWindow(QWidget):
             self.controller.publish_update()
 
     def _create_checkpoint(self, name):
-        self.controller.create_checkpoint(name, done=self._reload_backups)
+        ctx = self._backup_ctx or {}
+        if ctx.get("kind") == "character":
+            self.controller.checkpoint_character(ctx["match"], name,
+                                                 done=self._reload_backups)
+        else:
+            self.controller.create_checkpoint(name, done=self._reload_backups)
 
     def _delete_checkpoint(self, info):
         if self.confirm.ask(
@@ -267,11 +283,11 @@ class MainWindow(QWidget):
             self._reload_backups()
 
     def _reload_backups(self):
-        world = self.controller.active_world()
-        if not world:
+        ctx = self._backup_ctx
+        if not ctx:
             return
-        root = config.backup_root_for(world["id"])
-        self.backups_page.load(world["world_name"],
+        root = ctx["root"]
+        self.backups_page.load(ctx["title"],
                                backups_core.list_checkpoints(root),
                                backups_core.list_backups(root))
 
@@ -343,44 +359,77 @@ class MainWindow(QWidget):
             self.invite_page.load(world)
             self._show_page(self.invite_page)
 
+    def _open_characters(self):
+        self.characters_page.load(self.controller.list_characters(),
+                                  set((self.controller.cfg or {}).get(
+                                      "travel_characters") or []))
+        self._show_page(self.characters_page)
+
     def _open_backups(self):
         world = self.controller.active_world()
         if not world:
             return
+        self._backup_ctx = {
+            "kind": "world",
+            "title": world["world_name"],
+            "save_dir": self.controller.cfg["local_save_dir"],
+            "match": world["world_name"],
+            "root": config.backup_root_for(world["id"]),
+            "back_page": self.main_page,
+        }
         self._reload_backups()
         self._show_page(self.backups_page)
 
+    def _open_char_backups(self, stem):
+        self._backup_ctx = {
+            "kind": "character",
+            "title": stem,
+            "save_dir": str(self.controller.characters_dir()),
+            "match": stem,
+            "root": self.controller._char_backup_root(stem),
+            "back_page": self.characters_page,
+        }
+        self._reload_backups()
+        self._show_page(self.backups_page)
+
+    def _backups_back(self):
+        target = (self._backup_ctx or {}).get("back_page", self.main_page)
+        self._show_page(target)
+
     def _restore_backup(self, info):
-        world = self.controller.active_world()
-        if not world:
+        ctx = self._backup_ctx
+        if not ctx:
             return
-        if not self.confirm.ask(
-                "Restore this backup?",
-                "Your current local save will be replaced (after being backed up "
-                "itself, so nothing is lost). To put the whole group on the "
-                "restored version, use “Save my progress now” afterwards.",
-                danger_label="Restore", safe_label="Cancel"):
+        if ctx["kind"] == "world":
+            body = ("Your current local save will be replaced (after being backed "
+                    "up itself, so nothing is lost). To put the whole group on the "
+                    "restored version, use “Save my progress now” afterwards.")
+        else:
+            body = (f"{ctx['title']}'s current file will be replaced (after being "
+                    f"backed up itself, so nothing is lost). Make sure the game "
+                    f"is closed first.")
+        if not self.confirm.ask("Restore this backup?", body,
+                                danger_label="Restore", safe_label="Cancel"):
             return
-        cfg = self.controller.cfg
 
         def worker():
             try:
                 count = backups_core.restore_backup(
-                    info.path, cfg["local_save_dir"], world["world_name"],
-                    config.backup_root_for(world["id"]))
+                    info.path, ctx["save_dir"], ctx["match"], ctx["root"])
                 if count:
                     self.controller.toast.emit(
-                        "success", "Backup restored to this PC. Share it with "
-                                   "“Save my progress now” if the group should use it.")
+                        "success", "Backup restored to this PC."
+                        + (" Share it with “Save my progress now” if the group "
+                           "should use it." if ctx["kind"] == "world" else ""))
                 else:
                     self.controller.toast.emit("warning", "That backup was empty — nothing changed.")
             except Exception:
                 log.exception("Restore failed")
                 self.controller.toast.emit("error", "The restore didn't complete — "
-                                                    "your current save is untouched.")
+                                                    "nothing was changed.")
 
         threading.Thread(target=worker, daemon=True, name="restore").start()
-        self._show_page(self.main_page)
+        self._backups_back()
 
     # -- page transitions ---------------------------------------------------------------------
     def _show_page(self, page):

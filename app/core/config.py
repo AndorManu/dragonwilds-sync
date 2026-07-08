@@ -32,6 +32,11 @@ GLOBAL_DEFAULTS = {
     "close_to_tray": True,
     "launch_on_startup": False,
     "publish_status_page": True,
+    "characters_dir": None,        # None -> derived beside the save folder
+    "travel_characters": [],       # character file stems that follow you across PCs
+    "grimoire_unlocked": False,    # the secret stays found once found
+    "play_chime": True,
+    "discord_app_id": "",
     "active_world": None,
     "worlds": [],
 }

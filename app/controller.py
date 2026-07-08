@@ -14,10 +14,17 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
+import re
+
 from . import __version__
-from .core import (backups, config, game, health, paths, presence, statuspage,
-                   storage, sync, update, webhook)
+from .core import (backups, characters, config, game, health, paths, presence,
+                   statuspage, storage, sync, update, webhook)
 from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
+
+
+def _safe_dirname(name: str) -> str:
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f⁦-⁩]', "_", name).strip()
+    return cleaned or "unnamed"
 
 log = logging.getLogger("dwsync.controller")
 
@@ -327,6 +334,181 @@ class Controller(QObject):
         except Exception:
             log.exception("status page write failed")
 
+    # -- characters ------------------------------------------------------------------
+    def characters_dir(self) -> Path:
+        return characters.characters_dir(self.cfg or {})
+
+    def list_characters(self):
+        try:
+            return characters.list_characters(self.characters_dir())
+        except Exception:
+            log.exception("Character listing failed")
+            return []
+
+    def _recent_character(self):
+        infos = self.list_characters()
+        return infos[0] if infos else None
+
+    def _char_backup_root(self, stem: str) -> Path:
+        return paths.BACKUP_DIR / "characters" / _safe_dirname(stem)
+
+    def _char_flat_cfg(self, stem: str, world) -> dict:
+        """A v1-shaped cfg that points the frozen sync core at a character."""
+        travel_dir = Path(world["sync_dir"]) / "characters" / _safe_dirname(self.player_name)
+        return {
+            "player_name": self.player_name,
+            "local_save_dir": str(self.characters_dir()),
+            "world_name": stem,
+            "sync_dir": str(travel_dir),
+            "exe_path": None,
+            "steam_app_id": paths.STEAM_APP_ID,
+        }
+
+    def _travel_stems(self) -> list[str]:
+        stems = (self.cfg or {}).get("travel_characters") or []
+        # glob metacharacters would confuse the core's {name}* matching
+        return [s for s in stems if not any(ch in s for ch in "[]*?")]
+
+    def _travel_pull(self, world):
+        for stem in self._travel_stems():
+            try:
+                flat = self._char_flat_cfg(stem, world)
+                wstate = config.world_state(self.state, f"char_{stem}")
+                result, _ = sync.do_pull(flat, wstate, self._log, self._confirm,
+                                         self._char_backup_root(stem))
+                if result == SyncResult.PULLED:
+                    self.toast.emit("info", f"Your character “{stem}” caught up "
+                                            f"from your other PC.")
+            except Exception:
+                log.exception("Character travel pull failed for %s", stem)
+        storage.save_state(self.state)
+
+    def _travel_push(self, world):
+        for stem in self._travel_stems():
+            try:
+                flat = self._char_flat_cfg(stem, world)
+                wstate = config.world_state(self.state, f"char_{stem}")
+                sync.do_push(flat, wstate, self._log, self._confirm,
+                             self._char_backup_root(stem))
+            except Exception:
+                log.exception("Character travel push failed for %s", stem)
+        storage.save_state(self.state)
+
+    def _char_mtimes(self) -> dict:
+        return {p: p.stat().st_mtime for p in
+                characters.character_files(self.characters_dir())}
+
+    def _changed_characters(self, before: dict):
+        changed = []
+        for p, mtime in self._char_mtimes().items():
+            if before.get(p) != mtime:
+                info = characters.parse_character(p)
+                if info:
+                    changed.append(info)
+        return changed
+
+    def _vault_characters(self, infos):
+        """Rolling safety copies of characters touched this session."""
+        for info in infos:
+            try:
+                files = [p for p in characters.character_files(info.path.parent)
+                         if p.name.startswith(info.path.stem)]
+                files += [Path(str(info.path) + ".backup")]
+                files = [f for f in files if f.exists()]
+                sync._backup_files(files, "session", self._char_backup_root(info.path.stem))
+            except Exception:
+                log.exception("Character vault backup failed")
+
+    def set_character_travel(self, stem: str, travels: bool):
+        stems = set((self.cfg or {}).get("travel_characters") or [])
+        if travels:
+            if any(ch in stem for ch in "[]*?"):
+                self.toast.emit("warning", "That character's name confuses the sync "
+                                           "matcher — rename it in game to enable travel.")
+                return
+            stems.add(stem)
+        else:
+            stems.discard(stem)
+        self.cfg["travel_characters"] = sorted(stems)
+        self._save_all()
+
+    def checkpoint_character(self, stem: str, name: str, done=None):
+        def worker():
+            info = None
+            try:
+                info = backups.create_checkpoint(self.characters_dir(), stem, name,
+                                                 self._char_backup_root(stem))
+            except Exception:
+                log.exception("Character checkpoint failed")
+            if info:
+                self.toast.emit("success", f"Checkpoint “{info.name}” saved for {stem}.")
+            else:
+                self.toast.emit("warning", "Couldn't find that character's files.")
+            if done:
+                done()
+
+        threading.Thread(target=worker, daemon=True, name="char-checkpoint").start()
+
+    # -- the Dragon's Bargain ----------------------------------------------------------
+    def grimoire_unlocked(self) -> bool:
+        return bool((self.cfg or {}).get("grimoire_unlocked"))
+
+    def unlock_grimoire(self):
+        if not self.cfg.get("grimoire_unlocked"):
+            self.cfg["grimoire_unlocked"] = True
+            self._save_all()
+
+    def apply_bargain(self, char_path, plan, done=None):
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — bargains struck "
+                                               "while it runs are lost when it saves.")
+                    return
+                changes = characters.apply_edits(char_path, plan,
+                                                 self._char_backup_root(Path(char_path).stem))
+                if changes:
+                    self.toast.emit("success", "The bargain is sealed. A checkpoint of "
+                                               "the old self was kept, just in case.")
+                else:
+                    self.toast.emit("info", "Nothing to change — the dragon shrugs.")
+            except Exception:
+                log.exception("Bargain failed")
+                self.toast.emit("error", "The bargain failed — your character file "
+                                         "was left untouched.")
+            finally:
+                if done:
+                    done()
+
+        threading.Thread(target=worker, daemon=True, name="bargain").start()
+
+    # -- identify ritual ----------------------------------------------------------------
+    def skill_labels(self) -> dict:
+        return characters.load_skill_labels(paths.APP_DIR)
+
+    def save_skill_label(self, skill_id: str, label: str):
+        labels = self.skill_labels()
+        labels[skill_id] = label
+        characters.save_skill_labels(paths.APP_DIR, labels)
+
+    def start_ritual(self, char_path):
+        storage.write_json(paths.APP_DIR / "ritual.json", {
+            "char": str(char_path),
+            "skills": characters.snapshot_skills(char_path),
+        })
+
+    def pending_ritual(self) -> dict | None:
+        return storage.read_json(paths.APP_DIR / "ritual.json")
+
+    def finish_ritual(self):
+        ritual = self.pending_ritual()
+        if not ritual:
+            return None, []
+        after = characters.snapshot_skills(ritual["char"])
+        gains = characters.diff_skills(ritual.get("skills") or {}, after)
+        (paths.APP_DIR / "ritual.json").unlink(missing_ok=True)
+        return ritual["char"], gains
+
     # -- play workflow -------------------------------------------------------------
     def start_play(self):
         if not self._busy.acquire(blocking=False):
@@ -374,9 +556,16 @@ class Controller(QObject):
                     self.toast.emit("warning", "The newest save hasn't finished syncing to "
                                                "this PC — you're playing your current local copy.")
 
-            presence.start_playing(sync_dir, self.player_name, self.cfg.get("player_emoji", ""))
+            self._travel_pull(world)
+
+            recent = self._recent_character()
+            presence.start_playing(
+                sync_dir, self.player_name, self.cfg.get("player_emoji", ""),
+                character=recent.name if recent else "",
+                portrait=characters.portrait_descriptor(recent) if recent else "")
             presence.clear_next(sync_dir, self.player_name)
             self._write_status(world)
+            char_mtimes_before = self._char_mtimes()
             started_at = time.monotonic()
 
             if game.find_game_process():
@@ -407,7 +596,11 @@ class Controller(QObject):
 
             self._set_phase("pushing")
             duration = int(time.monotonic() - started_at) if started_at else None
-            self._do_push_guarded(world, flat, wstate, duration)
+            played = self._changed_characters(char_mtimes_before)
+            self._vault_characters(played)
+            self._travel_push(world)
+            self._do_push_guarded(world, flat, wstate, duration,
+                                  played[0] if played else self._recent_character())
         except Exception:
             log.exception("Play flow failed")
             self.toast.emit("error", "Something went wrong during the session. Your save "
@@ -442,7 +635,7 @@ class Controller(QObject):
             self.status_changed.emit(self._world_status(world))
             self._busy.release()
 
-    def _do_push_guarded(self, world, flat, wstate, duration_s):
+    def _do_push_guarded(self, world, flat, wstate, duration_s, played_char=None):
         """Health-gate the push so a corrupt save can't poison the group."""
         save_dir = Path(flat["local_save_dir"])
         world_name = flat["world_name"]
@@ -456,17 +649,21 @@ class Controller(QObject):
         result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
                                       self._backup_root(world))
         storage.save_state(self.state)
-        self._after_push(world, result, duration_s)
+        self._after_push(world, result, duration_s, played_char)
 
-    def _after_push(self, world, result, duration_s):
+    def _after_push(self, world, result, duration_s, played_char=None):
         if result == SyncResult.PUSHED:
             version = self._wstate(world).get("last_applied_version")
             self._seen_versions[world["id"]] = version
+            played_char = played_char or self._recent_character()
             try:
                 sync.amend_history_entry(
                     world["sync_dir"], version, duration_s=duration_s,
                     emoji=self.cfg.get("player_emoji", ""),
-                    color=self.cfg.get("player_color", ""))
+                    color=self.cfg.get("player_color", ""),
+                    character=played_char.name if played_char else "",
+                    portrait=characters.portrait_descriptor(played_char)
+                    if played_char else "")
             except Exception:
                 log.exception("Could not annotate history entry")
             self._write_status(world)

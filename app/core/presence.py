@@ -48,10 +48,12 @@ def _read_fresh(path: Path, stale_s: float) -> dict | None:
     return data
 
 
-def start_playing(sync_dir, player: str, emoji: str = ""):
+def start_playing(sync_dir, player: str, emoji: str = "",
+                  character: str = "", portrait: str = ""):
     try:
         write_json(Path(sync_dir) / PLAYING_NAME,
-                   {"player": player, "emoji": emoji, "since": _now()})
+                   {"player": player, "emoji": emoji, "since": _now(),
+                    "character": character, "portrait": portrait})
     except OSError:
         log.warning("Could not write presence file", exc_info=True)
 
