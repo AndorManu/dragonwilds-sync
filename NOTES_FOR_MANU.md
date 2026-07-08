@@ -1,3 +1,73 @@
+# Notes for Manu
+
+## v1.2 — the redesign + "everything a friend group could want" pass
+
+**Built on your feedback: the UI looked AI-made, and you wanted more features.**
+Both addressed. `dist\DragonwildsSync.exe` is now **v1.2.0** (44.7 MB, launches
+clean, bundled fonts confirmed loading inside the package). **87 tests green**
+(was 57). Sync core still frozen — untouched except the two additive helpers
+from v1.1. Git history is incremental across the whole session.
+
+### The new look (Game-launcher × Arcane grimoire, as you asked)
+- Every world gets a **procedurally-painted hero banner** — a moonlit,
+  ember-flecked landscape seeded from the world's name and tinted by its own
+  colour, so each world looks distinct. No image files shipped; it's all
+  painted (`app/ui/banner.py`).
+- World name in **Cinzel Decorative**, headings/wordmark in **Cinzel**, session
+  notes in **EB Garamond** italic (all SIL OFL, bundled in the exe). Ember-gold
+  accent now rides alongside the emerald. **PLAY** breathes at rest and flares
+  on hover.
+- Onboarding welcome + About restyled to match. See `docs/screenshots/` —
+  re-rendered, 20 states.
+
+### New features (you said "all of them, and more")
+Tier-1 asks, all shipped:
+- **Auto-update through the shared folder.** You (host) hit Settings → *Publish
+  this version to friends*; it copies the running exe into the folder's `_app`
+  dir with a version manifest. Everyone else gets an **Update bar** and swaps
+  in place on click. Self-swap uses a wait-then-replace batch script (Windows
+  won't overwrite a running exe). Only works from the packaged exe, not source.
+- **"Test my setup"** (Settings) — checklist: save folder, world save, shared
+  folder writable, cloud drive, sync state, game launch.
+- **Save safety** — a corrupt/zero-byte or still-downloading save is never
+  shared or pulled over. This lives in the controller *around* the frozen sync
+  core, so it can't affect protocol correctness.
+- **Pass the turn** — pick a friend, they get a tray ping ("it's your turn").
+
+More, added on top:
+- **Named checkpoints** + delete, beside the auto-backups (Backups page).
+- **Phone status page** — optional `status.html` in the shared folder (toggle
+  in Settings), checkable from a phone's Drive app. Zero backend.
+- **Richer conflict prompt** — now shows both saves' sizes and save-times.
+
+### Judgment calls worth a glance
+1. **Auto-update trust model:** anyone who can write the shared folder can
+   publish an update that others will run. That's the same trust you already
+   extend to everyone in a shared-save group, but worth knowing. If you want,
+   I can add a "only accept updates published by <you>" pin — say the word.
+2. **Update self-swap** is the standard Windows trick (stage + batch script
+   that waits for exit, copies, relaunches). It's the one bit that can't be
+   unit-tested end-to-end; I tested the pieces (version compare, publish/detect,
+   script generation) and the app launch, but **please do one real update
+   dry-run** between two machines before relying on it with friends.
+3. **Fonts add ~1 MB** and are bundled + confirmed loading in the packaged exe.
+4. **Save-safety gate skips the push** on a bad file rather than asking — the
+   safe default is "don't poison the group; keep the last good save."
+5. Status page is **off unless the toggle is on**? No — it defaults **on**
+   (`publish_status_page: true`). It only writes a small HTML file; flip it off
+   in Settings if you'd rather not.
+
+### Deferred (still), and honestly why
+- **Real .sav parsing** for in-game stats — still a rainy-day spike, same risks
+  as before (undocumented binary, breaks on game updates, must never write).
+- **World branching** — design sketch remains in the Tier C notes below.
+- **Discord Rich Presence** — needs a discord IPC dependency; the webhook
+  already covers "notify the group," so I left it out to avoid the dependency.
+- **Launch sound / animations** — would need QtMultimedia; skipped to keep the
+  exe lean. The PLAY breathing glow scratches some of that itch.
+
+---
+
 # Notes for Manu — overnight build, 2026-07-08 → 09
 
 ## Morning summary

@@ -1,6 +1,7 @@
 # Design rationale
 
-*(v1.1 additions at the bottom; the v1.0 rationale below still holds.)*
+*(v1.2 redesign notes at the very bottom; v1.1 additions below that; the v1.0
+rationale still holds underneath.)*
 
 ## Stack: Python + PySide6 (Qt), PyInstaller
 
@@ -108,3 +109,38 @@ to read like a campaign log, not a sync ledger.
 | ![Join watch](docs/screenshots/05_onboarding_join_watch.png) | ![Up to date](docs/screenshots/06_main_up_to_date.png) |
 | ![Friend playing](docs/screenshots/08_main_friend_playing.png) | ![Invite](docs/screenshots/12_invite.png) |
 | ![Backups](docs/screenshots/13_backups.png) | ![Conflict](docs/screenshots/17_conflict.png) |
+
+## v1.2 — the "wow" redesign + feature depth
+
+**Brief:** the v1.1 UI was clean but read as "AI-made / generic dark
+dashboard." The fix was atmosphere + a signature moment + character type,
+landing on a *dark-fantasy game launcher* (game-launcher structure carrying
+grimoire soul), plus the feature depth a friend group actually wants.
+
+What moved the needle, in order of impact:
+
+1. **A per-world hero banner.** The single biggest change: the top of the
+   screen is now a moody, procedurally-painted landscape (`banner.py`) —
+   moonlit ridge silhouettes, a soft halo, drifting embers — seeded from the
+   world name and tinted by the world's colour, so every world is visually
+   its own place. Painted with QPainter, zero image assets, animates gently.
+   This is what flips it from "utility" to "companion to a game."
+2. **Real display type.** Bundled Cinzel (roman caps — wordmark, headings,
+   the all-caps status line), Cinzel Decorative (the big world name), and EB
+   Garamond (italic session notes). Display-serif + clean-sans-body is the
+   disciplined combination that reads premium without tipping into costume.
+3. **An ember-gold accent** alongside the emerald: emerald stays the "go /
+   play" colour, gold carries identity and flourish (wordmark, section
+   labels, world title, update bar). Two purposeful colours, not a rainbow.
+4. **A showpiece PLAY button** that breathes at rest and flares on hover, and
+   gradient chrome with a vignette for depth.
+
+Everything stayed inside PySide6/QPainter — no new heavyweight deps, exe grew
+by ~1 MB (the fonts).
+
+**Feature depth** was built as new core modules (`update`, `preflight`,
+`health`, `statuspage`, `semver`, plus `presence`/`backups` extensions), each
+unit-tested, with all save-integrity-adjacent logic (health gating, sync-state
+checks, richer conflict detail) living in the controller *around* the frozen
+sync core — never inside it. That boundary is why 30 features' worth of change
+added zero risk to the one thing that must never regress.

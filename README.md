@@ -2,7 +2,9 @@
 
 **One world, shared between friends.** Take turns playing the same
 *RuneScape: Dragonwilds* world without renting a server — whoever plays next
-always picks up the newest save, automatically.
+always picks up the newest save, automatically. A dark-fantasy launcher for
+your group's shared world, with invites, presence, backups, and one-click
+updates — all through your own cloud drive, no server anywhere.
 
 ![Main screen](docs/screenshots/06_main_up_to_date.png)
 
@@ -55,6 +57,29 @@ missing.
 **House rule:** one person plays at a time. The app warns loudly (before
 *and* after the fact) if two sessions collide, but the polite fix is a
 message in the group chat.
+
+## Keeping everyone on the latest version
+
+No store, no manual re-sending of the exe:
+
+1. Build the new `DragonwildsSync.exe` and run it yourself to test.
+2. Settings → **Publish this version to friends**. The app copies itself into
+   the shared folder's `_app` subfolder with a version manifest.
+3. Everyone else's app notices the newer build (it's already syncing to their
+   PC), shows an **Update** bar, and swaps itself in place on confirm — worlds
+   and settings kept.
+
+## Extras
+
+- **Test my setup** (Settings) — a checklist that verifies folders, cloud
+  sync, and game launch so setup problems are obvious, not mysterious.
+- **Checkpoints** (world menu → Backups) — name a snapshot before something
+  risky; restore it any time. Automatic backups are taken whenever a save
+  would be overwritten.
+- **Pass the turn** — hand a specific friend the world; they get a tray ping.
+- **Phone status page** — with the toggle on, a `status.html` is written into
+  the shared folder; open it from your phone's cloud-drive app to see who's
+  playing without launching anything.
 
 ## For the maintainer: building from source
 
