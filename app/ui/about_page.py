@@ -53,7 +53,9 @@ class AboutPage(QWidget):
 
         name = QLabel("Dragonwilds Sync")
         name.setAlignment(Qt.AlignHCenter)
-        name.setStyleSheet("font-size: 19px; font-weight: 700;")
+        name.setStyleSheet(
+            f"font-family: '{theme.deco_family()}'; font-size: 24px; font-weight: 700;"
+            f"color: {theme.GOLD_TEXT}; letter-spacing: 1px;")
         root.addWidget(name)
 
         ver = QLabel(f"Version {__version__}")

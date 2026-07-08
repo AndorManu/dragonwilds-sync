@@ -1,28 +1,38 @@
 """Design system: palette, typography, and the global stylesheet.
 
-Obsidian base with a single "dragonfire" emerald accent; amber for attention,
-red strictly for destructive actions. One accent, generous spacing, no chrome.
+A dark-fantasy game-launcher look: deep warm-obsidian base, cinematic depth,
+an emerald "go" accent for action and an ember-gold accent for identity and
+attention. Cinzel display type carries the fantasy; a clean sans keeps the
+body legible. Red strictly for destruction.
 """
 
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from ..core import paths
+from . import fonts
 
 # -- palette ----------------------------------------------------------------
-BG           = "#0C1116"   # window base
-SURFACE      = "#121A22"   # cards
-SURFACE_2    = "#17212B"   # raised elements, hover fills
-FIELD_BG     = "#0E151C"   # inputs sit slightly below the surface
-BORDER       = "#1E2A36"
-BORDER_SOFT  = "#18222D"
-TEXT         = "#E9EEF4"
-TEXT_DIM     = "#95A5B6"
-TEXT_FAINT   = "#5C6D7E"
-ACCENT       = "#3ECF8E"   # dragonfire emerald
+BG           = "#0A0D12"   # window base (deep warm obsidian)
+BG_HI        = "#10161E"   # top of the ambient gradient
+SURFACE      = "#12191F"   # cards
+SURFACE_2    = "#1A232C"   # raised elements, hover fills
+SURFACE_GLASS = "rgba(22, 30, 39, 0.72)"  # frosted panels over the banner
+FIELD_BG     = "#0D131A"   # inputs sit slightly below the surface
+BORDER       = "#222E39"
+BORDER_SOFT  = "#19222C"
+BORDER_GOLD  = "#3A3223"   # faint warm hairline for fantasy framing
+TEXT         = "#ECEFF3"
+TEXT_DIM     = "#9AA7B6"
+TEXT_FAINT   = "#5E6B7A"
+ACCENT       = "#3ECF8E"   # dragonfire emerald — the "go / play" colour
 ACCENT_HOVER = "#55DCA0"
 ACCENT_TEAL  = "#1FA89B"   # gradient partner
 ON_ACCENT    = "#07130D"   # text on emerald
+EMBER        = "#E8A23D"   # ember gold — identity, titles, flourishes
+EMBER_HI     = "#F6C56A"
+EMBER_DEEP   = "#B9761F"
+GOLD_TEXT    = "#E6C892"   # legible gold for text over dark art
 AMBER        = "#F2B441"
 RED          = "#E5484D"
 RED_HOVER    = "#EF5E63"
@@ -31,6 +41,19 @@ AVATAR_COLORS = ["#3ECF8E", "#5EA2EF", "#B78AF7", "#F2B441",
                  "#EF6E88", "#4FC7D4", "#9BCB57", "#F09B5C"]
 
 FONT_STACK = '"Segoe UI Variable Display", "Segoe UI", sans-serif'
+
+
+def display_family() -> str:
+    return fonts.DISPLAY
+
+
+def deco_family() -> str:
+    return fonts.DISPLAY_DECO
+
+
+def voice_family() -> str:
+    return fonts.VOICE
+
 
 UI_CACHE = paths.APP_DIR / "ui"
 
@@ -67,18 +90,20 @@ def build_qss() -> str:
 QWidget {{ color: {TEXT}; font-size: 13px; }}
 
 #Chrome {{
-    background: {BG};
+    background: qlineargradient(x1:0, y1:0, x2:0.35, y2:1,
+                stop:0 {BG_HI}, stop:0.55 {BG}, stop:1 #070A0E);
     border: 1px solid {BORDER};
-    border-radius: 14px;
+    border-radius: 16px;
 }}
 
 /* -- titlebar ----------------------------------------------------------- */
 #TitleBar {{ background: transparent; }}
 #TitleText {{
-    color: {TEXT_DIM};
-    font-size: 12px;
+    color: {GOLD_TEXT};
+    font-family: "{fonts.DISPLAY}";
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
 }}
 QPushButton[variant="titlebar"], QPushButton[variant="titlebarClose"] {{
     background: transparent;
@@ -98,13 +123,30 @@ QPushButton[variant="titlebarClose"]:pressed {{ background: #A63237; }}
     border: 1px solid {BORDER_SOFT};
     border-radius: 14px;
 }}
-#HeroHeadline {{ font-size: 19px; font-weight: 600; }}
+#GlassCard {{
+    background: {SURFACE_GLASS};
+    border: 1px solid {BORDER};
+    border-radius: 14px;
+}}
+#HeroHeadline {{
+    font-family: "{fonts.DISPLAY}";
+    font-size: 22px; font-weight: 600; letter-spacing: 0.5px;
+}}
 #HeroSubline  {{ font-size: 12.5px; color: {TEXT_DIM}; }}
 #SectionLabel {{
-    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    color: {TEXT_FAINT};
+    font-family: "{fonts.DISPLAY}";
+    font-size: 11px; font-weight: 600; letter-spacing: 2.5px;
+    color: {EMBER};
 }}
 #FooterText   {{ font-size: 11px; color: {TEXT_FAINT}; }}
+#WorldTitle {{
+    font-family: "{fonts.DISPLAY_DECO}";
+    font-size: 30px; font-weight: 700; color: #FFFFFF;
+    letter-spacing: 1px;
+}}
+#HeroPill {{
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+}}
 
 /* -- buttons ------------------------------------------------------------ */
 QPushButton[variant="primary"] {{
@@ -300,14 +342,16 @@ QPlainTextEdit {{
 }}
 
 #SettingsSection {{
-    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    color: {TEXT_FAINT};
+    font-family: "{fonts.DISPLAY}";
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    color: {EMBER};
 }}
 """
 
 
 def apply(app: QApplication):
     app.setStyle("Fusion")
+    fonts.load()
     font = QFont()
     font.setFamilies(["Segoe UI Variable Display", "Segoe UI"])
     font.setPointSizeF(9.5)

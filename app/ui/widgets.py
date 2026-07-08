@@ -211,39 +211,65 @@ def icon_button(icon_name, color=theme.TEXT_DIM, variant="icon", size=16,
 
 
 class PlayButton(QPushButton):
-    """The primary action: emerald gradient with a glow that wakes on hover."""
+    """The showpiece action: emerald gradient with a glow that breathes at
+    rest and flares on hover."""
 
     def __init__(self, text="PLAY", parent=None):
         super().__init__(text, parent)
         self.setProperty("variant", "primary")
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(58)
+        self.setFixedHeight(60)
+        f = QFont(self.font())
+        f.setPointSizeF(12.5)
+        f.setWeight(QFont.Black)
+        f.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
+        self.setFont(f)
         self._glow = QGraphicsDropShadowEffect(self)
         self._glow.setColor(QColor(theme.ACCENT))
-        self._glow.setOffset(0, 4)
-        self._glow.setBlurRadius(18)
+        self._glow.setOffset(0, 3)
+        self._glow.setBlurRadius(20)
         self.setGraphicsEffect(self._glow)
-        self._anim = QPropertyAnimation(self._glow, b"blurRadius", self)
-        self._anim.setDuration(160)
+        self._hovering = False
 
-    def _animate_glow(self, target):
-        self._anim.stop()
-        self._anim.setStartValue(self._glow.blurRadius())
-        self._anim.setEndValue(target)
-        self._anim.start()
+        self._hover_anim = QPropertyAnimation(self._glow, b"blurRadius", self)
+        self._hover_anim.setDuration(160)
+
+        # gentle idle breathing so the button feels alive at rest
+        self._breathe = QPropertyAnimation(self._glow, b"blurRadius", self)
+        self._breathe.setStartValue(16)
+        self._breathe.setKeyValueAt(0.5, 26)
+        self._breathe.setEndValue(16)
+        self._breathe.setDuration(2600)
+        self._breathe.setLoopCount(-1)
+        self._breathe.start()
+
+    def _flare(self, target):
+        self._breathe.stop()
+        self._hover_anim.stop()
+        self._hover_anim.setStartValue(self._glow.blurRadius())
+        self._hover_anim.setEndValue(target)
+        self._hover_anim.start()
 
     def enterEvent(self, e):
+        self._hovering = True
         if self.isEnabled():
-            self._animate_glow(34)
+            self._flare(40)
         super().enterEvent(e)
 
     def leaveEvent(self, e):
-        self._animate_glow(18)
+        self._hovering = False
+        self._hover_anim.stop()
+        if self.isEnabled():
+            self._breathe.start()
         super().leaveEvent(e)
 
     def setEnabled(self, on):
         super().setEnabled(on)
         self._glow.setEnabled(on)
+        if on and not self._hovering:
+            self._breathe.start()
+        else:
+            self._breathe.stop()
 
 
 def scan_worlds(save_dir: str) -> list[str]:

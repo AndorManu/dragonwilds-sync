@@ -1,22 +1,27 @@
-"""The home screen: world switcher, status hero, Play, and the session feed."""
+"""The home screen: a cinematic world banner, the status readout, the
+showpiece PLAY button, and the session feed."""
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QMenu, QScrollArea,
-                               QSizePolicy, QStackedWidget, QVBoxLayout, QWidget)
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QMenu, QPushButton,
+                               QScrollArea, QSizePolicy, QStackedWidget,
+                               QVBoxLayout, QWidget)
 
 from .. import __version__
 from . import format as fmt
 from . import icons, theme, widgets
+from .banner import WorldBanner
 
 FEED_TITLE = "RECENT SESSIONS"
 
 
 class HeroIcon(QFrame):
-    """56px circle that hosts either a static icon, a spinner, or the pulse."""
+    """Small status medallion: a static icon, a spinner, or a pulse."""
 
-    def __init__(self, parent=None):
+    def __init__(self, size=44, parent=None):
         super().__init__(parent)
-        self.setFixedSize(56, 56)
+        self._size = size
+        self.setFixedSize(size, size)
         self._stack = QStackedWidget(self)
         box = QVBoxLayout(self)
         box.setContentsMargins(0, 0, 0, 0)
@@ -25,9 +30,9 @@ class HeroIcon(QFrame):
         self._icon_label = QLabel()
         self._icon_label.setAlignment(Qt.AlignCenter)
         self._icon_label.setStyleSheet("background: transparent; border: none;")
-        self._spinner_wrap = self._center(widgets.Spinner(26))
-        self._dot_wrap = self._center(widgets.PulsingDot(18))
-        self._amber_dot_wrap = self._center(widgets.PulsingDot(18, theme.AMBER))
+        self._spinner_wrap = self._center(widgets.Spinner(22))
+        self._dot_wrap = self._center(widgets.PulsingDot(15))
+        self._amber_dot_wrap = self._center(widgets.PulsingDot(15, theme.AMBER))
         self._stack.addWidget(self._icon_label)
         self._stack.addWidget(self._spinner_wrap)
         self._stack.addWidget(self._dot_wrap)
@@ -44,12 +49,13 @@ class HeroIcon(QFrame):
     def _tint(self, color_hex):
         c = color_hex.lstrip("#")
         r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+        rad = self._size // 2
         self.setStyleSheet(
-            f"HeroIcon {{ background: rgba({r},{g},{b},0.13);"
-            f"border: 1px solid rgba({r},{g},{b},0.25); border-radius: 28px; }}")
+            f"HeroIcon {{ background: rgba({r},{g},{b},0.14);"
+            f"border: 1px solid rgba({r},{g},{b},0.30); border-radius: {rad}px; }}")
 
     def show_icon(self, name, color):
-        self._icon_label.setPixmap(icons.pixmap(name, color, 26))
+        self._icon_label.setPixmap(icons.pixmap(name, color, 22))
         self._tint(color)
         self._stack.setCurrentWidget(self._icon_label)
 
@@ -62,87 +68,152 @@ class HeroIcon(QFrame):
         self._stack.setCurrentWidget(self._amber_dot_wrap if amber else self._dot_wrap)
 
 
+class BannerHeader(QWidget):
+    """The world-art banner with overlaid title, controls, and a status pill."""
+
+    world_menu_requested = Signal()
+    refresh_requested = Signal()
+    invite_requested = Signal()
+
+    def __init__(self, height=158, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(height)
+        self.banner = WorldBanner(height, self)
+
+        self.overlay = QWidget(self)
+        self.overlay.setStyleSheet("background: transparent;")
+        ov = QVBoxLayout(self.overlay)
+        ov.setContentsMargins(18, 12, 12, 14)
+        ov.setSpacing(0)
+
+        top = QHBoxLayout()
+        top.setSpacing(6)
+        top.addStretch(1)
+        self.refresh_btn = widgets.icon_button("refresh", theme.GOLD_TEXT,
+                                               tooltip="Check again")
+        self.refresh_btn.clicked.connect(self.refresh_requested.emit)
+        self.invite_btn = widgets.icon_button("user-plus", theme.GOLD_TEXT,
+                                              tooltip="Invite friends")
+        self.invite_btn.clicked.connect(self.invite_requested.emit)
+        top.addWidget(self.refresh_btn)
+        top.addWidget(self.invite_btn)
+        ov.addLayout(top)
+        ov.addStretch(1)
+
+        self.title_btn = QPushButton("World")
+        self.title_btn.setObjectName("WorldTitle")
+        self.title_btn.setCursor(Qt.PointingHandCursor)
+        self.title_btn.setFlat(True)
+        self.title_btn.setStyleSheet(
+            "QPushButton#WorldTitle { background: transparent; border: none;"
+            "color: #FFFFFF; text-align: left; padding: 0; }")
+        f = QFont(theme.deco_family())
+        f.setPixelSize(29)
+        f.setWeight(QFont.Bold)
+        self.title_btn.setFont(f)
+        self.title_btn.clicked.connect(self.world_menu_requested.emit)
+        ov.addWidget(self.title_btn)
+
+        pill_row = QHBoxLayout()
+        pill_row.setSpacing(8)
+        self.pill = QLabel("")
+        self.pill.setObjectName("HeroPill")
+        self.pill.setVisible(False)
+        pill_row.addWidget(self.pill)
+        pill_row.addStretch(1)
+        ov.addSpacing(5)
+        ov.addLayout(pill_row)
+
+    def resizeEvent(self, e):
+        self.banner.setGeometry(0, 0, self.width(), self.height())
+        self.overlay.setGeometry(0, 0, self.width(), self.height())
+        self.overlay.raise_()
+        super().resizeEvent(e)
+
+    def set_world(self, name, accent):
+        self.banner.set_world(name, accent)
+        self.title_btn.setText(f"{name}  ⌄")
+
+    def set_pill(self, text, color):
+        if not text:
+            self.pill.setVisible(False)
+            return
+        c = color.lstrip("#")
+        r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+        self.pill.setText(text)
+        self.pill.setStyleSheet(
+            f"#HeroPill {{ background: rgba({r},{g},{b},0.18);"
+            f"color: {color}; border: 1px solid rgba({r},{g},{b},0.45);"
+            f"border-radius: 11px; padding: 3px 11px; }}")
+        self.pill.setVisible(True)
+
+
 class MainPage(QWidget):
     play_clicked = Signal()
     save_clicked = Signal()
     refresh_clicked = Signal()
     invite_clicked = Signal()
-    world_selected = Signal(str)          # world_id
+    world_selected = Signal(str)
     add_world_clicked = Signal()
     backups_clicked = Signal()
     next_claim_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._status = None               # WorldStatus
+        self._status = None
         self._phase = "idle"
         self._me = ""
         self._worlds = []
         self._active_id = None
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(24, 4, 24, 16)
-        root.setSpacing(12)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        # -- header: world switcher + invite ---------------------------------
-        header = QHBoxLayout()
-        header.setSpacing(8)
-        self.world_btn = widgets.make_button("", "subtle", height=32)
-        self.world_btn.setStyleSheet("font-size: 14px; font-weight: 650; text-align: left;")
-        self.world_btn.clicked.connect(self._open_world_menu)
-        header.addWidget(self.world_btn)
-        header.addStretch(1)
-        self.invite_btn = widgets.make_button("Invite friends", "ghost",
-                                              "user-plus", height=32)
-        self.invite_btn.clicked.connect(self.invite_clicked.emit)
-        header.addWidget(self.invite_btn)
-        root.addLayout(header)
+        # -- banner hero ----------------------------------------------------
+        self.header = BannerHeader()
+        self.header.world_menu_requested.connect(self._open_world_menu)
+        self.header.refresh_requested.connect(self.refresh_clicked.emit)
+        self.header.invite_requested.connect(self.invite_clicked.emit)
+        root.addWidget(self.header)
 
-        # -- hero card ----------------------------------------------------------
-        hero = QFrame()
-        hero.setObjectName("Card")
-        hero_box = QVBoxLayout(hero)
-        hero_box.setContentsMargins(20, 14, 20, 22)
-        hero_box.setSpacing(4)
+        body = QWidget()
+        body_box = QVBoxLayout(body)
+        body_box.setContentsMargins(24, 16, 24, 16)
+        body_box.setSpacing(13)
+        root.addWidget(body, 1)
 
-        top_row = QHBoxLayout()
-        top_row.addStretch(1)
-        self.refresh_btn = widgets.icon_button("refresh", theme.TEXT_FAINT,
-                                               tooltip="Check again")
-        self.refresh_btn.clicked.connect(self.refresh_clicked.emit)
-        top_row.addWidget(self.refresh_btn)
-        hero_box.addLayout(top_row)
-
-        self.hero_icon = HeroIcon()
-        hero_box.addWidget(self.hero_icon, 0, Qt.AlignHCenter)
-        hero_box.addSpacing(10)
-
+        # -- status readout -------------------------------------------------
+        status_row = QHBoxLayout()
+        status_row.setSpacing(13)
+        self.hero_icon = HeroIcon(44)
+        status_row.addWidget(self.hero_icon, 0, Qt.AlignVCenter)
+        text_col = QVBoxLayout()
+        text_col.setSpacing(2)
         self.headline = QLabel("Checking…")
         self.headline.setObjectName("HeroHeadline")
-        self.headline.setAlignment(Qt.AlignHCenter)
         self.headline.setWordWrap(True)
-        hero_box.addWidget(self.headline)
-
         self.subline = QLabel("")
         self.subline.setObjectName("HeroSubline")
-        self.subline.setAlignment(Qt.AlignHCenter)
         self.subline.setWordWrap(True)
-        hero_box.addWidget(self.subline)
-        root.addWidget(hero)
+        text_col.addWidget(self.headline)
+        text_col.addWidget(self.subline)
+        status_row.addLayout(text_col, 1)
+        body_box.addLayout(status_row)
 
-        # -- actions ----------------------------------------------------------------
+        # -- actions --------------------------------------------------------
         self.play_btn = widgets.PlayButton("PLAY")
         self.play_btn.setIcon(icons.icon("play", theme.ON_ACCENT, 20))
         self.play_btn.clicked.connect(self.play_clicked.emit)
-        root.addWidget(self.play_btn)
+        body_box.addWidget(self.play_btn)
 
         self.save_btn = widgets.make_button("Save my progress now", "ghost",
                                             "upload-cloud", height=40)
         self.save_btn.setToolTip("Share your current save without launching the game")
         self.save_btn.clicked.connect(self.save_clicked.emit)
-        root.addWidget(self.save_btn)
+        body_box.addWidget(self.save_btn)
 
-        # -- turn claim row ------------------------------------------------------------
+        # -- turn claim -----------------------------------------------------
         claim_row = QHBoxLayout()
         claim_row.setSpacing(8)
         self.claim_label = QLabel("")
@@ -152,18 +223,17 @@ class MainPage(QWidget):
         self.claim_btn = widgets.make_button("I've got next", "subtle", "flag", height=28)
         self.claim_btn.clicked.connect(self.next_claim_clicked.emit)
         claim_row.addWidget(self.claim_btn)
-        root.addLayout(claim_row)
+        body_box.addLayout(claim_row)
 
-        # -- feed --------------------------------------------------------------------------
+        # -- feed -----------------------------------------------------------
         section = QLabel(FEED_TITLE)
         section.setObjectName("SectionLabel")
-        root.addWidget(section)
+        body_box.addWidget(section)
 
         feed_card = QFrame()
         feed_card.setObjectName("Card")
         feed_wrap = QVBoxLayout(feed_card)
         feed_wrap.setContentsMargins(6, 6, 6, 6)
-
         self.feed_scroll = QScrollArea()
         self.feed_scroll.setWidgetResizable(True)
         self.feed_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -175,9 +245,9 @@ class MainPage(QWidget):
         self.feed_scroll.setWidget(self.feed_body)
         feed_wrap.addWidget(self.feed_scroll)
         feed_card.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        root.addWidget(feed_card, 1)
+        body_box.addWidget(feed_card, 1)
 
-        # -- footer ------------------------------------------------------------------------
+        # -- footer ---------------------------------------------------------
         footer = QHBoxLayout()
         self.conn_dot = QLabel("●")
         self.conn_dot.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 9px;")
@@ -189,20 +259,20 @@ class MainPage(QWidget):
         footer.addWidget(self.conn_text)
         footer.addStretch(1)
         footer.addWidget(version)
-        root.addLayout(footer)
+        body_box.addLayout(footer)
 
         self._clock = QTimer(self)
         self._clock.setInterval(60_000)
         self._clock.timeout.connect(self._rerender)
         self._clock.start()
 
-    # -- world switcher ------------------------------------------------------------
+    # -- world switcher ------------------------------------------------------
     def set_worlds(self, worlds, active_id):
         self._worlds = worlds
         self._active_id = active_id
         active = next((w for w in worlds if w["id"] == active_id), None)
         name = active["world_name"] if active else "No world"
-        self.world_btn.setText(f"{name}  ⌄")
+        self.header.set_world(name, fmt.name_color(name))
 
     def _open_world_menu(self):
         menu = QMenu(self)
@@ -217,16 +287,17 @@ class MainPage(QWidget):
         add.triggered.connect(self.add_world_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
         backups.triggered.connect(self.backups_clicked.emit)
-        menu.exec(self.world_btn.mapToGlobal(self.world_btn.rect().bottomLeft()))
+        menu.exec(self.header.title_btn.mapToGlobal(
+            self.header.title_btn.rect().bottomLeft()))
 
-    # -- state ---------------------------------------------------------------------
+    # -- state ---------------------------------------------------------------
     def set_player_name(self, name):
         self._me = name or ""
 
     def set_checking(self):
         if self._phase == "idle":
             self.hero_icon.show_spinner()
-            self.headline.setText("Checking the shared folder…")
+            self.headline.setText("Reading the shared folder…")
             self.subline.setText("Looking for a newer save from your friends.")
 
     def set_status(self, status):
@@ -238,8 +309,7 @@ class MainPage(QWidget):
         busy = phase != "idle"
         self.play_btn.setEnabled(not busy)
         self.save_btn.setEnabled(not busy)
-        self.refresh_btn.setEnabled(not busy)
-        self.world_btn.setEnabled(not busy)
+        self.header.refresh_btn.setEnabled(not busy)
         self.claim_btn.setEnabled(not busy)
 
         if phase == "idle":
@@ -254,42 +324,49 @@ class MainPage(QWidget):
 
         if phase == "checking":
             self.hero_icon.show_spinner()
-            self.headline.setText("Checking for a newer save…")
-            self.subline.setText("Making sure you start from the latest world.")
+            self._say("Checking for a newer save…",
+                      "Making sure you start from the latest world.")
+            self.header.set_pill("Syncing", theme.EMBER)
         elif phase == "launching":
             self.hero_icon.show_spinner()
-            self.headline.setText("Launching Dragonwilds…")
-            self.subline.setText("Handing you over to Steam.")
+            self._say("Launching Dragonwilds…", "Handing you over to Steam.")
+            self.header.set_pill("Launching", theme.EMBER)
         elif phase == "waiting":
             self.hero_icon.show_spinner()
-            self.headline.setText("Waiting for the game to start…")
-            self.subline.setText("This can take a minute while Steam warms up.")
+            self._say("Waiting for the game to start…",
+                      "This can take a minute while Steam warms up.")
+            self.header.set_pill("Launching", theme.EMBER)
         elif phase == "ingame":
             self.hero_icon.show_pulse()
-            self.headline.setText("You're in the wilds")
-            self.subline.setText("Your progress is shared automatically when you close the game.")
+            self._say("You're in the wilds",
+                      "Your progress is shared automatically when you close the game.")
+            self.header.set_pill("Playing", theme.ACCENT)
         elif phase == "pushing":
             self.hero_icon.show_spinner()
-            self.headline.setText("Sharing your progress…")
-            self.subline.setText("Uploading your save to the shared folder.")
+            self._say("Sharing your progress…",
+                      "Uploading your save to the shared folder.")
+            self.header.set_pill("Sharing", theme.EMBER)
 
-    # -- rendering ---------------------------------------------------------------------
+    def _say(self, headline, subline):
+        self.headline.setText(headline)
+        self.subline.setText(subline)
+
+    # -- rendering -----------------------------------------------------------
     def _rerender(self):
         if self._phase != "idle" or self._status is None:
             return
         status = self._status
         snap = status.snapshot
-
         self._render_claim(status.next_claim)
 
         if status.newer_app_needed:
             self.hero_icon.show_icon("alert", theme.AMBER)
-            self.headline.setText("This world needs a newer app")
-            self.subline.setText("A friend shared a save with a newer version of "
-                                 "Dragonwilds Sync. Update your app before playing "
-                                 "so nothing gets scrambled.")
+            self._say("This world needs a newer app",
+                      "A friend shared a save with a newer version of Dragonwilds "
+                      "Sync. Update your app before playing so nothing gets scrambled.")
             self.play_btn.setEnabled(False)
             self.save_btn.setEnabled(False)
+            self.header.set_pill("Update needed", theme.AMBER)
             self._set_conn(theme.AMBER, "App update needed")
             self._render_feed(getattr(snap, "history", None) or [])
             return
@@ -304,43 +381,47 @@ class MainPage(QWidget):
             else:
                 since = f"{minutes // 60} h ago"
             self.hero_icon.show_pulse(amber=True)
-            self.headline.setText(f"{who['player']} is in the wilds right now")
-            self.subline.setText(f"Started {since}. Best wait for their save — "
-                                 f"you'll see it land here.")
+            self._say(f"{who['player']} is in the wilds right now",
+                      f"Started {since}. Best wait for their save — you'll see it land here.")
+            self.header.set_pill(f"{who['player']} playing", theme.AMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
             self._render_feed(getattr(snap, "history", None) or [])
             return
 
         if snap.kind == "error":
             self.hero_icon.show_icon("alert", theme.RED_HOVER)
-            self.headline.setText("Something went wrong")
-            self.subline.setText("Couldn't check the shared folder. Try again in a moment — "
-                                 "details are in Settings → Open log folder.")
+            self._say("Something went wrong",
+                      "Couldn't read the shared folder. Try again in a moment — "
+                      "details are in Settings → Open log folder.")
+            self.header.set_pill("Unreachable", theme.RED_HOVER)
             self._set_conn(theme.RED, "Shared folder unreachable")
         elif snap.kind == "folder_missing":
             self.hero_icon.show_icon("folder", theme.AMBER)
-            self.headline.setText("Shared folder not found")
-            self.subline.setText("Is your cloud drive running? If the folder moved, "
-                                 "update it in Settings.")
+            self._say("Shared folder not found",
+                      "Is your cloud drive running? If the folder moved, update it in Settings.")
+            self.header.set_pill("Offline", theme.AMBER)
             self._set_conn(theme.AMBER, "Shared folder unreachable")
         elif snap.kind == "no_shared":
-            self.hero_icon.show_icon("sparkle", theme.ACCENT)
-            self.headline.setText("A fresh world awaits")
-            self.subline.setText("No one has shared a save yet — hit Play and carve the first path.")
+            self.hero_icon.show_icon("sparkle", theme.EMBER)
+            self._say("A fresh world awaits",
+                      "No one has shared a save yet — hit Play and carve the first path.")
+            self.header.set_pill("New world", theme.EMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
         elif snap.kind == "behind":
             editor = self._display_name(snap.last_editor)
             self.hero_icon.show_icon("download-cloud", theme.AMBER)
-            self.headline.setText(f"New save from {editor}")
-            self.subline.setText(f"v{snap.shared_version} · {fmt.humanize(snap.timestamp)} — "
-                                 f"Play will pick it up automatically.")
+            self._say(f"New save from {editor}",
+                      f"v{snap.shared_version} · {fmt.humanize(snap.timestamp)} — "
+                      f"Play will pick it up automatically.")
+            self.header.set_pill("New save", theme.AMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
         else:  # up_to_date
             editor = self._display_name(snap.last_editor)
             self.hero_icon.show_icon("check-circle", theme.ACCENT)
-            self.headline.setText("You're up to date")
-            self.subline.setText(f"v{snap.shared_version} · last played by {editor} "
-                                 f"{fmt.humanize(snap.timestamp)}.")
+            self._say("You're up to date",
+                      f"v{snap.shared_version} · last played by {editor} "
+                      f"{fmt.humanize(snap.timestamp)}.")
+            self.header.set_pill("Up to date", theme.ACCENT)
             self._set_conn(theme.ACCENT, "Shared folder connected")
 
         self._render_feed(getattr(snap, "history", None) or [])
@@ -378,7 +459,7 @@ class MainPage(QWidget):
         if not history:
             empty = QWidget()
             box = QVBoxLayout(empty)
-            box.setContentsMargins(16, 26, 16, 26)
+            box.setContentsMargins(16, 24, 16, 24)
             box.setSpacing(6)
             ic = QLabel()
             ic.setPixmap(icons.pixmap("dragon", theme.TEXT_FAINT, 26))
@@ -433,7 +514,8 @@ class MainPage(QWidget):
             note_label = QLabel(f"“{note}”")
             note_label.setWordWrap(True)
             note_label.setStyleSheet(
-                f"border: none; color: {theme.TEXT_DIM}; font-size: 12px; font-style: italic;")
+                f"border: none; color: {theme.GOLD_TEXT}; font-family: '{theme.voice_family()}';"
+                f"font-size: 13px; font-style: italic;")
             col.addWidget(note_label)
         lay.addLayout(col, 1)
 

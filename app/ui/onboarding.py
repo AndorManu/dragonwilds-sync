@@ -160,13 +160,17 @@ class OnboardingPage(QWidget):
 
         title = QLabel("Dragonwilds Sync")
         title.setAlignment(Qt.AlignHCenter)
-        title.setStyleSheet("font-size: 26px; font-weight: 700;")
+        title.setStyleSheet(
+            f"font-family: '{theme.deco_family()}'; font-size: 32px; font-weight: 700;"
+            f"color: {theme.GOLD_TEXT}; letter-spacing: 1px;")
         box.addWidget(title)
 
         tag = QLabel("One world, shared between friends.")
         tag.setAlignment(Qt.AlignHCenter)
-        tag.setStyleSheet(f"color: {theme.ACCENT}; font-size: 13.5px; font-weight: 600;")
-        box.addSpacing(4)
+        tag.setStyleSheet(
+            f"font-family: '{theme.display_family()}'; color: {theme.ACCENT};"
+            f"font-size: 13px; font-weight: 600; letter-spacing: 1px;")
+        box.addSpacing(6)
         box.addWidget(tag)
 
         body = QLabel("Take turns in the same Dragonwilds world without renting a server. "
