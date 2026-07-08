@@ -7,6 +7,15 @@ from .. import __version__
 from . import icons, theme, widgets
 
 CHANGELOG = [
+    ("1.3.0", [
+        "Characters! Portraits in the feed, playtime, per-session vault backups",
+        "A character can travel with you between your own PCs",
+        "The Saga — the fellowship's totals and an exportable chronicle",
+        "Group history: the last three world versions kept in the shared folder",
+        "See who a friend is playing as, live and in the feed",
+        "Per-world banner colors, a soft chime on Play, Discord Rich Presence",
+        "…and the dragon's eye keeps a secret for the curious",
+    ]),
     ("1.2.0", [
         "A whole new look — a fantasy game-launcher, world-art and all",
         "Update the app in one click, straight from the shared folder",

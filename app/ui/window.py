@@ -22,6 +22,7 @@ from .note_overlay import NoteOverlay
 from .onboarding import OnboardingPage
 from .overlay import ConfirmOverlay
 from .preflight_page import PreflightPage
+from .saga_page import SagaPage
 from .settings import SettingsPage
 from . import icons, theme
 from .titlebar import TitleBar
@@ -77,9 +78,11 @@ class MainWindow(QWidget):
         self.preflight_page = PreflightPage()
         self.characters_page = CharactersPage()
         self.grimoire_page = GrimoirePage()
+        self.saga_page = SagaPage()
         for p in (self.main_page, self.settings_page, self.onboarding_page,
                   self.invite_page, self.backups_page, self.about_page,
-                  self.preflight_page, self.characters_page, self.grimoire_page):
+                  self.preflight_page, self.characters_page, self.grimoire_page,
+                  self.saga_page):
             self.pages.addWidget(p)
         self._backup_ctx = None
 
@@ -117,6 +120,9 @@ class MainWindow(QWidget):
         self.main_page.pass_turn_clicked.connect(self._pass_turn)
         self.main_page.update_clicked.connect(self._apply_update)
         self.main_page.characters_clicked.connect(self._open_characters)
+        self.main_page.saga_clicked.connect(self._open_saga)
+        self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
+        self.saga_page.export_requested.connect(c.export_saga)
 
         # characters
         self.characters_page.back_requested.connect(lambda: self._show_page(self.main_page))
@@ -300,9 +306,16 @@ class MainWindow(QWidget):
         if not ctx:
             return
         root = ctx["root"]
+        group = []
+        if ctx["kind"] == "world":
+            for av in self.controller.group_history():
+                group.append(backups_core.BackupInfo(
+                    path=av.path, stamp=av.modified, label=f"group_v{av.version}",
+                    file_count=av.file_count))
         self.backups_page.load(ctx["title"],
                                backups_core.list_checkpoints(root),
-                               backups_core.list_backups(root))
+                               backups_core.list_backups(root),
+                               group_history=group)
 
     # -- onboarding & worlds -----------------------------------------------------------
     def _finish_onboarding(self, payload):
@@ -377,6 +390,12 @@ class MainWindow(QWidget):
                                   set((self.controller.cfg or {}).get(
                                       "travel_characters") or []))
         self._show_page(self.characters_page)
+
+    def _open_saga(self):
+        world, manifest, stats, all_time = self.controller.saga_data()
+        self.saga_page.load(world, manifest, stats, all_time,
+                            me=self.controller.player_name)
+        self._show_page(self.saga_page)
 
     # -- the secret --------------------------------------------------------------------
     def _awaken_secret(self):

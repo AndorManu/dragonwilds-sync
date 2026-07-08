@@ -62,12 +62,16 @@ def seed_world():
         {"version": 11, "editor": "Reinier", "timestamp": ts(76),
          "duration_s": 5400, "emoji": "🪓"},
         {"version": 12, "editor": "Bram", "timestamp": ts(29),
-         "note": "Tamed the salamander. It has opinions.", "duration_s": 8100},
+         "note": "Tamed the salamander. It has opinions.", "duration_s": 8100,
+         "character": "Grimjaw",
+         "portrait": "male_A_01|SkinTone3|Preset2|Color2|M_B_Preset2|Color1"},
         {"version": 13, "editor": "Andor", "timestamp": ts(7),
          "note": "Built the gatehouse, found the swamp cave", "duration_s": 4520,
-         "emoji": "🐉"},
+         "character": "Negrito",
+         "portrait": "male_A_01|SkinTone1|Preset7|Color8|M_D_Preset4|Color2"},
         {"version": 14, "editor": "Elise", "timestamp": ts(1.8), "duration_s": 6300,
-         "emoji": "🏹", "color": "#5EA2EF"},
+         "character": "Sylwen", "color": "#5EA2EF",
+         "portrait": "female_A_01|SkinTone6|Preset11|Color5|F_PresetNone|Color3"},
     ]
     storage.write_json(shared / paths.MANIFEST_NAME, {
         "version": 14, "last_editor": "Elise", "timestamp": ts(1.8),
@@ -215,10 +219,35 @@ def main():
     # update bar on the main screen
     window2._show_page(window2.main_page)
     window2.main_page.set_status(controller2._world_status(world))
-    window2.main_page.show_update_bar("1.2.0", "Bram")
+    window2.main_page.show_update_bar("1.3.0", "Bram")
     QTest.qWait(150)
     shoot(window2, "20_update_bar")
     window2.main_page.hide_update_bar()
+
+    # characters page (synthetic characters in the scratch dir)
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "tests"))
+    from test_characters import make_character
+    chars_dir = scratch / "SaveCharacters"
+    make_character(chars_dir, "Negrito")
+    make_character(chars_dir, "Minblyat")
+    controller2.cfg["characters_dir"] = str(chars_dir)
+    window2._open_characters()
+    shoot(window2, "21_characters")
+
+    # the grimoire
+    controller2.cfg["grimoire_unlocked"] = True
+    window2._open_grimoire()
+    shoot(window2, "22_grimoire")
+
+    # the saga
+    from app.core import saga as saga_mod
+    saga_mod.bump_stats(shared, "Andor", 4520)
+    saga_mod.bump_stats(shared, "Elise", 6300)
+    saga_mod.bump_stats(shared, "Bram", 8100)
+    saga_mod.bump_stats(shared, "Bram", 5400)
+    window2._open_saga()
+    shoot(window2, "23_saga")
 
     # conflict overlay
     ov = window2.confirm
