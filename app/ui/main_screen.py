@@ -160,6 +160,7 @@ class MainPage(QWidget):
     pass_turn_clicked = Signal()
     update_clicked = Signal()
     characters_clicked = Signal()
+    grimoire_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -168,6 +169,7 @@ class MainPage(QWidget):
         self._me = ""
         self._worlds = []
         self._active_id = None
+        self._grimoire = False
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -320,8 +322,16 @@ class MainPage(QWidget):
         chars.triggered.connect(self.characters_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
         backups.triggered.connect(self.backups_clicked.emit)
+        if self._grimoire:
+            menu.addSeparator()
+            secret = menu.addAction(icons.icon("sparkle", theme.EMBER, 14),
+                                    "The Dragon's Bargain…")
+            secret.triggered.connect(self.grimoire_clicked.emit)
         menu.exec(self.header.title_btn.mapToGlobal(
             self.header.title_btn.rect().bottomLeft()))
+
+    def set_grimoire(self, unlocked: bool):
+        self._grimoire = bool(unlocked)
 
     # -- update bar ----------------------------------------------------------
     def show_update_bar(self, version, published_by):

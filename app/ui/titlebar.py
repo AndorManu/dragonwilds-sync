@@ -1,13 +1,44 @@
-"""Custom titlebar for the frameless window: mark, wordmark, window controls."""
+"""Custom titlebar for the frameless window: mark, wordmark, window controls.
 
-from PySide6.QtCore import Qt, Signal
+The dragon-eye mark keeps a secret: five quick clicks wake it.
+"""
+
+from PySide6.QtCore import QElapsedTimer, Qt, Signal
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel
 
 from . import icons, theme, widgets
 
+SECRET_CLICKS = 5
+SECRET_WINDOW_MS = 3000
+
+
+class SecretMark(QLabel):
+    """The dragon eye. It notices being poked."""
+
+    awakened = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setPixmap(icons.pixmap("dragon", theme.ACCENT, 18))
+        self._clicks = 0
+        self._timer = QElapsedTimer()
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            if not self._timer.isValid() or self._timer.elapsed() > SECRET_WINDOW_MS:
+                self._clicks = 0
+                self._timer.restart()
+            self._clicks += 1
+            if self._clicks >= SECRET_CLICKS:
+                self._clicks = 0
+                self._timer.invalidate()
+                self.awakened.emit()
+        super().mousePressEvent(e)
+
 
 class TitleBar(QFrame):
     settings_clicked = Signal()
+    secret_awakened = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -18,8 +49,8 @@ class TitleBar(QFrame):
         row.setContentsMargins(16, 0, 10, 0)
         row.setSpacing(8)
 
-        mark = QLabel()
-        mark.setPixmap(icons.pixmap("dragon", theme.ACCENT, 18))
+        mark = SecretMark()
+        mark.awakened.connect(self.secret_awakened.emit)
         row.addWidget(mark)
 
         title = QLabel("DRAGONWILDS SYNC")
