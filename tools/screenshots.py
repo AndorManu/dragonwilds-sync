@@ -26,11 +26,13 @@ paths.LEGACY_CONFIG_PATH = scratch / "nolegacy" / "config.json"
 paths.LEGACY_STATE_PATH = scratch / "nolegacy" / "state.json"
 
 from PySide6.QtCore import Qt  # noqa: E402
+from PySide6.QtGui import QIcon  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
-from app.core import storage, sync  # noqa: E402
+from app.core import config, presence, storage, sync  # noqa: E402
 from app.core.logs import setup_logging  # noqa: E402
+from app.core.sync import _backup_files  # noqa: E402
 from app.controller import Controller  # noqa: E402
 from app.ui import theme  # noqa: E402
 from app.ui.window import MainWindow  # noqa: E402
@@ -57,24 +59,31 @@ def seed_world():
     (shared / f"{WORLD}.sav").write_bytes(b"shared-save")
     (shared / f"{WORLD}.sav.backup").write_bytes(b"shared-save-backup")
     history = [
-        {"version": 11, "editor": "Reinier", "timestamp": ts(76)},
-        {"version": 12, "editor": "Bram", "timestamp": ts(29)},
-        {"version": 13, "editor": "Andor", "timestamp": ts(7)},
-        {"version": 14, "editor": "Elise", "timestamp": ts(1.8)},
+        {"version": 11, "editor": "Reinier", "timestamp": ts(76),
+         "duration_s": 5400, "emoji": "🪓"},
+        {"version": 12, "editor": "Bram", "timestamp": ts(29),
+         "note": "Tamed the salamander. It has opinions.", "duration_s": 8100},
+        {"version": 13, "editor": "Andor", "timestamp": ts(7),
+         "note": "Built the gatehouse, found the swamp cave", "duration_s": 4520,
+         "emoji": "🐉"},
+        {"version": 14, "editor": "Elise", "timestamp": ts(1.8), "duration_s": 6300,
+         "emoji": "🏹", "color": "#5EA2EF"},
     ]
     storage.write_json(shared / paths.MANIFEST_NAME, {
         "version": 14, "last_editor": "Elise", "timestamp": ts(1.8),
-        "world_name": WORLD, "history": history,
+        "world_name": WORLD, "history": history, "app_schema": 1,
     })
-    cfg = {
-        "player_name": "Andor",
+    world = config.make_world(WORLD, str(shared),
+                              share_link="https://drive.google.com/drive/folders/x")
+    world2 = config.make_world("Frostspire", str(scratch / "shared2"))
+    cfg, _ = config.migrate_config({})
+    cfg.update({
+        "player_name": "Andor", "player_emoji": "🐉",
         "local_save_dir": str(save_dir),
-        "world_name": WORLD,
-        "sync_dir": str(shared),
-        "exe_path": None,
-        "steam_app_id": "1374490",
-    }
-    return cfg
+        "active_world": world["id"],
+        "worlds": [world, world2],
+    })
+    return cfg, world, shared, save_dir
 
 
 def shoot(window, name):
@@ -98,50 +107,97 @@ def main():
     app = QApplication(sys.argv)
     theme.apply(app)
 
-    # ---- onboarding states (no config yet) ---------------------------------
+    # ---- onboarding states (no config yet) --------------------------------------
     controller = Controller()
-    window = MainWindow(controller)
+    window = MainWindow(controller, QIcon())
     window.setAttribute(Qt.WA_DontShowOnScreen, True)  # render fully, never flash
     window.show()
-    shoot(window, "1_onboarding_welcome")
+    shoot(window, "01_onboarding_welcome")
     window.onboarding_page._go(1)
-    shoot(window, "2_onboarding_name")
-    window.onboarding_page._go(3)
-    shoot(window, "3_onboarding_shared")
+    shoot(window, "02_onboarding_name")
+    window.onboarding_page._go(2)
+    shoot(window, "03_onboarding_choice")
+    window.onboarding_page._go(4)
+    shoot(window, "04_onboarding_shared")
+    window.onboarding_page.code_field.edit.setText("DWS1.demo")
+    window.onboarding_page._join_info = {
+        # deliberately non-existent folder so the watcher keeps spinning
+        "world_name": "Emberfall", "folder_name": "Emberfall Sync",
+        "share_link": "https://drive.google.com/drive/folders/x"}
+    window.onboarding_page._start_watching()
+    window.onboarding_page._go(6)
+    shoot(window, "05_onboarding_join_watch")
+    window.onboarding_page._watch_timer.stop()
     window.close()
 
-    # ---- configured states ---------------------------------------------------
-    cfg = seed_world()
+    # ---- configured states -----------------------------------------------------------
+    cfg, world, shared, save_dir = seed_world()
     storage.save_config(cfg)
+    storage.save_state({"schema": 2, "worlds": {
+        world["id"]: {"last_applied_version": 14, "last_hash": "x"}}})
 
-    state_uptodate = {"last_applied_version": 14, "last_hash": "x"}
-    storage.save_state(state_uptodate)
     controller2 = Controller()
-    window2 = MainWindow(controller2)
+    window2 = MainWindow(controller2, QIcon())
     window2.setAttribute(Qt.WA_DontShowOnScreen, True)
     window2.show()
-    window2.main_page.set_status(sync.get_status(cfg, state_uptodate))
-    shoot(window2, "4_main_up_to_date")
 
-    state_behind = {"last_applied_version": 13, "last_hash": "x"}
-    window2.main_page.set_status(sync.get_status(cfg, state_behind))
-    shoot(window2, "5_main_new_save")
+    window2.main_page.set_status(controller2._world_status(world))
+    shoot(window2, "06_main_up_to_date")
 
+    config.world_state(controller2.state, world["id"])["last_applied_version"] = 13
+    window2.main_page.set_status(controller2._world_status(world))
+    shoot(window2, "07_main_new_save")
+
+    presence.start_playing(shared, "Bram", "🪓")
+    window2.main_page.set_status(controller2._world_status(world))
+    shoot(window2, "08_main_friend_playing")
+    presence.stop_playing(shared, "Bram")
+
+    presence.claim_next(shared, "Elise", "🏹")
+    config.world_state(controller2.state, world["id"])["last_applied_version"] = 14
+    window2.main_page.set_status(controller2._world_status(world))
+    shoot(window2, "09_main_turn_claimed")
+    presence.clear_next(shared)
+
+    window2.main_page.set_status(controller2._world_status(world))
     window2.main_page.set_phase("ingame")
-    shoot(window2, "6_main_in_game")
+    shoot(window2, "10_main_in_game")
     window2.main_page.set_phase("idle")
 
-    window2.toasts.show_toast("success", "Shared your progress as v15 — your friends are up to date.")
+    window2.toasts.show_toast("success",
+                              "Shared your progress as v15 — your friends are up to date.")
     QTest.qWait(400)
-    shoot(window2, "7_main_toast")
+    shoot(window2, "11_main_toast")
     clear_toasts(window2)
 
-    window2.settings_page.load(cfg)
+    # invite page
+    window2.invite_page.load(world)
+    window2._show_page(window2.invite_page)
+    window2.invite_page._generate()
+    shoot(window2, "12_invite")
+
+    # backups page
+    files = sorted(save_dir.glob(f"{WORLD}*"))
+    root = config.backup_root_for(world["id"])
+    _backup_files(files, "local_v13", root)
+    _backup_files(files, "shared_v14", root)
+    window2._open_backups()
+    shoot(window2, "13_backups")
+
+    # settings + about
+    window2.settings_page.load(cfg, world)
     window2._show_page(window2.settings_page)
-    shoot(window2, "8_settings")
+    shoot(window2, "14_settings")
+    window2._show_page(window2.about_page)
+    shoot(window2, "15_about")
     window2._show_page(window2.main_page)
 
-    # Conflict overlay (rendered without blocking).
+    # note overlay
+    window2.note_overlay.open(world["id"], 15)
+    shoot(window2, "16_note_prompt")
+    window2.note_overlay._skip()
+
+    # conflict overlay
     ov = window2.confirm
     ov.title_label.setText("Overwrite your local progress?")
     ov.body_label.setText(
@@ -153,9 +209,11 @@ def main():
     ov.setGeometry(window2.chrome.rect())
     ov.show()
     ov.raise_()
-    shoot(window2, "9_conflict")
+    shoot(window2, "17_conflict")
     ov.hide()
 
+    window2._really_quit = True
+    window2.close()
     print("done ->", OUT)
 
 

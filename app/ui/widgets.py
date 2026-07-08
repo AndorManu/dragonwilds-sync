@@ -101,28 +101,89 @@ class PulsingDot(QWidget):
 
 
 class Avatar(QWidget):
-    """Colored initials circle for the activity feed."""
+    """Colored circle for the activity feed: initials, or a chosen emoji."""
 
-    def __init__(self, name: str, size=30, parent=None):
+    def __init__(self, name: str, size=30, emoji="", color=None, parent=None):
         super().__init__(parent)
         self._name = name or "?"
+        self._emoji = emoji or ""
+        self._color = color or None
         self.setFixedSize(size, size)
 
     def paintEvent(self, e):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        base = QColor(fmt.name_color(self._name))
+        base = QColor(self._color or fmt.name_color(self._name))
+        if not base.isValid():
+            base = QColor(fmt.name_color(self._name))
         fill = QColor(base)
         fill.setAlphaF(0.18)
         p.setBrush(QBrush(fill))
         p.setPen(QPen(base, 1.2))
         p.drawEllipse(self.rect().adjusted(1, 1, -1, -1))
-        p.setPen(QPen(base))
         f = QFont(self.font())
-        f.setPixelSize(int(self.height() * 0.38))
-        f.setWeight(QFont.DemiBold)
-        p.setFont(f)
-        p.drawText(self.rect(), Qt.AlignCenter, fmt.initials(self._name))
+        if self._emoji:
+            f.setPixelSize(int(self.height() * 0.5))
+            p.setFont(f)
+            p.setPen(QPen(QColor(theme.TEXT)))
+            p.drawText(self.rect(), Qt.AlignCenter, self._emoji)
+        else:
+            f.setPixelSize(int(self.height() * 0.38))
+            f.setWeight(QFont.DemiBold)
+            p.setFont(f)
+            p.setPen(QPen(base))
+            p.drawText(self.rect(), Qt.AlignCenter, fmt.initials(self._name))
+
+
+class OptionCard(QWidget):
+    """A large clickable choice card (onboarding fork)."""
+
+    def __init__(self, icon_name, title, description, parent=None):
+        super().__init__(parent)
+        self.setCursor(Qt.PointingHandCursor)
+        self._hover = False
+        self.setAttribute(Qt.WA_Hover, True)
+
+        row = QHBoxLayout(self)
+        row.setContentsMargins(18, 16, 16, 16)
+        row.setSpacing(14)
+        ic = QLabel()
+        ic.setPixmap(icons.pixmap(icon_name, theme.ACCENT, 22))
+        ic.setStyleSheet("background: transparent;")
+        row.addWidget(ic, 0, Qt.AlignTop)
+        col = QVBoxLayout()
+        col.setSpacing(3)
+        t = QLabel(title)
+        t.setStyleSheet("background: transparent; font-size: 14px; font-weight: 650;")
+        d = QLabel(description)
+        d.setWordWrap(True)
+        d.setStyleSheet(f"background: transparent; color: {theme.TEXT_DIM}; font-size: 12px;")
+        col.addWidget(t)
+        col.addWidget(d)
+        row.addLayout(col, 1)
+
+    # clicked is wired via mousePressEvent -> callback for simplicity
+    def set_on_click(self, callback):
+        self._on_click = callback
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton and getattr(self, "_on_click", None):
+            self._on_click()
+
+    def event(self, e):
+        if e.type() in (e.Type.HoverEnter, e.Type.HoverLeave):
+            self._hover = e.type() == e.Type.HoverEnter
+            self.update()
+        return super().event(e)
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        bg = QColor(theme.SURFACE_2 if self._hover else theme.SURFACE)
+        border = QColor(theme.ACCENT if self._hover else theme.BORDER)
+        p.setBrush(QBrush(bg))
+        p.setPen(QPen(border, 1))
+        p.drawRoundedRect(self.rect().adjusted(0, 0, -1, -1), 12, 12)
 
 
 def make_button(text="", variant="ghost", icon_name=None, icon_color=None,
