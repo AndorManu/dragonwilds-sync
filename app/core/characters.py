@@ -40,13 +40,37 @@ DEFAULT_CHARACTERS_DIR = (
     / "RSDragonwilds" / "Saved" / "SaveCharacters"
 )
 
-# Candidate skill names for the labelling flow. The save file only has
-# opaque GUIDs; players identify them (see the "identify ritual").
-SKILL_NAME_CHOICES = [
-    "Woodcutting", "Mining", "Firemaking", "Cooking", "Smithing",
-    "Crafting", "Construction", "Runecrafting", "Melee", "Ranged",
-    "Defence", "Agility", "Fishing",
+# The canonical skill-GUID -> name mapping, cracked 2026-07-08 by matching
+# in-game skill-panel XP values against the file, all 11 exact and unique.
+# The Ids are identical across characters, so this holds game-wide (until a
+# game update adds skills — the identify ritual covers that day).
+DEFAULT_SKILL_LABELS = {
+    "4pefO9k1lUqfA6mvHNi1SA": "Attack",
+    "0hreSMRVXUihq9qjDO2CFA": "Magic",
+    "heq7u88Q2UuLXFqLGTVwQw": "Ranged",
+    "jqX0Gh6QI0GFFPCDFK_CJQ": "Mining",
+    "4zYUGF5u_0KbMLkWJmmBbQ": "Woodcutting",
+    "Wf3i7Ha-B06DH719j1vtBw": "Artisan",
+    "waK-8EyQFQ2xEjCGYmuTRQ": "Construction",
+    "Tn7t6DQyX0-Q0cM5K7B90A": "Cooking",
+    "PyUi-0LU_riFY46AnnFiWg": "Farming",
+    "NOqC-z-2ckqi0El22qMFlw": "Runecrafting",
+    "vwY5IkQJJDwb2PKEfoc8MQ": "Fishing",
+}
+
+# Candidate names for the identify ritual (future/unknown skills).
+SKILL_NAME_CHOICES = sorted(set(DEFAULT_SKILL_LABELS.values())) + [
+    "Firemaking", "Smithing", "Defence", "Agility", "Slayer",
 ]
+
+
+def skill_label(skill_id: str, index: int = 0, user_labels: dict | None = None) -> str:
+    """User's own label > the canonical map > a numbered fallback."""
+    if user_labels and user_labels.get(skill_id):
+        return user_labels[skill_id]
+    if skill_id in DEFAULT_SKILL_LABELS:
+        return DEFAULT_SKILL_LABELS[skill_id]
+    return f"Skill {index + 1}"
 
 
 @dataclass

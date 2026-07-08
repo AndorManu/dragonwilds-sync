@@ -180,8 +180,27 @@ def test_skill_snapshot_and_diff(tmp_path):
 
 
 def test_skill_labels_roundtrip(tmp_path):
-    characters.save_skill_labels(tmp_path, {SKILL_A: "Woodcutting"})
-    assert characters.load_skill_labels(tmp_path) == {SKILL_A: "Woodcutting"}
+    characters.save_skill_labels(tmp_path, {SKILL_A: "Chopping"})
+    assert characters.load_skill_labels(tmp_path) == {SKILL_A: "Chopping"}
+
+
+def test_canonical_skill_map_complete():
+    """The Rosetta Stone: 11 skills, matched exactly against in-game panels."""
+    assert len(characters.DEFAULT_SKILL_LABELS) == 11
+    assert characters.DEFAULT_SKILL_LABELS[SKILL_A] == "Woodcutting"
+    assert characters.DEFAULT_SKILL_LABELS[SKILL_B] == "Artisan"
+    assert characters.DEFAULT_SKILL_LABELS["4pefO9k1lUqfA6mvHNi1SA"] == "Attack"
+    assert characters.DEFAULT_SKILL_LABELS["vwY5IkQJJDwb2PKEfoc8MQ"] == "Fishing"
+    assert len(set(characters.DEFAULT_SKILL_LABELS.values())) == 11  # no dupes
+
+
+def test_skill_label_precedence():
+    # user label wins over the canonical map
+    assert characters.skill_label(SKILL_A, 0, {SKILL_A: "Trees"}) == "Trees"
+    # canonical map wins over the fallback
+    assert characters.skill_label(SKILL_A, 0, {}) == "Woodcutting"
+    # unknown ids get a numbered fallback
+    assert characters.skill_label("mystery-id", 4, {}) == "Skill 5"
 
 
 def test_characters_dir_derivation(tmp_path):

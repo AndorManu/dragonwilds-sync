@@ -8,14 +8,11 @@ you ask it to.
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame, QHBoxLayout,
-                               QLabel, QLineEdit, QScrollArea, QVBoxLayout,
-                               QWidget)
+                               QLabel, QLineEdit, QPushButton, QScrollArea,
+                               QVBoxLayout, QWidget)
 
-from ..core.characters import SKILL_NAME_CHOICES, EditPlan
+from ..core.characters import SKILL_NAME_CHOICES, EditPlan, skill_label
 from . import theme, widgets
-
-ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-         "XI", "XII", "XIII"]
 
 
 class GrimoirePage(QWidget):
@@ -125,10 +122,7 @@ class GrimoirePage(QWidget):
         return self._infos[i] if 0 <= i < len(self._infos) else None
 
     def skill_label(self, skill_id, index):
-        if skill_id in self._labels:
-            return self._labels[skill_id]
-        roman = ROMAN[index] if index < len(ROMAN) else str(index + 1)
-        return f"Skill {roman}"
+        return skill_label(skill_id, index, self._labels)
 
     # -- rendering -------------------------------------------------------------
     def _render_skills(self):
@@ -155,26 +149,38 @@ class GrimoirePage(QWidget):
         grid = QVBoxLayout(card)
         grid.setContentsMargins(14, 8, 14, 8)
         grid.setSpacing(0)
-        for i, skill in enumerate(info.skills):
+        rows = sorted(enumerate(info.skills),
+                      key=lambda t: self.skill_label(t[1]["Id"], t[0]).lower())
+        for i, skill in rows:
             row = QWidget()
-            if i:
+            if grid.count():
                 row.setStyleSheet(f"border-top: 1px solid {theme.BORDER_SOFT};")
             rl = QHBoxLayout(row)
-            rl.setContentsMargins(0, 7, 0, 7)
-            rl.setSpacing(10)
+            rl.setContentsMargins(0, 6, 0, 6)
+            rl.setSpacing(8)
             label = QLabel(self.skill_label(skill["Id"], i))
             label.setStyleSheet("border: none; font-size: 13px; font-weight: 600;")
-            label.setMinimumWidth(120)
+            label.setMinimumWidth(104)
             rl.addWidget(label)
-            current = QLabel(f"{int(skill.get('Xp') or 0):,} xp")
+            current_xp = int(skill.get("Xp") or 0)
+            current = QLabel(f"{current_xp:,} xp")
             current.setStyleSheet(f"border: none; color: {theme.TEXT_DIM}; font-size: 12px;")
             rl.addWidget(current)
             rl.addStretch(1)
             edit = QLineEdit()
             edit.setPlaceholderText("new xp")
             edit.setValidator(QIntValidator(0, 99_999_999))
-            edit.setFixedSize(110, 30)
+            edit.setFixedSize(92, 28)
             self._skill_edits[skill["Id"]] = edit
+            for text, delta in (("+1k", 1_000), ("+10k", 10_000)):
+                chip = QPushButton(text)
+                chip.setProperty("variant", "chip")
+                chip.setCursor(Qt.CursorShape.PointingHandCursor)
+                chip.setFixedHeight(24)
+                chip.clicked.connect(
+                    lambda _=False, e=edit, d=delta, base=current_xp:
+                    self._bump(e, base, d))
+                rl.addWidget(chip)
             rl.addWidget(edit)
             grid.addWidget(row)
         self.body_box.addWidget(card)
@@ -187,14 +193,18 @@ class GrimoirePage(QWidget):
         self.body_box.addWidget(self.heal_check)
         self.body_box.addWidget(self.repair_check)
 
-        ritual_hint = QLabel("Skill names are the game's secret — the ritual "
-                             "uncovers them: begin it, go train exactly one skill "
-                             "for a minute, quit to menu, then finish the ritual "
-                             "and name what you trained.")
+        ritual_hint = QLabel("All eleven skills are named from the group's own "
+                             "research. If a game update ever adds one, the "
+                             "identify ritual below names it: begin, train exactly "
+                             "that skill in game, then finish and name it.")
         ritual_hint.setWordWrap(True)
         ritual_hint.setProperty("role", "hint")
         self.body_box.addWidget(ritual_hint)
         self.body_box.addStretch(1)
+
+    def _bump(self, edit, base_xp, delta):
+        current = int(edit.text()) if edit.text().strip() else base_xp
+        edit.setText(str(current + delta))
 
     # -- actions ---------------------------------------------------------------
     def _seal(self):
