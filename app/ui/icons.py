@@ -116,6 +116,62 @@ _ICONS = {
         '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4'
         'a2 2 0 0 1 2 2v2"/>'
     ),
+    # -- skill emblems (drawn in-house, gold-line style) ----------------------
+    "skill-attack": (
+        '<path d="M19.5 4.5 9 15"/><path d="M15.5 3.5l5 5"/>'
+        '<path d="M7.5 13.5l3 3-3.5 4-2.5-2.5z"/>'
+        '<line x1="3.5" y1="20.5" x2="6" y2="18"/>'
+    ),
+    "skill-magic": (
+        '<path d="M4.5 19h15"/>'
+        '<path d="M7 19C8.5 14 10.2 8.5 12 4.5 13.8 8.5 15.5 14 17 19"/>'
+        '<path d="M12 10.2l.7 1.4 1.4.7-1.4.7-.7 1.4-.7-1.4-1.4-.7 1.4-.7z" '
+        'fill="{color}" stroke="none"/>'
+    ),
+    "skill-ranged": (
+        '<path d="M5.5 3c6 4.5 6 13.5 0 18"/>'
+        '<line x1="5.5" y1="12" x2="20" y2="12"/>'
+        '<polyline points="17 9 20 12 17 15"/>'
+    ),
+    "skill-mining": (
+        '<path d="M4 10C8 5.2 16 5.2 20 10"/>'
+        '<line x1="12" y1="6.6" x2="12" y2="8.5"/>'
+        '<line x1="12" y1="8.5" x2="6" y2="20.5"/>'
+    ),
+    "skill-woodcutting": (
+        '<path d="M12 3l4.5 6h-2.5l3.5 5H6.5L10 9H7.5z" fill="{color}" stroke="none"/>'
+        '<line x1="12" y1="14" x2="12" y2="20.5"/>'
+        '<line x1="9" y1="20.5" x2="15" y2="20.5"/>'
+    ),
+    "skill-artisan": (
+        '<path d="M5 20.5l7-7"/><path d="M10.5 6.5 14 3l5 5-3.5 3.5z"/>'
+        '<line x1="19" y1="20.5" x2="13.5" y2="15"/>'
+    ),
+    "skill-construction": (
+        '<rect x="3" y="7" width="18" height="13" rx="1"/>'
+        '<line x1="3" y1="13.5" x2="21" y2="13.5"/>'
+        '<line x1="9.5" y1="7" x2="9.5" y2="13.5"/>'
+        '<line x1="14.5" y1="13.5" x2="14.5" y2="20"/>'
+    ),
+    "skill-cooking": (
+        '<path d="M5.5 10.5h13V13a6.5 6.5 0 0 1-13 0z"/>'
+        '<line x1="3.5" y1="10.5" x2="20.5" y2="10.5"/>'
+        '<path d="M9.5 7.5c0-1.2 1-1.4 1-2.6M14 7.5c0-1.2 1-1.4 1-2.6"/>'
+    ),
+    "skill-farming": (
+        '<path d="M7.5 10h8.5v7a3 3 0 0 1-3 3h-2.5a3 3 0 0 1-3-3z"/>'
+        '<path d="M8.5 10c0-2.3 1.4-3.8 3.2-3.8S15 7.7 15 10"/>'
+        '<path d="M16 12.5l4-3 1.5 2"/>'
+    ),
+    "skill-runecrafting": (
+        '<path d="M12 2.5 19 12l-7 9.5L5 12z"/>'
+        '<path d="M13.5 7.5 10 12h4l-3.5 4.5"/>'
+    ),
+    "skill-fishing": (
+        '<path d="M6.5 12S10 7 14.5 7c3 0 5.5 3 6.5 5-1 2-3.5 5-6.5 5-4.5 0-8-5-8-5z"/>'
+        '<path d="M6.5 12 3 9v6z" fill="{color}" stroke="none"/>'
+        '<circle cx="16.5" cy="10.8" r="0.9" fill="{color}" stroke="none"/>'
+    ),
     "bell": (
         '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>'
         '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>'
@@ -168,6 +224,12 @@ def mark_pixmap(size: int, dpr: float = 2.0) -> QPixmap:
     painter.end()
     pm.setDevicePixelRatio(dpr)
     return pm
+
+
+def skill_icon_name(label: str) -> str:
+    """Icon key for a skill label; falls back to the sparkle."""
+    key = f"skill-{(label or '').lower()}"
+    return key if key in _ICONS else "sparkle"
 
 
 def svg_source(name: str, color: str) -> str:

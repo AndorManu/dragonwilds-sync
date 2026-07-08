@@ -286,21 +286,22 @@ def icon_button(icon_name, color=theme.TEXT_DIM, variant="icon", size=16,
 
 
 class PlayButton(QPushButton):
-    """The showpiece action: emerald gradient with a glow that breathes at
-    rest and flares on hover."""
+    """The showpiece action: gradient fill with a glow that breathes at
+    rest and flares on hover. Emerald by default; ember for the grimoire."""
 
-    def __init__(self, text="PLAY", parent=None):
+    def __init__(self, text="PLAY", parent=None, variant="primary",
+                 glow_color=None, height=60, point_size=12.5):
         super().__init__(text, parent)
-        self.setProperty("variant", "primary")
+        self.setProperty("variant", variant)
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(60)
+        self.setFixedHeight(height)
         f = QFont(self.font())
-        f.setPointSizeF(12.5)
+        f.setPointSizeF(point_size)
         f.setWeight(QFont.Black)
         f.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
         self.setFont(f)
         self._glow = QGraphicsDropShadowEffect(self)
-        self._glow.setColor(QColor(theme.ACCENT))
+        self._glow.setColor(QColor(glow_color or theme.ACCENT))
         self._glow.setOffset(0, 3)
         self._glow.setBlurRadius(20)
         self.setGraphicsEffect(self._glow)
