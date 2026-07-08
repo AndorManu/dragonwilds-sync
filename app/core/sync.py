@@ -46,6 +46,14 @@ logger = logging.getLogger("dwsync.sync")
 HISTORY_LIMIT = 50
 BACKUPS_TO_KEEP = 10
 
+# Bumped only when the manifest layout changes incompatibly. Written on push
+# so older apps can be warned instead of failing in confusing ways.
+MANIFEST_SCHEMA = 1
+
+# Optional per-entry annotations added after a push (session notes, duration,
+# flair). Amending these never touches save files or the version counter.
+AMENDABLE_FIELDS = {"note", "duration_s", "emoji", "color"}
+
 
 class SyncResult(Enum):
     PULLED = auto()
@@ -67,6 +75,7 @@ class StatusSnapshot:
     last_editor: str | None = None
     timestamp: str | None = None
     history: list | None = None
+    manifest_schema: int | None = None  # for newer-app warnings; None on old manifests
 
 
 def sha256_file(path: Path) -> str:
@@ -105,6 +114,7 @@ def get_status(cfg, state) -> StatusSnapshot:
         last_editor=manifest.get("last_editor"),
         timestamp=manifest.get("timestamp"),
         history=manifest.get("history"),
+        manifest_schema=manifest.get("app_schema"),
     )
 
 
@@ -240,9 +250,34 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
         "timestamp": entry["timestamp"],
         "world_name": world_name,
         "history": history,
+        "app_schema": MANIFEST_SCHEMA,
     })
 
     state["last_applied_version"] = new_version
     state["last_hash"] = sha256_file(local_files[0])
     log(f"Shared your progress as v{new_version}. Friends will get it next time they hit Play.")
     return SyncResult.PUSHED, state
+
+
+def amend_history_entry(sync_dir, version: int, **fields) -> bool:
+    """Annotate an already-pushed history entry (session note, duration, flair).
+
+    Strictly additive metadata: only whitelisted fields, only on the matching
+    version's history entry. Never touches save files, the version counter,
+    or any other manifest field, so it cannot affect sync correctness.
+    """
+    allowed = {k: v for k, v in fields.items()
+               if k in AMENDABLE_FIELDS and v not in (None, "")}
+    if not allowed:
+        return False
+    manifest = get_shared_manifest(sync_dir)
+    if not manifest:
+        return False
+    changed = False
+    for entry in manifest.get("history", []):
+        if entry.get("version") == version:
+            entry.update(allowed)
+            changed = True
+    if changed:
+        write_json(Path(sync_dir) / paths.MANIFEST_NAME, manifest)
+    return changed
