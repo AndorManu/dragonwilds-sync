@@ -274,9 +274,9 @@ class GrimoirePage(QWidget):
             c.setStyleSheet("background: transparent;")
             self.body_box.addWidget(c)
 
-        hint = QLabel("Levels above 32 are extrapolated (≈) — the bargain "
-                      "overshoots a touch so you never land under. The tiny xp "
-                      "box overrides the level pick, for the precise-minded.")
+        hint = QLabel("Levels use the game's own table (wiki-verified, Lv 1–99; "
+                      "the road past 93 gets steep). The tiny xp box overrides "
+                      "the level pick, for the precise-minded.")
         hint.setWordWrap(True)
         hint.setProperty("role", "hint")
         hint.setStyleSheet("background: transparent;")

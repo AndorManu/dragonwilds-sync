@@ -1,71 +1,48 @@
-"""The Dragonwilds skill level curve, reverse-engineered from the game's own
-skill panels (2026-07-09).
+"""The Dragonwilds skill level table — the game's own numbers, all 99 levels.
 
-Nine ground-truth points were read off in-game panels ("6,439/6,608 XP" at
-level 31 means level 32 requires 6,608 total XP). They fit
-
-    REQ(L) = A * R**(L-1) + B      (A=327.95, R=1.10345, B=-332.4)
-
-to within ±1 XP everywhere except the lowest levels (±3). Exact known
-thresholds override the model; unknown levels use the model plus a small
-overshoot margin so "make me level 25" never lands at 24. Levels beyond the
-highest calibrated point (32) are extrapolated — flagged so the UI can mark
-them as approximate.
+Source: the official wiki (dragonwilds.runescape.wiki/w/Experience), fetched
+2026-07-09. Every one of the nine thresholds we independently read off
+in-game skill panels matches this table exactly, which is as verified as it
+gets. Notable: the cap was raised from 50 to 99, growth is ~10.35%/level up
+to the low 90s, and levels 94-99 spike sharply (99 = exactly 1,000,000 XP).
 """
 
-import math
+from bisect import bisect_right
 
-# Total XP required to REACH level L — exact, read from in-game panels.
-KNOWN_REQ = {
-    4: 111, 14: 847, 15: 969, 17: 1253, 22: 2261,
-    25: 3152, 29: 4833, 31: 5957, 32: 6608,
-}
+# Total XP required to reach level L; index L-1. Levels 1..99.
+REQ_TABLE = (
+    0, 33, 70, 111, 156, 206, 261, 322, 389, 463,
+    545, 636, 736, 847, 969, 1_104, 1_253, 1_417, 1_598, 1_798,
+    2_018, 2_261, 2_529, 2_825, 3_152, 3_512, 3_910, 4_349, 4_833, 5_367,
+    5_957, 6_608, 7_326, 8_118, 8_993, 9_958, 11_023, 12_199, 13_496, 14_929,
+    16_510, 18_255, 20_181, 22_307, 24_654, 27_245, 30_105, 33_262, 36_747, 40_594,
+    44_581, 48_717, 52_997, 57_421, 61_990, 66_702, 71_560, 76_562, 81_708, 86_998,
+    92_433, 98_012, 103_735, 109_603, 115_616, 121_772, 128_073, 134_518, 141_108, 147_842,
+    154_721, 161_743, 168_910, 176_222, 183_678, 191_278, 199_022, 206_911, 214_944, 223_122,
+    231_444, 239_910, 248_521, 257_276, 266_176, 275_219, 284_407, 293_740, 303_217, 312_838,
+    322_604, 332_514, 342_568, 395_129, 447_689, 543_044, 666_881, 819_200, 1_000_000,
+)
 
-A = 327.95
-R = 1.10345
-B = -332.4
-
-MAX_LEVEL = 60
-CALIBRATED_MAX = 32
-
-
-def _model(level: int) -> float:
-    return A * math.pow(R, level - 1) + B
+MAX_LEVEL = len(REQ_TABLE)   # 99
 
 
 def req_xp(level: int) -> int:
-    """Best-estimate total XP needed to reach `level` (no safety margin)."""
-    if level <= 1:
-        return 0
-    if level in KNOWN_REQ:
-        return KNOWN_REQ[level]
-    return max(0, int(round(_model(level))))
+    """Total XP needed to reach `level` — exact, from the game's table."""
+    level = max(1, min(int(level), MAX_LEVEL))
+    return REQ_TABLE[level - 1]
 
 
 def xp_for_level(level: int) -> int:
-    """XP to write so the character lands exactly on `level`.
-
-    Exact where calibrated; modelled values get a small overshoot (bigger
-    when extrapolating) that stays far below the ~10% gap to the next level.
-    """
-    level = max(1, min(int(level), MAX_LEVEL))
-    if level <= 1:
-        return 0
-    if level in KNOWN_REQ:
-        return KNOWN_REQ[level]
-    estimate = _model(level)
-    margin = max(6.0, estimate * (0.03 if level > CALIBRATED_MAX else 0.01))
-    return int(math.ceil(estimate + margin))
+    """XP to write so a character lands exactly on `level`."""
+    return req_xp(level)
 
 
 def level_for_xp(xp: int) -> int:
     """The level a character with `xp` total is on."""
     xp = max(0, int(xp))
-    for level in range(MAX_LEVEL, 1, -1):
-        if xp >= req_xp(level):
-            return level
-    return 1
+    return bisect_right(REQ_TABLE, xp)
 
 
 def is_estimated(level: int) -> bool:
-    return level > CALIBRATED_MAX
+    """Kept for API compatibility: the whole table is exact now."""
+    return False
