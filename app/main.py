@@ -32,9 +32,10 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
+    app.setQuitOnLastWindowClosed(False)  # the tray keeps watch; quit is explicit
     icon_file = resource_path("app/assets/icon.ico")
-    if icon_file.exists():
-        app.setWindowIcon(QIcon(str(icon_file)))
+    app_icon = QIcon(str(icon_file)) if icon_file.exists() else QIcon()
+    app.setWindowIcon(app_icon)
 
     paths.APP_DIR.mkdir(parents=True, exist_ok=True)
     lock = QLockFile(str(paths.APP_DIR / "app.lock"))
@@ -46,8 +47,12 @@ def main():
 
     theme.apply(app)
     controller = Controller()
-    window = MainWindow(controller)
-    window.show()
+    window = MainWindow(controller, app_icon)
+
+    # --tray (used by launch-on-startup): start quietly in the tray.
+    start_hidden = "--tray" in sys.argv and controller.has_config and window.tray.available
+    if not start_hidden:
+        window.show()
     return app.exec()
 
 

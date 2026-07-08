@@ -40,17 +40,25 @@ _CHEVRON_SVG = (
     '<polyline points="6 9 12 15 18 9"/></svg>'
 )
 
+_CHECK_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" '
+    f'stroke="{ON_ACCENT}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">'
+    '<polyline points="20 6 9 17 4 12"/></svg>'
+)
 
-def _write_qss_assets() -> str:
+
+def _write_qss_assets() -> tuple[str, str]:
     """QSS image: url() needs real files; render the few we use to disk."""
     UI_CACHE.mkdir(parents=True, exist_ok=True)
     chevron = UI_CACHE / "chevron-down.svg"
     chevron.write_text(_CHEVRON_SVG, encoding="utf-8")
-    return chevron.as_posix()
+    check = UI_CACHE / "check.svg"
+    check.write_text(_CHECK_SVG, encoding="utf-8")
+    return chevron.as_posix(), check.as_posix()
 
 
 def build_qss() -> str:
-    chevron = _write_qss_assets()
+    chevron, check = _write_qss_assets()
     return f"""
 * {{
     font-family: {FONT_STACK};
@@ -244,6 +252,56 @@ QToolTip {{
     color: {TEXT};
     border: 1px solid {BORDER};
     padding: 5px 8px;
+}}
+
+/* -- menus (world switcher) ---------------------------------------------- */
+QMenu {{
+    background: {SURFACE_2};
+    border: 1px solid {BORDER};
+    border-radius: 10px;
+    padding: 6px;
+}}
+QMenu::item {{
+    padding: 8px 26px 8px 12px;
+    border-radius: 6px;
+    color: {TEXT};
+    font-size: 13px;
+}}
+QMenu::item:selected {{ background: {BORDER}; }}
+QMenu::item:disabled {{ color: {TEXT_FAINT}; }}
+QMenu::separator {{ height: 1px; background: {BORDER_SOFT}; margin: 5px 8px; }}
+QMenu::icon {{ padding-left: 8px; }}
+
+/* -- checkboxes ------------------------------------------------------------ */
+QCheckBox {{ font-size: 13px; spacing: 9px; }}
+QCheckBox::indicator {{
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1px solid {BORDER};
+    background: {FIELD_BG};
+}}
+QCheckBox::indicator:hover {{ border-color: {ACCENT}; }}
+QCheckBox::indicator:checked {{
+    background: {ACCENT};
+    border-color: {ACCENT};
+    image: url({check});
+}}
+
+/* -- invite code box --------------------------------------------------------- */
+QPlainTextEdit {{
+    background: {FIELD_BG};
+    border: 1px solid {BORDER};
+    border-radius: 9px;
+    padding: 8px 10px;
+    color: {ACCENT};
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    selection-background-color: {ACCENT_TEAL};
+}}
+
+#SettingsSection {{
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    color: {TEXT_FAINT};
 }}
 """
 
