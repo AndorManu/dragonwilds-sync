@@ -153,6 +153,7 @@ class MainWindow(QWidget):
         c.update_available.connect(self._on_update_available)
         c.nudge_received.connect(self._on_nudge_received)
         c.quit_for_update.connect(self._quit_for_update)
+        c.run_on_ui.connect(lambda fn: fn())   # queued → runs on the GUI thread
         self.note_overlay.submitted.connect(c.save_session_note)
 
         # onboarding / settings / sub-pages
@@ -271,7 +272,9 @@ class MainWindow(QWidget):
             except Exception:
                 log.exception("Preflight failed")
                 checks = []
-            self.preflight_page.show_results(checks)
+            # widgets are rebuilt on the GUI thread, never from this worker
+            self.controller.run_on_ui.emit(
+                lambda: self.preflight_page.show_results(checks))
 
         threading.Thread(target=worker, daemon=True, name="preflight").start()
 

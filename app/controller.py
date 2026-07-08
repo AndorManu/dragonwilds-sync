@@ -60,6 +60,9 @@ class Controller(QObject):
     update_available = Signal(object, str)     # UpdateInfo, world_name
     nudge_received = Signal(str, str)           # from_player, world_name
     quit_for_update = Signal()
+    # Worker threads must never touch widgets. Emitting a callable through
+    # this signal marshals it onto the GUI thread (queued connection).
+    run_on_ui = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -449,7 +452,7 @@ class Controller(QObject):
             else:
                 self.toast.emit("warning", "Couldn't find that character's files.")
             if done:
-                done()
+                self.run_on_ui.emit(done)
 
         threading.Thread(target=worker, daemon=True, name="char-checkpoint").start()
 
@@ -482,7 +485,7 @@ class Controller(QObject):
                                          "was left untouched.")
             finally:
                 if done:
-                    done()
+                    self.run_on_ui.emit(done)
 
         threading.Thread(target=worker, daemon=True, name="bargain").start()
 
@@ -796,7 +799,7 @@ class Controller(QObject):
             else:
                 self.toast.emit("warning", "No local save to checkpoint yet.")
             if done:
-                done()
+                self.run_on_ui.emit(done)
 
         threading.Thread(target=worker, daemon=True, name="checkpoint").start()
 

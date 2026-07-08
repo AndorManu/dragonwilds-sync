@@ -173,6 +173,30 @@ QPushButton[variant="primary"]:disabled {{
     color: {TEXT_FAINT};
 }}
 
+QPushButton[variant="ember"] {{
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {EMBER}, stop:1 {EMBER_DEEP});
+    color: #1A1206;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 0 22px;
+}}
+QPushButton[variant="ember"]:hover {{
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {EMBER_HI}, stop:1 {EMBER});
+}}
+QPushButton[variant="ember"]:pressed {{
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {EMBER_DEEP}, stop:1 #8F5A16);
+}}
+QPushButton[variant="ember"]:disabled {{
+    background: {SURFACE_2};
+    color: {TEXT_FAINT};
+}}
+
 QPushButton[variant="ghost"] {{
     background: transparent;
     color: {TEXT_DIM};
