@@ -1,5 +1,55 @@
 # Notes for Manu
 
+## v1.3 — characters, the Secret, and the saga
+
+**Everything you greenlit shipped**, in `dist\DragonwildsSync.exe` (v1.3.0,
+44.8 MB, launches clean). **112 tests** (was 87). Sync core still frozen —
+character travel literally reuses it unchanged, which is why it inherits
+every conflict guarantee.
+
+### What I found before building (the grounding)
+- Characters live in `Saved\SaveCharacters\` as **plain JSON** with `.backup`
+  twins — not the scary binary I'd feared. Name, playtime, appearance,
+  vitals, inventory (plain-int counts/durability), and 11 skills as
+  `{Id, Xp}` with **bare-integer XP** and Ids identical across characters.
+- The `Backup` field changes every save; I tested CRC32/Adler32 over every
+  plausible byte range — **no match**, so it's not a simple content checksum.
+  The editor never touches it. **First bargain on a real character is a
+  supervised experiment**: checkpoint is automatic, and if the game rejects
+  the file, restore from Characters → Backups costs ten seconds. Please try
+  one small edit (e.g. +1 xp) before telling the group about the secret.
+- One of your characters is named with invisible RTL Unicode marks
+  (`1⁧⁧Minblyat`) — handled, and honestly, respect.
+
+### The Secret (don't read this aloud in the group chat)
+Click the **dragon eye in the titlebar five times, quickly**. It stays
+unlocked afterwards (bottom of the world menu: *The Dragon's Bargain*).
+Skill XP rewrites, restore-vitals, repair-everything. Skill names are
+opaque GUIDs in the file, so the grimoire ships with an **identify ritual**:
+begin it, train exactly one skill in game, finish it, and name what you
+trained — the label sticks forever. Every bargain: game-closed check →
+auto-checkpoint → only the asked-for numbers change → the game's own
+`.backup` twin stays untouched as a second net.
+
+### Judgment calls (v1.3)
+1. **Character travel is per-player and opt-in** (Characters page toggle) —
+   your character follows *you* across *your* PCs via
+   `shared/characters/<you>/`. It never touches friends' characters.
+2. **Portraits are stylised guesses**: the save stores swatch names
+   (SkinTone8, Color6), not RGB. I mapped them to consistent palettes — a
+   character always looks the same everywhere, even if not game-exact.
+3. **Vitals "heal" writes a huge CurrentValue** on the theory the game
+   clamps to max on load — part of the same first-bargain experiment.
+4. **Group history keeps 3 versions ≈ 9 MB** of cloud space per world.
+5. **Discord Rich Presence needs a free app id** (discord.com/developers →
+   New Application → copy the ID into Settings). Without it, the feature
+   silently stays off. No dependency was added — the IPC pipe is hand-rolled.
+6. **Saga totals**: all-time via `stats.json` starting *now*; sessions from
+   before v1.3 only exist in the capped manifest history, so the first days
+   may undercount old sessions. It says so on the page ("totals cover…").
+
+---
+
 ## v1.2 — the redesign + "everything a friend group could want" pass
 
 **Built on your feedback: the UI looked AI-made, and you wanted more features.**

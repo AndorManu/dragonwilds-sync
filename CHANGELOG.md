@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.3.0 — 2026-07-09
+
+**Your characters join the story.**
+
+- **Characters page** (world menu): everyone on this PC with procedural
+  portraits drawn from their actual in-game appearance, real playtime,
+  vitals, and per-session vault backups + named checkpoints.
+- **Portraits as avatars**: the session feed and live presence now show who
+  played *as whom* — "Bram is in the wilds as Grimjaw", portrait included.
+  Friends see it too (a tiny appearance descriptor rides the manifest).
+- **Character travel**: mark a character as travelling and it follows you
+  between your own PCs through the shared folder — with the same conflict
+  protection as world saves (it literally reuses the same protocol).
+- **The Saga** (world menu): the fellowship's totals (all-time, via a small
+  accumulator in the shared folder) and a chronicle of everyone's session
+  notes, exportable as a handsome `saga.html` for the group.
+- **Group history**: the last three shared world versions are archived in
+  the shared folder — anyone can roll the group back from Backups.
+- **Extras**: per-world banner colors, a soft ember chime on Play (off in
+  Settings if it's not your thing), and optional Discord Rich Presence.
+- *…and the dragon's eye keeps a secret. Curious fingers find it.*
+
+Character files are only ever edited checkpoint-first, with the game's own
+`.backup` twin untouched. Sync protocol: unchanged, compatible with 1.0–1.2.
+
 ## 1.2.0 — 2026-07-09
 
 **A new look, and a lot less friction.**
