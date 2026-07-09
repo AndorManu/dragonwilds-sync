@@ -580,9 +580,12 @@ class Controller(QObject):
                     self._char_backup_root(Path(char_path).stem))
                 if slot is not None:
                     name = items_mod.name(item_data)
-                    self.toast.emit("success", f"{name} ×{count} conjured into bag slot "
-                                               f"{slot}. Experimental — if the game "
-                                               f"rejects it, restore the checkpoint.")
+                    pouch = items_mod.pouch(item_data)
+                    where = ("your Equipped/main bag" if pouch == "Gear & Tools"
+                             else f"your {pouch} pouch")
+                    self.toast.emit("success", f"{name} ×{count} conjured — look in "
+                                               f"{where} in-game. If the game rejects "
+                                               f"it, restore the checkpoint.")
                 else:
                     self.toast.emit("warning", "No free bag slot — make room first.")
             except Exception:

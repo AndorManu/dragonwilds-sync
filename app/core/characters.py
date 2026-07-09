@@ -360,6 +360,73 @@ def list_inventory(data: dict) -> tuple[list[InventorySlot], int]:
     return slots, max_index
 
 
+def list_loadout(data: dict) -> list[InventorySlot]:
+    """Equipped gear from the Loadout container (real gear, not hotbar refs)."""
+    loadout = _get_path(data, ("GameProgress", "Loadout")) or {}
+    slots = []
+    for key, value in loadout.items():
+        if key == "MaxSlotIndex" or not isinstance(value, dict):
+            continue
+        if "ItemData" not in value:      # hotbar bindings hold PlayerInventoryItemIndex
+            continue
+        try:
+            index = int(key)
+        except ValueError:
+            continue
+        slots.append(InventorySlot(
+            index=index, item_data=str(value.get("ItemData", "")),
+            guid=str(value.get("GUID", "")), count=value.get("Count"),
+            durability=value.get("Durability")))
+    slots.sort(key=lambda s: s.index)
+    return slots
+
+
+# Appearance customization slots and their observed value ranges. The game
+# only stores enum row-names; these are the ranges seen across characters.
+APPEARANCE_SLOTS = ("SkinTone", "HairPreset", "HairColor",
+                    "EyeColor", "EyebrowColor", "FacialHairPreset")
+APPEARANCE_RANGES = {
+    "SkinTone": [f"SkinTone{i}" for i in range(1, 9)],
+    "HairColor": [f"Color{i}" for i in range(1, 9)],
+    "EyeColor": [f"Color{i}" for i in range(1, 9)],
+    "EyebrowColor": [f"Color{i}" for i in range(1, 9)],
+    "HairPreset": [f"Preset{i}" for i in range(1, 12)],
+}
+
+
+def appearance_rows(data: dict) -> dict:
+    cust = (data.get("Customization") or {}).get("CustomizationData") or {}
+    return {slot: entry.get("rowName") for slot, entry in cust.items()
+            if isinstance(entry, dict)}
+
+
+def facial_hair_options(current: str | None) -> list[str]:
+    """Facial-hair presets are prefixed by head variant (M_A_/M_D_); offer the
+    matching family plus the shared 'None'."""
+    prefix = "M_A_"
+    if current and "_" in current:
+        prefix = current.rsplit("Preset", 1)[0]
+    opts = [f"{prefix}PresetNone"] + [f"{prefix}Preset{i}" for i in range(1, 7)]
+    if current and current not in opts:
+        opts.insert(0, current)
+    return opts
+
+
+def is_hardcore(data: dict) -> bool:
+    hc = data.get("Hardcore")
+    return bool(isinstance(hc, dict) and hc.get("IsHardcore"))
+
+
+def active_status_effects(data: dict) -> list[str]:
+    char = _get_path(data, ("GameProgress", "Character")) or {}
+    effects = char.get("StatusEffects") or {}
+    active = []
+    for name, e in effects.items():
+        if isinstance(e, dict) and (e.get("Value") or any(e.get("Active") or [])):
+            active.append(name)
+    return active
+
+
 def first_free_slot(data: dict) -> int | None:
     slots, max_index = list_inventory(data)
     used = {s.index for s in slots}
@@ -479,10 +546,14 @@ class EditPlan:
     repair_all: bool = False                            # every Durability -> max
     item_counts: dict = field(default_factory=dict)     # slot key -> new Count
     item_repairs: set = field(default_factory=set)      # slot keys to repair
+    cleanse: bool = False                               # clear all status effects
+    disable_hardcore: bool = False                      # turn off hardcore
+    appearance: dict = field(default_factory=dict)      # customization slot -> rowName
 
     def empty(self) -> bool:
         return not (self.skill_xp or self.heal_vitals or self.repair_all
-                    or self.item_counts or self.item_repairs)
+                    or self.item_counts or self.item_repairs or self.cleanse
+                    or self.disable_hardcore or self.appearance)
 
 
 REPAIR_VALUE = 9999
@@ -564,6 +635,40 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
         if isinstance(slot, dict) and "Durability" in slot:
             slot["Durability"] = REPAIR_VALUE
             changes.append(f"slot {slot_key}: repaired")
+    # loadout (equipped) durability too, so "repair X" from the Equipped pouch works
+    loadout = progress.get("Loadout") or {}
+    for slot_key in (plan.item_repairs or ()):
+        if str(slot_key).startswith("L"):
+            slot = loadout.get(str(slot_key)[1:])
+            if isinstance(slot, dict) and "Durability" in slot:
+                slot["Durability"] = REPAIR_VALUE
+                changes.append(f"equipped {slot_key}: repaired")
+
+    if plan.cleanse:
+        char = progress.get("Character") or {}
+        effects = char.get("StatusEffects") or {}
+        cleansed = 0
+        for name, effect in effects.items():
+            if isinstance(effect, dict) and "Active" in effect:
+                effect["Value"] = 0
+                effect["Active"] = [False for _ in effect.get("Active", [False])]
+                cleansed += 1
+        if cleansed:
+            changes.append("status effects cleansed")
+
+    if plan.disable_hardcore:
+        hardcore = data.get("Hardcore")
+        if isinstance(hardcore, dict) and hardcore.get("IsHardcore"):
+            hardcore["IsHardcore"] = False
+            changes.append("hardcore disabled")
+
+    if plan.appearance:
+        cust = (data.get("Customization") or {}).get("CustomizationData") or {}
+        for slot_name, row in plan.appearance.items():
+            entry = cust.get(slot_name)
+            if isinstance(entry, dict) and entry.get("rowName") != row:
+                entry["rowName"] = row
+                changes.append(f"{slot_name} → {row}")
 
     if not changes:
         return []

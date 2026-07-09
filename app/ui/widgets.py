@@ -159,55 +159,85 @@ class Avatar(QWidget):
             p.drawText(self.rect(), Qt.AlignCenter, fmt.initials(self._name))
 
     def _paint_portrait(self, p: QPainter):
-        """A tiny stylised bust from the descriptor: skin, hair, beard, eyes."""
-        _body, skin_row, hair_preset, hair_row, facial_row, eye_row = self._portrait[:6]
-        s = self.height()
-        skin = _ramp_pick(_SKIN_RAMP, skin_row)
-        hair = _ramp_pick(_HAIR_RAMP, hair_row)
-        eyes = _ramp_pick(_EYE_RAMP, eye_row, 1)
+        paint_bust(p, self.rect(), self._portrait, shoulders=True)
 
-        p.setClipRegion(self.rect().adjusted(2, 2, -2, -2), Qt.ReplaceClip)
-        p.setPen(Qt.NoPen)
 
-        # shoulders
+def paint_bust(p: QPainter, rect, descriptor_parts, shoulders=True):
+    """Stylised bust from an appearance descriptor: skin, hair, beard, eyes.
+    Shared by the feed Avatar and the Mirror's live preview."""
+    _body, skin_row, hair_preset, hair_row, facial_row, eye_row = descriptor_parts[:6]
+    x0, y0, s = rect.left(), rect.top(), rect.height()
+    skin = _ramp_pick(_SKIN_RAMP, skin_row)
+    hair = _ramp_pick(_HAIR_RAMP, hair_row)
+    eyes = _ramp_pick(_EYE_RAMP, eye_row, 1)
+
+    p.setClipRect(rect.adjusted(2, 2, -2, -2))
+    p.setPen(Qt.NoPen)
+
+    if shoulders:
         p.setBrush(QBrush(QColor(theme.SURFACE_2)))
-        p.drawEllipse(int(s * 0.12), int(s * 0.72), int(s * 0.76), int(s * 0.55))
-        # head
-        p.setBrush(QBrush(skin))
-        head_x, head_y = int(s * 0.28), int(s * 0.22)
-        head_w, head_h = int(s * 0.44), int(s * 0.50)
-        p.drawEllipse(head_x, head_y, head_w, head_h)
+        p.drawEllipse(x0 + int(s * 0.12), y0 + int(s * 0.72),
+                      int(s * 0.76), int(s * 0.55))
+    p.setBrush(QBrush(skin))
+    head_x, head_y = x0 + int(s * 0.28), y0 + int(s * 0.22)
+    head_w, head_h = int(s * 0.44), int(s * 0.50)
+    p.drawEllipse(head_x, head_y, head_w, head_h)
 
-        # hair, unless the preset says none/bald
-        preset = (hair_preset or "").lower()
-        if "none" not in preset and "bald" not in preset:
-            digits = "".join(ch for ch in preset if ch.isdigit())
-            style = (int(digits) if digits else 0) % 3
-            p.setBrush(QBrush(hair))
-            if style == 0:      # short cap
-                p.drawChord(head_x - 1, head_y - int(s * 0.04),
-                            head_w + 2, int(head_h * 0.72), 0, 180 * 16)
-            elif style == 1:    # longer, falls beside the face
-                p.drawChord(head_x - int(s * 0.05), head_y - int(s * 0.05),
-                            head_w + int(s * 0.10), int(head_h * 0.95), 0, 180 * 16)
-            else:               # swept back / knot
-                p.drawChord(head_x, head_y - int(s * 0.07),
-                            head_w, int(head_h * 0.62), 0, 180 * 16)
-                p.drawEllipse(int(s * 0.44), int(s * 0.10), int(s * 0.14), int(s * 0.12))
+    preset = (hair_preset or "").lower()
+    if "none" not in preset and "bald" not in preset:
+        digits = "".join(ch for ch in preset if ch.isdigit())
+        style = (int(digits) if digits else 0) % 3
+        p.setBrush(QBrush(hair))
+        if style == 0:
+            p.drawChord(head_x - 1, head_y - int(s * 0.04),
+                        head_w + 2, int(head_h * 0.72), 0, 180 * 16)
+        elif style == 1:
+            p.drawChord(head_x - int(s * 0.05), head_y - int(s * 0.05),
+                        head_w + int(s * 0.10), int(head_h * 0.95), 0, 180 * 16)
+        else:
+            p.drawChord(head_x, head_y - int(s * 0.07),
+                        head_w, int(head_h * 0.62), 0, 180 * 16)
+            p.drawEllipse(x0 + int(s * 0.44), y0 + int(s * 0.10),
+                          int(s * 0.14), int(s * 0.12))
 
-        # facial hair
-        if "none" not in (facial_row or "").lower():
-            beard = QColor(hair).darker(115)
-            p.setBrush(QBrush(beard))
-            p.drawChord(head_x + int(head_w * 0.14), head_y + int(head_h * 0.52),
-                        int(head_w * 0.72), int(head_h * 0.52), 180 * 16, 180 * 16)
+    if "none" not in (facial_row or "").lower():
+        beard = QColor(hair).darker(115)
+        p.setBrush(QBrush(beard))
+        p.drawChord(head_x + int(head_w * 0.14), head_y + int(head_h * 0.52),
+                    int(head_w * 0.72), int(head_h * 0.52), 180 * 16, 180 * 16)
 
-        # eyes
-        p.setBrush(QBrush(eyes))
-        eye_y = head_y + int(head_h * 0.42)
-        r = max(1, int(s * 0.045))
-        p.drawEllipse(head_x + int(head_w * 0.26) - r, eye_y - r, r * 2, r * 2)
-        p.drawEllipse(head_x + int(head_w * 0.72) - r, eye_y - r, r * 2, r * 2)
+    p.setBrush(QBrush(eyes))
+    eye_y = head_y + int(head_h * 0.42)
+    r = max(1, int(s * 0.045))
+    p.drawEllipse(head_x + int(head_w * 0.26) - r, eye_y - r, r * 2, r * 2)
+    p.drawEllipse(head_x + int(head_w * 0.72) - r, eye_y - r, r * 2, r * 2)
+
+
+class Portrait(QWidget):
+    """A larger live portrait for the Mirror; set from an appearance dict."""
+
+    def __init__(self, size=132, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+        self._parts = ["", "SkinTone4", "Preset1", "Color4", "None", "Color2"]
+
+    def set_appearance(self, rows: dict):
+        self._parts = [
+            rows.get("BodyType", ""), rows.get("SkinTone", "SkinTone4"),
+            rows.get("HairPreset", "Preset1"), rows.get("HairColor", "Color4"),
+            rows.get("FacialHairPreset", "None"), rows.get("EyeColor", "Color2")]
+        self.update()
+
+    def paintEvent(self, e):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        base = QColor(theme.EMBER)
+        ring = QColor(base)
+        ring.setAlphaF(0.10)
+        p.setBrush(QBrush(ring))
+        p.setPen(QPen(QColor(base.red(), base.green(), base.blue(), 90), 1.4))
+        p.drawEllipse(self.rect().adjusted(1, 1, -2, -2))
+        paint_bust(p, self.rect(), self._parts, shoulders=True)
 
 
 class OptionCard(QWidget):

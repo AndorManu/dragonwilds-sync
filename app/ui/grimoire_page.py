@@ -75,10 +75,11 @@ class SlotCell(QWidget):
     """One bag slot: category glyph tinted by rarity, count badge, durability
     sliver, name tooltip, hover glow."""
 
-    clicked = Signal(object)   # InventorySlot
+    clicked = Signal(object)   # the SlotCell itself
 
-    def __init__(self, slot, edited=False, parent=None):
+    def __init__(self, key, slot, edited=False, parent=None):
         super().__init__(parent)
+        self.key = key
         self.slot = slot
         self._hover = False
         self._selected = False
@@ -105,7 +106,7 @@ class SlotCell(QWidget):
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
-            self.clicked.emit(self.slot)
+            self.clicked.emit(self)
 
     def event(self, e):
         if e.type() in (e.Type.HoverEnter, e.Type.HoverLeave):
@@ -249,8 +250,11 @@ class GrimoirePage(QWidget):
         top_row.addStretch(1)
         self.tab_skills = TabChip("Skills", "skill-attack")
         self.tab_bag = TabChip("The Bag", "gem")
+        self.tab_mirror = TabChip("Mirror", "cat-ring")
         self.tab_scrolls = TabChip("Scrolls", "scroll")
-        for i, chip in enumerate((self.tab_skills, self.tab_bag, self.tab_scrolls)):
+        self._tabs = (self.tab_skills, self.tab_bag, self.tab_mirror,
+                      self.tab_scrolls)
+        for i, chip in enumerate(self._tabs):
             chip.clicked.connect(lambda _=False, idx=i: self._switch_tab(idx))
             top_row.addWidget(chip)
         root.addLayout(top_row)
@@ -260,8 +264,10 @@ class GrimoirePage(QWidget):
         self.stack.setStyleSheet("background: transparent;")
         self._skills_tab = self._make_scroll_tab()
         self._bag_tab = self._make_scroll_tab()
+        self._mirror_tab = self._make_scroll_tab()
         self._scrolls_tab = self._make_scroll_tab()
-        for tab in (self._skills_tab, self._bag_tab, self._scrolls_tab):
+        for tab in (self._skills_tab, self._bag_tab, self._mirror_tab,
+                    self._scrolls_tab):
             self.stack.addWidget(tab)
         root.addWidget(self.stack, 1)
         root.addSpacing(10)
@@ -307,7 +313,7 @@ class GrimoirePage(QWidget):
         return box
 
     def _switch_tab(self, index):
-        for i, chip in enumerate((self.tab_skills, self.tab_bag, self.tab_scrolls)):
+        for i, chip in enumerate(self._tabs):
             chip.setChecked(i == index)
         self.stack.setCurrentIndex(index)
 
@@ -404,8 +410,10 @@ class GrimoirePage(QWidget):
     def _render_all(self):
         self._bag_edits = {}
         self._bag_selected = None
+        self._mirror_combos = {}
         self._render_skills()
         self._render_bag()
+        self._render_mirror()
         self._render_scrolls()
 
     def _empty_note(self, box, text):
@@ -443,7 +451,13 @@ class GrimoirePage(QWidget):
         box.addWidget(boons_head)
         self.heal_check = QCheckBox("Restore vitals — health, stamina, food, water")
         self.repair_check = QCheckBox("Repair everything carried and worn")
-        for c in (self.heal_check, self.repair_check):
+        self.cleanse_check = QCheckBox("Cleanse all status effects (poison, burning, cold…)")
+        self.hardcore_check = QCheckBox("Lift the hardcore curse (disable hardcore)")
+        boons = [self.heal_check, self.repair_check, self.cleanse_check]
+        data = self._current_data()
+        if data and characters.is_hardcore(data):
+            boons.append(self.hardcore_check)
+        for c in boons:
             c.setStyleSheet("background: transparent;")
             box.addWidget(c)
         box.addStretch(1)
@@ -514,25 +528,29 @@ class GrimoirePage(QWidget):
             self._empty_note(box, "No characters found on this PC.")
             return
         slots, _max = characters.list_inventory(data)
-        if not slots:
+        equipped = characters.list_loadout(data)
+        if not slots and not equipped:
             self._empty_note(box, "The bag is empty — go pick something up first.")
             return
 
         card = QFrame()
         card.setObjectName("GlassCard")
         wrap = QVBoxLayout(card)
-        wrap.setContentsMargins(14, 12, 14, 12)
-        wrap.setSpacing(10)
+        wrap.setContentsMargins(14, 10, 14, 12)
+        wrap.setSpacing(8)
 
-        grid = QGridLayout()
-        grid.setSpacing(6)
-        for i, slot in enumerate(slots):
-            cell = SlotCell(slot, edited=(slot.index in self._bag_edits))
-            cell.clicked.connect(self._select_slot)
-            self._bag_cells[slot.index] = cell
-            grid.addWidget(cell, i // BAG_COLUMNS, i % BAG_COLUMNS)
-        grid.setColumnStretch(BAG_COLUMNS, 1)
-        wrap.addLayout(grid)
+        # equipped gear (Loadout container — keyed "L<index>")
+        if equipped:
+            self._add_pouch(wrap, "Equipped", [("L", s) for s in equipped])
+        # main inventory, grouped into the game's pouches
+        by_pouch = {}
+        for slot in slots:
+            by_pouch.setdefault(items.pouch(slot.item_data), []).append(slot)
+        for pouch_name, _cats in items.POUCHES:
+            group = by_pouch.get(pouch_name)
+            if group:
+                self._add_pouch(wrap, pouch_name, [("", s) for s in group])
+        wrap.addSpacing(2)
 
         self.bag_editor = QWidget()
         self.bag_editor.setStyleSheet("background: transparent;")
@@ -601,10 +619,39 @@ class GrimoirePage(QWidget):
         if info:
             signal.emit(info.path)
 
-    def _select_slot(self, slot):
-        self._bag_selected = slot
-        for index, cell in self._bag_cells.items():
-            cell.set_selected(index == slot.index)
+    def _add_pouch(self, wrap, title, keyed_slots):
+        head = QHBoxLayout()
+        head.setSpacing(6)
+        lbl = QLabel(title.upper())
+        lbl.setStyleSheet(
+            f"background: transparent; border: none; color: {theme.EMBER};"
+            f"font-family: '{theme.display_family()}'; font-size: 10px;"
+            f"font-weight: 600; letter-spacing: 1.5px;")
+        head.addWidget(lbl)
+        count = QLabel(f"{len(keyed_slots)}")
+        count.setStyleSheet(f"background: transparent; border: none;"
+                            f"color: {theme.TEXT_FAINT}; font-size: 10px;")
+        head.addWidget(count)
+        head.addStretch(1)
+        wrap.addSpacing(2)
+        wrap.addLayout(head)
+
+        grid = QGridLayout()
+        grid.setSpacing(6)
+        for i, (prefix, slot) in enumerate(keyed_slots):
+            key = f"{prefix}{slot.index}"
+            cell = SlotCell(key, slot, edited=(key in self._bag_edits))
+            cell.clicked.connect(self._select_slot)
+            self._bag_cells[key] = cell
+            grid.addWidget(cell, i // BAG_COLUMNS, i % BAG_COLUMNS)
+        grid.setColumnStretch(BAG_COLUMNS, 1)
+        wrap.addLayout(grid)
+
+    def _select_slot(self, cell):
+        self._bag_selected = cell
+        for key, other in self._bag_cells.items():
+            other.set_selected(key == cell.key)
+        slot = cell.slot
         rarity_label, rarity_color = items.rarity(slot.item_data)
         name = items.name(slot.item_data)
         parts = [f"<b>{name}</b>",
@@ -613,7 +660,7 @@ class GrimoirePage(QWidget):
             parts.append(f"×{slot.count}")
         if slot.durability is not None:
             parts.append(f"dura {slot.durability}")
-        pending = self._bag_edits.get(slot.index) or {}
+        pending = self._bag_edits.get(cell.key) or {}
         tail = []
         if pending.get("count"):
             tail.append(f"→ ×{pending['count']}")
@@ -629,26 +676,25 @@ class GrimoirePage(QWidget):
         self.bag_count.setToolTip(f"Max stack for this item: {max_stack}")
         self.bag_repair.setEnabled(slot.durability is not None)
 
-    def _bag_edit(self, slot_index) -> dict:
-        return self._bag_edits.setdefault(slot_index, {"count": None, "repair": False})
+    def _bag_edit(self, key) -> dict:
+        return self._bag_edits.setdefault(key, {"count": None, "repair": False})
 
     def _bag_count_edited(self, text):
         if not self._bag_selected:
             return
-        edit = self._bag_edit(self._bag_selected.index)
+        edit = self._bag_edit(self._bag_selected.key)
         edit["count"] = int(text) if text.strip() else None
-        self._bag_cells[self._bag_selected.index].set_edited(
-            bool(edit["count"] or edit["repair"]))
+        self._bag_selected.set_edited(bool(edit["count"] or edit["repair"]))
 
     def _bag_quick(self, value):
-        if not self._bag_selected or self._bag_selected.count is None:
+        if not self._bag_selected or self._bag_selected.slot.count is None:
             return
-        cap = items.max_stack(self._bag_selected.item_data)
+        cap = items.max_stack(self._bag_selected.slot.item_data)
         if value == "max":
             value = cap
         elif value is None:   # ×2
             base = int(self.bag_count.text()) if self.bag_count.text().strip() \
-                else self._bag_selected.count
+                else self._bag_selected.slot.count
             value = min(cap, base * 2)
         self.bag_count.setText(str(value))
         self._bag_count_edited(self.bag_count.text())
@@ -656,11 +702,102 @@ class GrimoirePage(QWidget):
     def _bag_repair_clicked(self):
         if not self._bag_selected:
             return
-        edit = self._bag_edit(self._bag_selected.index)
+        edit = self._bag_edit(self._bag_selected.key)
         edit["repair"] = not edit["repair"]
-        self._bag_cells[self._bag_selected.index].set_edited(
-            bool(edit["count"] or edit["repair"]))
+        self._bag_selected.set_edited(bool(edit["count"] or edit["repair"]))
         self._select_slot(self._bag_selected)
+
+    # -- mirror tab (the barbershop) ---------------------------------------------------
+    def _render_mirror(self):
+        box = self._fresh_body(self._mirror_tab)
+        self._mirror_combos = {}
+        self._mirror_original = {}
+        data = self._current_data()
+        if not data:
+            self._empty_note(box, "No characters found on this PC.")
+            return
+        rows = characters.appearance_rows(data)
+        self._mirror_original = dict(rows)
+
+        top = QHBoxLayout()
+        top.setSpacing(16)
+        self.portrait = widgets.Portrait(128)
+        self.portrait.set_appearance(rows)
+        top.addWidget(self.portrait, 0, Qt.AlignTop)
+
+        controls = QVBoxLayout()
+        controls.setSpacing(9)
+        intro = QLabel("The Mirror reflects who you choose to be. Colours and "
+                       "styles use the game's own presets.")
+        intro.setWordWrap(True)
+        intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12px;"
+                            f"background: transparent;")
+        controls.addWidget(intro)
+
+        fields = [
+            ("SkinTone", "Skin tone", characters.APPEARANCE_RANGES["SkinTone"]),
+            ("HairPreset", "Hair style", characters.APPEARANCE_RANGES["HairPreset"] + ["None"]),
+            ("HairColor", "Hair colour", characters.APPEARANCE_RANGES["HairColor"]),
+            ("FacialHairPreset", "Facial hair",
+             characters.facial_hair_options(rows.get("FacialHairPreset"))),
+            ("EyeColor", "Eye colour", characters.APPEARANCE_RANGES["EyeColor"]),
+            ("EyebrowColor", "Brow colour", characters.APPEARANCE_RANGES["EyebrowColor"]),
+        ]
+        for slot, label, options in fields:
+            if slot not in rows:
+                continue
+            row = QHBoxLayout()
+            row.setSpacing(8)
+            lbl = QLabel(label)
+            lbl.setStyleSheet(f"background: transparent; color: {theme.TEXT_DIM};"
+                              f"font-size: 12px;")
+            lbl.setMinimumWidth(84)
+            row.addWidget(lbl)
+            combo = QComboBox()
+            combo.setFixedHeight(30)
+            current = rows.get(slot)
+            opts = list(options)
+            if current and current not in opts:
+                opts.insert(0, current)
+            for opt in opts:
+                combo.addItem(self._pretty_appearance(slot, opt), opt)
+            if current:
+                combo.setCurrentIndex(max(0, opts.index(current)))
+            combo.currentIndexChanged.connect(lambda _=0: self._mirror_preview())
+            self._mirror_combos[slot] = combo
+            row.addWidget(combo, 1)
+            controls.addLayout(row)
+        top.addLayout(controls, 1)
+        box.addLayout(top)
+        box.addStretch(1)
+
+    @staticmethod
+    def _pretty_appearance(slot, value):
+        if value in ("None", None):
+            return "None"
+        for prefix in ("SkinTone", "Preset", "Color"):
+            if str(value).startswith(prefix) and value[len(prefix):].isdigit():
+                return f"{prefix.replace('SkinTone', 'Tone')} {value[len(prefix):]}"
+        if "Preset" in str(value):   # facial hair like M_D_Preset4
+            tail = value.split("Preset", 1)[1]
+            return "None" if tail == "None" else f"Style {tail}"
+        return value
+
+    def _mirror_preview(self):
+        if not hasattr(self, "portrait"):
+            return
+        rows = dict(self._mirror_original)
+        for slot, combo in self._mirror_combos.items():
+            rows[slot] = combo.currentData()
+        self.portrait.set_appearance(rows)
+
+    def _mirror_changes(self) -> dict:
+        changes = {}
+        for slot, combo in getattr(self, "_mirror_combos", {}).items():
+            value = combo.currentData()
+            if value and value != self._mirror_original.get(slot):
+                changes[slot] = value
+        return changes
 
     # -- scrolls tab ------------------------------------------------------------------
     def _render_scrolls(self):
@@ -811,7 +948,9 @@ class GrimoirePage(QWidget):
         if not info:
             return
         plan = EditPlan(heal_vitals=self.heal_check.isChecked(),
-                        repair_all=self.repair_check.isChecked())
+                        repair_all=self.repair_check.isChecked(),
+                        cleanse=self.cleanse_check.isChecked(),
+                        disable_hardcore=self.hardcore_check.isChecked())
         for skill_id, (combo, edit) in self._skill_edits.items():
             text = edit.text().strip()
             if text:
@@ -820,11 +959,12 @@ class GrimoirePage(QWidget):
             level = combo.currentData()
             if level:
                 plan.skill_xp[skill_id] = levels.xp_for_level(level)
-        for index, edit in self._bag_edits.items():
+        for key, edit in self._bag_edits.items():
             if edit.get("count"):
-                plan.item_counts[str(index)] = edit["count"]
+                plan.item_counts[key] = edit["count"]
             if edit.get("repair"):
-                plan.item_repairs.add(str(index))
+                plan.item_repairs.add(key)
+        plan.appearance.update(self._mirror_changes())
         if plan.empty():
             return
         self.bargain_requested.emit(info.path, plan)

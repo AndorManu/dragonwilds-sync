@@ -504,6 +504,12 @@ class MainWindow(QWidget):
         if plan.item_repairs:
             wants.append(f"repair {len(plan.item_repairs)} item"
                          f"{'s' if len(plan.item_repairs) != 1 else ''}")
+        if plan.cleanse:
+            wants.append("cleanse status effects")
+        if plan.disable_hardcore:
+            wants.append("lift the hardcore curse")
+        if plan.appearance:
+            wants.append("reforge your appearance")
         if not self.confirm.ask(
                 "Seal the bargain?",
                 "The dragon will " + ", ".join(wants) + ".\n\n"
