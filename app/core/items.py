@@ -26,16 +26,33 @@ RARITY = {
 }
 
 # Category -> our own icon key (drawn in ui/icons.py). Unmapped -> "gem".
+# Every category gets a distinct item silhouette — earlier versions reused skill
+# emblems (ores drew the mining pickaxe, food the cooking pot), which read as the
+# wrong thing in a bag grid.
 CATEGORY_ICON = {
     "Melee Weapons": "cat-sword", "Bows": "cat-bow", "Crossbows": "cat-bow",
-    "Arrows": "cat-arrow", "Staves": "skill-magic", "Shields": "cat-shield",
+    "Arrows": "cat-arrow", "Staves": "cat-staff", "Shields": "cat-shield",
     "Chestplates": "cat-armor", "Helms": "cat-helm", "Leggings": "cat-armor",
     "Capes": "cat-cape", "Rings": "cat-ring", "Amulets": "cat-amulet",
-    "Food": "skill-cooking", "Potions": "cat-potion", "Herbs": "cat-herb",
-    "Farming": "skill-farming", "Woodcutting": "skill-woodcutting",
-    "Tools": "cat-tool", "Ores": "skill-mining", "Bars": "cat-bar",
-    "Runes": "cat-rune", "Runecrafting": "skill-runecrafting",
-    "Tombs": "cat-tomb", "Basic Item": "gem",
+    "Food": "cat-food", "Potions": "cat-potion", "Herbs": "cat-herb",
+    "Farming": "cat-seed", "Woodcutting": "cat-log",
+    "Tools": "cat-tool", "Ores": "cat-ore", "Bars": "cat-bar",
+    "Runes": "cat-rune", "Runecrafting": "cat-rune",
+    "Bones": "cat-bone", "Tombs": "cat-tomb", "Basic Item": "gem",
+}
+
+# Material tiers. Many items come in a ladder of materials sharing one base name
+# ("Bronze Dagger" → "Iron Dagger" → "Steel Dagger" → "Mithril Dagger"). This is
+# a single global rank order; only the *relative* order inside a family matters,
+# and families are homogeneous (all metals, or all woods), so metal and wood
+# ranks can interleave freely. Ties (Copper/Tin, both bronze precursors) are
+# siblings — an upgrade skips to the next strictly-higher rank.
+MATERIAL_RANK = {
+    "Wooden": 0, "Wood": 0, "Leather": 1, "Hardleather": 2, "Studded": 3,
+    "Copper": 4, "Tin": 4, "Bronze": 5, "Oak": 5,
+    "Iron": 6, "Silver": 7, "Willow": 7, "Steel": 8,
+    "Gold": 9, "Maple": 9, "Mithril": 10, "Yew": 11,
+    "Adamant": 12, "Adamantite": 12, "Rune": 13, "Runite": 13,
 }
 
 
@@ -133,3 +150,75 @@ def search(query: str = "", category_filter: str = "", min_rank: int = 0) -> lis
         rows.append({"id": item_id, **entry})
     rows.sort(key=lambda r: (-r["rank"], r["name"].lower()))
     return rows
+
+
+def is_stackable(item_data: str) -> bool:
+    return max_stack(item_data) > 1
+
+
+@lru_cache(maxsize=1)
+def _tier_index():
+    """Build the material-tier families from the catalogue.
+
+    Returns (ladders, of_item):
+      ladders  {(category, base): [member, …] sorted by rank}
+      of_item  {item_id: (family_key, rank, material)}
+    A member is {id, name, material, rank}. Singleton families (nothing to
+    upgrade to) are dropped, so membership implies a real ladder.
+    """
+    fams: dict = {}
+    of_item: dict = {}
+    for iid, entry in _catalog().items():
+        name = entry.get("name") or ""
+        if " " not in name:
+            continue
+        material, base = name.split(" ", 1)
+        rank = MATERIAL_RANK.get(material)
+        if rank is None or not base.strip():
+            continue
+        family = (entry.get("category"), base)
+        fams.setdefault(family, []).append(
+            {"id": iid, "name": name, "material": material, "rank": rank})
+        of_item[iid] = (family, rank, material)
+    ladders = {}
+    for family, members in fams.items():
+        if len(members) < 2:
+            continue
+        members.sort(key=lambda m: m["rank"])
+        ladders[family] = members
+    of_item = {iid: v for iid, v in of_item.items() if v[0] in ladders}
+    return ladders, of_item
+
+
+def tier_ladder(item_data: str) -> list[dict]:
+    """Every material tier of this item's family, low → high (or [] if none)."""
+    ladders, of_item = _tier_index()
+    info = of_item.get(item_data)
+    return ladders.get(info[0], []) if info else []
+
+
+def tier_position(item_data: str) -> tuple[int, int]:
+    """(1-based position, ladder length) of this item, or (0, 0) if untiered."""
+    ladder = tier_ladder(item_data)
+    for i, m in enumerate(ladder):
+        if m["id"] == item_data:
+            return i + 1, len(ladder)
+    return 0, 0
+
+
+def tier_neighbor(item_data: str, direction: int) -> dict | None:
+    """The next material up (direction>0) or down (<0), skipping equal ranks.
+
+    Returns the member dict {id, name, material, rank} or None at the end.
+    """
+    ladders, of_item = _tier_index()
+    info = of_item.get(item_data)
+    if not info:
+        return None
+    family, rank, _material = info
+    members = ladders[family]
+    if direction > 0:
+        higher = [m for m in members if m["rank"] > rank]
+        return higher[0] if higher else None
+    lower = [m for m in members if m["rank"] < rank]
+    return lower[-1] if lower else None

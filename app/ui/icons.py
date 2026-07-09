@@ -200,8 +200,11 @@ _ICONS = {
     "cat-sword": '<path d="M20 4 9 15"/><path d="M15 4h5v5"/><path d="M4 20l4-1 8-8-3-3-8 8z"/>',
     "cat-bow": ('<path d="M5 4c7 4 7 12 0 16"/><line x1="5" y1="4" x2="5" y2="20"/>'
                 '<line x1="5" y1="12" x2="20" y2="12"/><polyline points="16 8 20 12 16 16"/>'),
-    "cat-arrow": ('<line x1="4" y1="20" x2="20" y2="4"/>'
-                  '<polyline points="14 4 20 4 20 10"/><polyline points="4 14 4 20 10 20"/>'),
+    # a single fletched arrow — one head, one tail (the old glyph had a head at
+    # both ends, so it read as a double-arrow).
+    "cat-arrow": ('<line x1="5" y1="19" x2="18" y2="6"/>'
+                  '<polyline points="12 6 18 6 18 12"/>'
+                  '<path d="M5 19l3.4-1M5 19l1-3.4"/>'),
     "cat-shield": '<path d="M12 2.5 5 5.5v6c0 5 3 8 7 10 4-2 7-5 7-10v-6z"/>',
     "cat-armor": ('<path d="M7 4l5 2 5-2 3 3-3 3v9H7v-9L4 7z"/>'
                   '<line x1="12" y1="6" x2="12" y2="21"/>'),
@@ -226,6 +229,29 @@ _ICONS = {
                  '<path d="M12 10l3-3M12 10L9 7M12 15l3 3M12 15l-3 3"/>'),
     "cat-tomb": ('<path d="M6 21V9a6 6 0 0 1 12 0v12z"/>'
                  '<line x1="9" y1="12" x2="15" y2="12"/><line x1="12" y1="9" x2="12" y2="16"/>'),
+    # a rough ore chunk with two nuggets (not the mining pickaxe, not the gem)
+    "cat-ore": ('<path d="M5 13l3-5 5-1 5 4-1 6-6 2-6-2z"/>'
+                '<circle cx="10" cy="11" r="1.1" fill="{color}" stroke="none"/>'
+                '<circle cx="14.5" cy="14" r="1.4" fill="{color}" stroke="none"/>'),
+    # a felled log seen end-on, with a growth ring
+    "cat-log": ('<ellipse cx="7" cy="12" rx="3.2" ry="7"/>'
+                '<path d="M7 5h9a3.2 7 0 0 1 0 14H7"/>'
+                '<ellipse cx="7" cy="12" rx="1.3" ry="3"/>'),
+    # a mage's staff with an orb
+    "cat-staff": ('<line x1="6" y1="21" x2="15.5" y2="6.5"/>'
+                  '<circle cx="16.6" cy="5" r="2.6"/>'),
+    # a drumstick — meat with a bone handle
+    "cat-food": ('<circle cx="15" cy="9" r="5"/>'
+                 '<path d="M11.4 12.6l-5.4 5.4"/>'
+                 '<path d="M6 18l-1.6-.3-.3-1.6 1.9-1.9 1.9 1.9z" fill="{color}" stroke="none"/>'),
+    # a seedling — stem with two leaves
+    "cat-seed": ('<path d="M12 21v-7"/>'
+                 '<path d="M12 14c0-3-2-5-5-5 0 3 2 5 5 5z"/>'
+                 '<path d="M12 14c0-3 2-5 5-5 0 3-2 5-5 5z"/>'),
+    # a bone — a shaft knobbed at both ends
+    "cat-bone": ('<path d="M9 15l6-6"/>'
+                 '<circle cx="7.4" cy="16.6" r="1.7"/><circle cx="9.2" cy="17.4" r="1.7"/>'
+                 '<circle cx="16.6" cy="7.4" r="1.7"/><circle cx="14.8" cy="6.6" r="1.7"/>'),
     "skill-fishing": (
         '<path d="M6.5 12S10 7 14.5 7c3 0 5.5 3 6.5 5-1 2-3.5 5-6.5 5-4.5 0-8-5-8-5z"/>'
         '<path d="M6.5 12 3 9v6z" fill="{color}" stroke="none"/>'

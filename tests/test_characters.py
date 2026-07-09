@@ -266,3 +266,69 @@ def test_characters_dir_derivation(tmp_path):
     assert characters.characters_dir(cfg) == saved / "SaveCharacters"
     cfg2 = {"characters_dir": str(tmp_path / "elsewhere")}
     assert characters.characters_dir(cfg2) == tmp_path / "elsewhere"
+
+
+# -- tier swaps (upgrade / downgrade an item in place) -----------------------
+
+def _catalog_ids() -> dict:
+    from app.core import items
+    return {e["name"]: i for i, e in items._catalog().items()}
+
+
+def _put_item(path: Path, slot_key: str, item_id: str, **fields):
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["GameProgress"]["Inventory"][slot_key] = {"GUID": "keepme",
+                                                   "ItemData": item_id, **fields}
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+
+def test_swap_only_plan_is_not_empty():
+    assert not EditPlan(item_swaps={"0": "x"}).empty()
+    assert EditPlan().empty()
+
+
+def test_apply_edits_tier_swap_gear_and_ammo(tmp_path):
+    from app.core import items as _items
+    by = _catalog_ids()
+    path = make_character(tmp_path)
+    _put_item(path, "0", by["Bronze Dagger"], Durability=40)     # gear
+    _put_item(path, "8", by["Bronze Arrow"], Count=5)           # ammo
+
+    plan = EditPlan(item_swaps={"0": by["Iron Dagger"], "8": by["Iron Arrow"]},
+                    item_counts={"8": 10 ** 6})                  # over-cap on purpose
+    changes = characters.apply_edits(path, plan, tmp_path / "bk")
+    inv = json.loads(path.read_text(encoding="utf-8"))["GameProgress"]["Inventory"]
+
+    # gear: swapped in place, GUID kept, Count dropped, durability refreshed
+    assert inv["0"]["ItemData"] == by["Iron Dagger"]
+    assert inv["0"]["GUID"] == "keepme"
+    assert "Count" not in inv["0"]
+    assert inv["0"]["Durability"] == characters.REPAIR_VALUE
+    # ammo: swapped, Durability dropped, count clamped to the NEW item's cap
+    assert inv["8"]["ItemData"] == by["Iron Arrow"]
+    assert "Durability" not in inv["8"]
+    assert inv["8"]["Count"] == _items.max_stack(by["Iron Arrow"])
+    assert changes
+
+
+def test_swap_leaves_backup_field_and_twin_untouched(tmp_path):
+    by = _catalog_ids()
+    path = make_character(tmp_path, backup_value=424242)
+    _put_item(path, "0", by["Bronze Dagger"], Durability=40)
+    twin_before = (tmp_path / "Negrito.json.backup").read_text(encoding="utf-8")
+
+    characters.apply_edits(path, EditPlan(item_swaps={"0": by["Iron Dagger"]}),
+                           tmp_path / "bk")
+    after = json.loads(path.read_text(encoding="utf-8"))
+    assert after["Backup"] == 424242
+    assert (tmp_path / "Negrito.json.backup").read_text(encoding="utf-8") == twin_before
+
+
+def test_item_count_clamped_to_max_stack(tmp_path):
+    from app.core import items as _items
+    by = _catalog_ids()
+    path = make_character(tmp_path)
+    _put_item(path, "8", by["Bronze Arrow"], Count=5)
+    characters.apply_edits(path, EditPlan(item_counts={"8": 10 ** 7}), tmp_path / "bk")
+    inv = json.loads(path.read_text(encoding="utf-8"))["GameProgress"]["Inventory"]
+    assert inv["8"]["Count"] == _items.max_stack(by["Bronze Arrow"])

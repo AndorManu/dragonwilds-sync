@@ -261,9 +261,6 @@ def main():
     window2.grimoire_page.char_combo.setCurrentText("Negrito")
     QTest.qWait(60)
     window2.grimoire_page._switch_tab(1)
-    _cells = list(window2.grimoire_page._bag_cells.values())
-    if _cells:
-        window2.grimoire_page._select_slot(_cells[min(4, len(_cells) - 1)])
     shoot(window2, "22b_grimoire_bag")
     window2.grimoire_page._switch_tab(2)   # mirror
     shoot(window2, "22e_grimoire_mirror")
