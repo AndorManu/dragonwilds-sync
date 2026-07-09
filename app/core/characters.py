@@ -301,7 +301,14 @@ UNLOCK_TARGETS = {
     "journal": ("GameProgress", "Journal", "UnlockedEntries"),
 }
 SPELL_BAR_PATH = ("GameProgress", "Spellcasting", "SelectedSpells")
-SPELL_BAR_EMPTY = "00000000000000000000000000000000"
+# An empty spell-bar slot is stored as "" in the save (older assumptions of a
+# 32-zero GUID were wrong). Treat blank / "none" / all-zero as empty to be safe.
+SPELL_BAR_EMPTY = ""
+
+
+def _is_bar_empty(slot) -> bool:
+    s = str(slot).strip()
+    return s == "" or s.lower() == "none" or (bool(s) and set(s) <= {"0"})
 
 
 def load_unlock_catalogs() -> dict:
@@ -338,15 +345,36 @@ def _sync_spell_bar(data: dict):
     unlocked = _get_path(data, UNLOCK_TARGETS["spells"])
     if not isinstance(bar, list) or not isinstance(unlocked, list):
         return 0
-    on_bar = {str(s) for s in bar if str(s) != SPELL_BAR_EMPTY}
+    on_bar = {str(s) for s in bar if not _is_bar_empty(s)}
     missing = [str(s) for s in unlocked if str(s) not in on_bar]
     added = 0
     for i, slot in enumerate(bar):
         if not missing:
             break
-        if str(slot) == SPELL_BAR_EMPTY:
+        if _is_bar_empty(slot):
             bar[i] = missing.pop(0)
             added += 1
+    return added
+
+
+def fill_spell_bar(path, backup_root) -> int:
+    """Ensure every unlocked spell appears on the spell bar. Checkpoint-first,
+    atomic verified write. Returns how many were placed (0 if none needed)."""
+    path = Path(path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    bar = _get_path(data, SPELL_BAR_PATH)
+    unlocked = _get_path(data, UNLOCK_TARGETS["spells"])
+    if not isinstance(bar, list) or not isinstance(unlocked, list):
+        return 0
+    on_bar = {str(s) for s in bar if not _is_bar_empty(s)}
+    if not any(str(s) not in on_bar for s in unlocked):
+        return 0
+    stamp = datetime.now().strftime("%H:%M")
+    backups.create_checkpoint(path.parent, path.stem,
+                              f"Before spell-bar fill ({stamp})", backup_root)
+    added = _sync_spell_bar(data)
+    if added:
+        _write_character(path, data)
     return added
 
 

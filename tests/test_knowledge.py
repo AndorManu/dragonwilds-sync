@@ -117,6 +117,35 @@ def test_complete_codex_grants_and_fills_bar(tmp_path):
     assert len(backups.list_checkpoints(tmp_path / "bk")) == 1
 
 
+def test_spell_bar_empty_token_variants():
+    # the real save uses "" for empty slots; be robust to other forms too
+    assert characters._is_bar_empty("")
+    assert characters._is_bar_empty("   ")
+    assert characters._is_bar_empty("None")
+    assert characters._is_bar_empty("00000000000000000000000000000000")
+    assert not characters._is_bar_empty("HegOiEb8gROM5UiIDvMVEg")
+
+
+def test_fill_spell_bar_places_unlocked_into_empty_string_slots(tmp_path):
+    path = make_character(tmp_path, "Mage")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["GameProgress"].setdefault("Progress", {})["SpellsUnlocked"] = [
+        "on_bar", "missing_1", "missing_2"]
+    data["GameProgress"]["Spellcasting"] = {
+        "SelectedSpells": ["on_bar", "", "", ""]}   # real empties are ""
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+    added = characters.fill_spell_bar(path, tmp_path / "bk")
+    assert added == 2
+    bar = json.loads(path.read_text(encoding="utf-8"))[
+        "GameProgress"]["Spellcasting"]["SelectedSpells"]
+    assert bar[0] == "on_bar"
+    assert "missing_1" in bar and "missing_2" in bar
+    assert bar.count("") == 1   # one empty slot remained
+    # idempotent: nothing left to place
+    assert characters.fill_spell_bar(path, tmp_path / "bk") == 0
+
+
 def test_complete_codex_noop_when_nothing_missing(tmp_path):
     path = make_character(tmp_path)
     data = json.loads(path.read_text(encoding="utf-8"))
