@@ -13,6 +13,7 @@ a = Analysis(
         ("app/assets/fonts/EBGaramond.ttf", "app/assets/fonts"),
         ("app/assets/items.json", "app/assets"),
         ("app/assets/unlocks.json", "app/assets"),
+        ("app/assets/learnables.json", "app/assets"),
     ],
     hiddenimports=[],
     excludes=[

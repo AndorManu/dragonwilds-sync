@@ -147,6 +147,7 @@ class MainWindow(QWidget):
         self.grimoire_page.gift_browse_requested.connect(self._browse_gifts)
         self.grimoire_page.conjure_requested.connect(self._conjure_item)
         self.grimoire_page.complete_codex_requested.connect(self._complete_codex)
+        self.grimoire_page.learn_requested.connect(self._open_learn)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -441,6 +442,21 @@ class MainWindow(QWidget):
             lambda item_data, count: self.controller.conjure_item(
                 char_path, item_data, count, done=self._open_grimoire))
         picker.exec()
+
+    def _open_learn(self, char_path):
+        from .learn_picker import LearnPicker
+        picker = LearnPicker(self.controller.unlocked_ids(char_path), self)
+
+        def on_learn(kind, ids):
+            self.controller.learn_specific(char_path, kind, ids,
+                                           done=lambda: self._refresh_learn(picker, char_path))
+        picker.learn_selected.connect(on_learn)
+        picker.exec()
+        self._open_grimoire()
+
+    def _refresh_learn(self, picker, char_path):
+        picker._owned = self.controller.unlocked_ids(char_path)
+        picker._refresh()
 
     def _complete_codex(self, char_path):
         preview = self.controller.codex_preview(char_path)
