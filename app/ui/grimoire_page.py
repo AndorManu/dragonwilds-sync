@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame, QGridLayout,
                                QHBoxLayout, QLabel, QLineEdit, QPushButton,
                                QScrollArea, QStackedWidget, QVBoxLayout, QWidget)
 
-from ..core import characters, levels
+from ..core import characters, items, levels
 from ..core.characters import SKILL_NAME_CHOICES, EditPlan, skill_label
 from . import icons, theme, widgets
 
@@ -72,7 +72,8 @@ class XPBar(QWidget):
 
 
 class SlotCell(QWidget):
-    """One bag slot: rune gem, count badge, durability sliver, hover glow."""
+    """One bag slot: category glyph tinted by rarity, count badge, durability
+    sliver, name tooltip, hover glow."""
 
     clicked = Signal(object)   # InventorySlot
 
@@ -82,13 +83,17 @@ class SlotCell(QWidget):
         self._hover = False
         self._selected = False
         self._edited = edited
+        self._name = items.name(slot.item_data)
+        self._rarity_label, self._rarity_color = items.rarity(slot.item_data)
+        self._icon = items.icon_key(slot.item_data)
         self.setFixedSize(46, 46)
         self.setCursor(Qt.PointingHandCursor)
         self.setAttribute(Qt.WA_Hover, True)
-        count = f" · {slot.count}" if slot.count is not None else ""
-        dur = f" · durability {slot.durability}" if slot.durability is not None else ""
-        self.setToolTip(f"Bag slot {slot.index}{count}{dur}\n"
-                        f"(slots match your in-game bag order)")
+        count = f"  ×{slot.count}" if slot.count is not None else ""
+        dur = f"\nDurability {slot.durability}" if slot.durability is not None else ""
+        cat = items.category(slot.item_data)
+        self.setToolTip(f"{self._name}{count}\n{self._rarity_label} · {cat}"
+                        f"{dur}\nBag slot {slot.index}")
 
     def set_selected(self, on):
         self._selected = on
@@ -112,22 +117,26 @@ class SlotCell(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         rect = self.rect().adjusted(1, 1, -2, -2)
+        rare = QColor(self._rarity_color)
 
-        bg = QColor(232, 162, 61, 26 if self._hover else 14)
-        p.setBrush(QBrush(bg))
+        # rarity-tinted fill
+        fill = QColor(rare)
+        fill.setAlphaF(0.16 if (self._hover or self._selected) else 0.10)
+        p.setBrush(QBrush(fill))
         if self._selected:
             pen = QPen(QColor(theme.EMBER), 2)
         elif self._edited:
             pen = QPen(QColor(theme.ACCENT), 1.6)
         else:
-            pen = QPen(QColor(232, 162, 61, 120 if self._hover else 55), 1)
+            edge = QColor(rare)
+            edge.setAlphaF(0.85 if self._hover else 0.5)
+            pen = QPen(edge, 1)
         p.setPen(pen)
         p.drawRoundedRect(rect, 9, 9)
 
-        # the item rune
-        gem = icons.pixmap("gem", theme.EMBER_HI if (self._hover or self._selected)
-                           else theme.GOLD_TEXT, 18)
-        p.drawPixmap(rect.center().x() - 9, rect.top() + 6, gem)
+        # the category glyph, tinted by rarity
+        glyph = icons.pixmap(self._icon, self._rarity_color, 18)
+        p.drawPixmap(rect.center().x() - 9, rect.top() + 6, glyph)
 
         # count badge
         if self.slot.count is not None:
@@ -179,6 +188,7 @@ class GrimoirePage(QWidget):
     absorb_requested = Signal(object, object, str, str) # path, knowledge, source, summary
     offer_requested = Signal(object)                    # char_path
     gift_browse_requested = Signal(object)              # char_path
+    conjure_requested = Signal(object)                  # char_path
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -251,7 +261,7 @@ class GrimoirePage(QWidget):
         self._skills_tab = self._make_scroll_tab()
         self._bag_tab = self._make_scroll_tab()
         self._scrolls_tab = self._make_scroll_tab()
-        for tab, _box in (self._skills_tab, self._bag_tab, self._scrolls_tab):
+        for tab in (self._skills_tab, self._bag_tab, self._scrolls_tab):
             self.stack.addWidget(tab)
         root.addWidget(self.stack, 1)
         root.addSpacing(10)
@@ -278,14 +288,23 @@ class GrimoirePage(QWidget):
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+        scroll.viewport().setStyleSheet("background: transparent;")
+        return scroll
+
+    @staticmethod
+    def _fresh_body(scroll: QScrollArea):
+        """Replace the tab's whole body — surgical layout clearing inside a
+        QScrollArea proved glitchy (widgets left with stale geometry)."""
+        old = scroll.takeWidget()
+        if old is not None:
+            old.deleteLater()
         body = QWidget()
         body.setStyleSheet("background: transparent;")
         box = QVBoxLayout(body)
         box.setContentsMargins(2, 2, 10, 2)
         box.setSpacing(10)
         scroll.setWidget(body)
-        scroll.viewport().setStyleSheet("background: transparent;")
-        return scroll, box
+        return box
 
     def _switch_tab(self, index):
         for i, chip in enumerate((self.tab_skills, self.tab_bag, self.tab_scrolls)):
@@ -389,19 +408,6 @@ class GrimoirePage(QWidget):
         self._render_bag()
         self._render_scrolls()
 
-    @staticmethod
-    def _clear(box):
-        while box.count():
-            item = box.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-            elif item.layout():
-                sub = item.layout()
-                while sub.count():
-                    inner = sub.takeAt(0)
-                    if inner.widget():
-                        inner.widget().deleteLater()
-
     def _empty_note(self, box, text):
         note = QLabel(text)
         note.setWordWrap(True)
@@ -413,8 +419,7 @@ class GrimoirePage(QWidget):
 
     # -- skills tab --------------------------------------------------------------
     def _render_skills(self):
-        _, box = self._skills_tab
-        self._clear(box)
+        box = self._fresh_body(self._skills_tab)
         self._skill_edits = {}
         info = self._current_info()
         if not info:
@@ -502,8 +507,7 @@ class GrimoirePage(QWidget):
 
     # -- bag tab -------------------------------------------------------------------
     def _render_bag(self):
-        _, box = self._bag_tab
-        self._clear(box)
+        box = self._fresh_body(self._bag_tab)
         self._bag_cells = {}
         data = self._current_data()
         if not data:
@@ -545,7 +549,7 @@ class GrimoirePage(QWidget):
         self.bag_count.setFixedSize(70, 28)
         self.bag_count.textEdited.connect(self._bag_count_edited)
         ed.addWidget(self.bag_count)
-        for text, value in (("Max 999", 999), ("×2", None)):
+        for text, value in (("Max", "max"), ("×2", None)):
             chip = QPushButton(text)
             chip.setProperty("variant", "chip")
             chip.setCursor(Qt.PointingHandCursor)
@@ -565,6 +569,16 @@ class GrimoirePage(QWidget):
         beyond.setObjectName("SettingsSection")
         beyond.setStyleSheet("background: transparent;")
         box.addWidget(beyond)
+        conjure_row = QHBoxLayout()
+        conjure_row.setSpacing(8)
+        conjure = widgets.make_button("Conjure an item…", "ember", "sparkle",
+                                      height=34)
+        conjure.setToolTip("Summon any item in the game into a free bag slot")
+        conjure.clicked.connect(lambda: self._emit_with_char(self.conjure_requested))
+        conjure_row.addWidget(conjure)
+        conjure_row.addStretch(1)
+        box.addLayout(conjure_row)
+
         void_row = QHBoxLayout()
         void_row.setSpacing(8)
         offer = widgets.make_button("Offer my bag to friends", "ghost", "gift",
@@ -591,19 +605,28 @@ class GrimoirePage(QWidget):
         self._bag_selected = slot
         for index, cell in self._bag_cells.items():
             cell.set_selected(index == slot.index)
-        desc = f"Slot {slot.index}"
+        rarity_label, rarity_color = items.rarity(slot.item_data)
+        name = items.name(slot.item_data)
+        parts = [f"<b>{name}</b>",
+                 f"<span style='color:{rarity_color}'>{rarity_label}</span>"]
         if slot.count is not None:
-            desc += f" · stack of {slot.count}"
+            parts.append(f"×{slot.count}")
         if slot.durability is not None:
-            desc += f" · durability {slot.durability}"
+            parts.append(f"dura {slot.durability}")
         pending = self._bag_edits.get(slot.index) or {}
+        tail = []
         if pending.get("count"):
-            desc += f"  →  {pending['count']}"
+            tail.append(f"→ ×{pending['count']}")
         if pending.get("repair"):
-            desc += "  →  repaired"
-        self.bag_label.setText(desc)
+            tail.append("→ repaired")
+        text = "  ·  ".join(parts)
+        if tail:
+            text += f"  <span style='color:{theme.ACCENT}'>{' '.join(tail)}</span>"
+        self.bag_label.setText(text)
         self.bag_count.setEnabled(slot.count is not None)
         self.bag_count.setText(str(pending.get("count") or ""))
+        max_stack = items.max_stack(slot.item_data)
+        self.bag_count.setToolTip(f"Max stack for this item: {max_stack}")
         self.bag_repair.setEnabled(slot.durability is not None)
 
     def _bag_edit(self, slot_index) -> dict:
@@ -620,10 +643,13 @@ class GrimoirePage(QWidget):
     def _bag_quick(self, value):
         if not self._bag_selected or self._bag_selected.count is None:
             return
-        if value is None:   # ×2
+        cap = items.max_stack(self._bag_selected.item_data)
+        if value == "max":
+            value = cap
+        elif value is None:   # ×2
             base = int(self.bag_count.text()) if self.bag_count.text().strip() \
                 else self._bag_selected.count
-            value = min(9999, base * 2)
+            value = min(cap, base * 2)
         self.bag_count.setText(str(value))
         self._bag_count_edited(self.bag_count.text())
 
@@ -638,8 +664,7 @@ class GrimoirePage(QWidget):
 
     # -- scrolls tab ------------------------------------------------------------------
     def _render_scrolls(self):
-        _, box = self._scrolls_tab
-        self._clear(box)
+        box = self._fresh_body(self._scrolls_tab)
         data = self._current_data()
         if not data:
             self._empty_note(box, "No characters found on this PC.")
@@ -723,17 +748,6 @@ class GrimoirePage(QWidget):
         col.addWidget(num)
         col.addWidget(cap)
         lay.addLayout(col, 1)
-
-        from PySide6.QtWidgets import QGraphicsOpacityEffect
-        fx = QGraphicsOpacityEffect(card)
-        fx.setOpacity(0.0)
-        card.setGraphicsEffect(fx)
-        anim = QPropertyAnimation(fx, b"opacity", card)
-        anim.setDuration(420)
-        anim.setStartValue(0.0)
-        anim.setEndValue(1.0)
-        anim.setEasingCurve(QEasingCurve.OutCubic)
-        QTimer.singleShot(80 + delay_ms, anim.start)
         return card
 
     def _summary(self, gains: dict) -> str:

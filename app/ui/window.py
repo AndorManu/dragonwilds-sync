@@ -145,6 +145,7 @@ class MainWindow(QWidget):
         self.grimoire_page.absorb_requested.connect(self._absorb_knowledge)
         self.grimoire_page.offer_requested.connect(c.export_offering)
         self.grimoire_page.gift_browse_requested.connect(self._browse_gifts)
+        self.grimoire_page.conjure_requested.connect(self._conjure_item)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -431,6 +432,14 @@ class MainWindow(QWidget):
                 danger_label="Absorb", safe_label="Not now"):
             self.controller.absorb_knowledge(char_path, knowledge, source,
                                              done=self._open_grimoire)
+
+    def _conjure_item(self, char_path):
+        from .item_picker import ItemPicker
+        picker = ItemPicker(self)
+        picker.conjure.connect(
+            lambda item_data, count: self.controller.conjure_item(
+                char_path, item_data, count, done=self._open_grimoire))
+        picker.exec()
 
     def _browse_gifts(self, char_path):
         from PySide6.QtWidgets import QInputDialog

@@ -408,7 +408,24 @@ def read_offering(path) -> dict | None:
     return payload
 
 
-def receive_gift(char_path, item_entry: dict, backup_root) -> int | None:
+def spawn_item(char_path, item_data: str, count: int, backup_root,
+               durability: int | None = None) -> int | None:
+    """Conjure a catalogue item into the first free bag slot.
+
+    Same safety contract as every bargain: checkpoint first, fresh GUID,
+    respects MaxSlotIndex, atomic verified write. Returns the slot index or
+    None if the bag is full.
+    """
+    entry = {"ItemData": item_data}
+    if count is not None:
+        entry["Count"] = max(1, int(count))
+    if durability is not None:
+        entry["Durability"] = max(1, int(durability))
+    return receive_gift(char_path, entry, backup_root, checkpoint_label="conjuring")
+
+
+def receive_gift(char_path, item_entry: dict, backup_root,
+                 checkpoint_label: str = "gift") -> int | None:
     """Copy one offered item entry into the first free slot. Experimental:
     checkpoint-first, fresh GUID, respects the bag's MaxSlotIndex.
 
@@ -425,7 +442,7 @@ def receive_gift(char_path, item_entry: dict, backup_root) -> int | None:
 
     stamp = datetime.now().strftime("%H:%M")
     backups.create_checkpoint(path.parent, path.stem,
-                              f"Before the gift ({stamp})", backup_root)
+                              f"Before the {checkpoint_label} ({stamp})", backup_root)
 
     slot = {"GUID": new_item_guid(), "ItemData": item_data}
     if item_entry.get("Count") is not None:

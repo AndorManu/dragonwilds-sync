@@ -5,6 +5,7 @@ Writes docs/screenshots/*.png using a throwaway config in a temp folder
 (the real per-user config is never touched).
 """
 
+import json
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -232,19 +233,55 @@ def main():
     make_character(chars_dir, "Negrito")
     make_character(chars_dir, "Minblyat")
     controller2.cfg["characters_dir"] = str(chars_dir)
+
+    # give Negrito a believable real-item bag so the demo reads naturally
+    from app.core import items as _items
+    _sample = _items.search(min_rank=0)
+    _picks = {}
+    for _r in _sample:                       # a spread across rarities
+        _picks.setdefault(_r["rank"], _r)
+    _neg = chars_dir / "Negrito.json"
+    _data = json.loads(_neg.read_text(encoding="utf-8"))
+    _inv = {"MaxSlotIndex": 30}
+    for _i, _row in enumerate(list(_picks.values()) * 3):
+        _slot = {"GUID": f"g{_i}", "ItemData": _row["id"]}
+        if _row["max"] > 1:
+            _slot["Count"] = min(_row["max"], (_i + 1) * 7)
+        else:
+            _slot["Durability"] = 300 + _i * 90
+        _inv[str(_i)] = _slot
+    _data["GameProgress"]["Inventory"] = _inv
+    _neg.write_text(json.dumps(_data, indent="\t"), encoding="utf-8")
     window2._open_characters()
     shoot(window2, "21_characters")
 
     # the grimoire (opened the way anyone opens it: through the eye)
     window2._open_grimoire()
     shoot(window2, "22_grimoire")
+    window2.grimoire_page.char_combo.setCurrentText("Negrito")
+    QTest.qWait(60)
     window2.grimoire_page._switch_tab(1)
-    window2.grimoire_page._select_slot(
-        next(iter(window2.grimoire_page._bag_cells.values())).slot)
+    _cells = list(window2.grimoire_page._bag_cells.values())
+    if _cells:
+        window2.grimoire_page._select_slot(_cells[4].slot)
     shoot(window2, "22b_grimoire_bag")
     window2.grimoire_page._switch_tab(2)
     shoot(window2, "22c_grimoire_scrolls")
     window2.grimoire_page._switch_tab(0)
+
+    # the conjuring catalogue
+    from app.ui.item_picker import ItemPicker
+    picker = ItemPicker(window2)
+    picker.setAttribute(Qt.WA_DontShowOnScreen, True)
+    picker.show()
+    picker.search.setText("dragon")
+    QTest.qWait(120)
+    if picker.list.count():
+        picker.list.setCurrentRow(0)
+    QTest.qWait(120)
+    picker.grab().save(str(OUT / "22d_conjure.png"))
+    print("  wrote 22d_conjure.png")
+    picker.close()
 
     # the saga
     from app.core import saga as saga_mod

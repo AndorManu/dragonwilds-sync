@@ -196,6 +196,36 @@ _ICONS = {
         '<path d="M7 4a2 2 0 0 0-2 2v3h4"/>'
         '<line x1="11" y1="9" x2="16" y2="9"/><line x1="11" y1="13" x2="16" y2="13"/>'
     ),
+    # -- item category glyphs (in-house; the game's icon art is not shipped) --
+    "cat-sword": '<path d="M20 4 9 15"/><path d="M15 4h5v5"/><path d="M4 20l4-1 8-8-3-3-8 8z"/>',
+    "cat-bow": ('<path d="M5 4c7 4 7 12 0 16"/><line x1="5" y1="4" x2="5" y2="20"/>'
+                '<line x1="5" y1="12" x2="20" y2="12"/><polyline points="16 8 20 12 16 16"/>'),
+    "cat-arrow": ('<line x1="4" y1="20" x2="20" y2="4"/>'
+                  '<polyline points="14 4 20 4 20 10"/><polyline points="4 14 4 20 10 20"/>'),
+    "cat-shield": '<path d="M12 2.5 5 5.5v6c0 5 3 8 7 10 4-2 7-5 7-10v-6z"/>',
+    "cat-armor": ('<path d="M7 4l5 2 5-2 3 3-3 3v9H7v-9L4 7z"/>'
+                  '<line x1="12" y1="6" x2="12" y2="21"/>'),
+    "cat-helm": ('<path d="M4 12a8 8 0 0 1 16 0v6h-4v-4H8v4H4z"/>'
+                 '<line x1="12" y1="7" x2="12" y2="14"/>'),
+    "cat-cape": '<path d="M8 3l4 2 4-2 3 17-7-3-7 3z"/><path d="M12 5v14"/>',
+    "cat-ring": ('<circle cx="12" cy="14" r="6"/>'
+                 '<path d="M9 8l3-4 3 4"/><circle cx="12" cy="4.5" r="1.2" fill="{color}" stroke="none"/>'),
+    "cat-amulet": ('<path d="M6 3c1 5 5 6 6 6s5-1 6-6"/>'
+                   '<circle cx="12" cy="15" r="5"/>'
+                   '<path d="M12 12.5l1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 14.8l2-.3z" '
+                   'fill="{color}" stroke="none"/>'),
+    "cat-potion": ('<path d="M10 3h4v3l3 6a5 5 0 0 1-10 0l3-6z"/>'
+                   '<line x1="9" y1="3" x2="15" y2="3"/><path d="M7.5 14h9"/>'),
+    "cat-herb": ('<path d="M12 21c0-6 3-10 8-11-1 6-4 9-8 11z"/>'
+                 '<path d="M12 21c0-5-3-8-7-9 1 5 3 7 7 9z"/><line x1="12" y1="21" x2="12" y2="13"/>'),
+    "cat-tool": ('<path d="M14 3a4 4 0 0 0-1 6l-8 8 3 3 8-8a4 4 0 0 0 6-1z" '
+                 'stroke-linejoin="round"/>'),
+    "cat-bar": ('<path d="M3 15l4-3h11l3 2-4 3H6z"/>'
+                '<path d="M7 12l2-2h11"/>'),
+    "cat-rune": ('<circle cx="12" cy="12" r="9"/><path d="M12 6v12"/>'
+                 '<path d="M12 10l3-3M12 10L9 7M12 15l3 3M12 15l-3 3"/>'),
+    "cat-tomb": ('<path d="M6 21V9a6 6 0 0 1 12 0v12z"/>'
+                 '<line x1="9" y1="12" x2="15" y2="12"/><line x1="12" y1="9" x2="12" y2="16"/>'),
     "skill-fishing": (
         '<path d="M6.5 12S10 7 14.5 7c3 0 5.5 3 6.5 5-1 2-3.5 5-6.5 5-4.5 0-8-5-8-5z"/>'
         '<path d="M6.5 12 3 9v6z" fill="{color}" stroke="none"/>'

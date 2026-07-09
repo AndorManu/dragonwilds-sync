@@ -1,0 +1,4734 @@
+{
+"_source": "Item names/IDs/stack sizes are datamined game facts (community tools: PEAKEGames/DWCharacterEditor, KevinStillman/dragonwilder). Icons are drawn in-house; the game's own icon art is not distributed.",
+"count": 788,
+"items": {
+"TuG7zUS90qgd7BOHhOxd8Q": {
+"name": "Abraxus Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"Mw42KUu2HuXm3baIbHa_8g": {
+"name": "Abyssal Ashes",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"GHBDsEGyH5DJpTqa7xIC1w": {
+"name": "Abyssal Spine",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"P3_Aq0nAXu5dlFuBNGgyaw": {
+"name": "Abyssal Whip",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"3_luxedD0kyY_dd3UKYvEQ": {
+"name": "Adhesive",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"ewbJ37oeTkypaVfRgI_GPg": {
+"name": "Adventurer's Leggings",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"VVq58NyN8EKOk3WUg2130Q": {
+"name": "Adventurer's Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 2
+},
+"FOjGigKnBkev9f-VWFFdYA": {
+"name": "Adventurer's Tunic",
+"category": "Chestplates",
+"max": 1,
+"rank": 1
+},
+"3qvw7EnZoZI0IDyB7ZUCQg": {
+"name": "Aetheric Fundamentals, a Primordial Primer",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Dvo6TE2d7YNnoni8XbKYzw": {
+"name": "Air Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"u0YGp0XHrNClFea2YgtqHQ": {
+"name": "Amulet of Accuracy",
+"category": "Amulets",
+"max": 1,
+"rank": 1
+},
+"bkZosEFhzpZdonqm9gx-vA": {
+"name": "Amulet of Defence",
+"category": "Amulets",
+"max": 1,
+"rank": 1
+},
+"MQ9B9EFqxWoPzFSfC8X2dg": {
+"name": "Amulet of Magic",
+"category": "Amulets",
+"max": 1,
+"rank": 1
+},
+"4EKck0Gae8VbebeQZ0DANA": {
+"name": "Amulet of Strength",
+"category": "Amulets",
+"max": 1,
+"rank": 1
+},
+"tKokB0xYm6tJNHiWwmG2SQ": {
+"name": "Anima-infused Bark",
+"category": "Bars",
+"max": 99,
+"rank": 1
+},
+"EnjZ-B1MLkuduCRe1oLNQw": {
+"name": "Animal Bone",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"ND81bEI1UktxBZK6a1kPtg": {
+"name": "Animal Hide",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ab53An3iPkyjTqnHyme-0A": {
+"name": "Animal Hide Scraps",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"BNb1F0xxIE_NlYq3ypX6LA": {
+"name": "Anti-dragon Shield",
+"category": "Shields",
+"max": 1,
+"rank": 3
+},
+"56queU2VGYTvp06IsYxZMw": {
+"name": "Antifire Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"-oVBzksmuwIMiVWlc9G4aw": {
+"name": "Antipoison Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"AEnD3ErsJVZ3V7WT1YdPQQ": {
+"name": "Antler",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"h3G7NqBW-0i6TrNRlBD6Sg": {
+"name": "Apprentice Hat",
+"category": "Helms",
+"max": 1,
+"rank": 2
+},
+"AIZLP8mwfEij7hwWUOr-aQ": {
+"name": "Apprentice Leggings",
+"category": "Basic Item",
+"max": 1,
+"rank": 2
+},
+"g9vfX7KsMkurrMZa7z1aPg": {
+"name": "Apprentice Robe",
+"category": "Chestplates",
+"max": 1,
+"rank": 2
+},
+"twHjF0oX62SopfSMJwt00g": {
+"name": "Arcane Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"JceCAk6MoBgJWc209l6akw": {
+"name": "Artisan Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"UhTvLU673YxiQSuGzOGeUA": {
+"name": "Artisan Cape - Trimmed",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"924KFU8kvGNESi-zN0doDw": {
+"name": "Ash Battlestaff",
+"category": "Staves",
+"max": 1,
+"rank": 2
+},
+"2rxJ495rm0GDn4h5OWKiyQ": {
+"name": "Ash Logs",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"AZfdA0yelBs6PZqj9sRp8Q": {
+"name": "Ash Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Gv_wHkJnBgiXOfq0cCvggg": {
+"name": "Ash Plank",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"ilFiZ9GcsUC5EOSxOrE74w": {
+"name": "Ash Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 2
+},
+"rml74kE3HftGhqabnwqNhw": {
+"name": "Ash tree Seed",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"4wdYZE-FFMhS9Iia0ftWDg": {
+"name": "Astral Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"yaZr2UqUzLXtDDC6b9lPzA": {
+"name": "Attack Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"UnU39kGv8GrkK6mUAfzXww": {
+"name": "Attack Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"JI5A3EN23h-KYFm7hUvaRg": {
+"name": "Ava's Accumulator",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"Z5QvWUvqmCXwNoqA4luI4A": {
+"name": "Bag of Flour",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"U3WG60uJFgZl-BWJIj6_Iw": {
+"name": "Bag Of Noggin",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"wgV3TEOkcYod4tGRdutHqg": {
+"name": "Baked Potato",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"1Gu7vU51PMnkRBu2wqlHHQ": {
+"name": "Bandosian Amulet",
+"category": "Amulets",
+"max": 99,
+"rank": 1
+},
+"5g2q0EbO7nKX_e-N1ogTGg": {
+"name": "Beast-Training Notes",
+"category": "Basic Item",
+"max": 3,
+"rank": 1
+},
+"SIm7DUR1h7EDCcGACB8JDA": {
+"name": "Bedraggled Spellbook",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Lg6skUqRUr6NjjyUWJio7A": {
+"name": "Beef & Tomato Stew",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"P9AaJUmKwNjQ_lWuDOGRTQ": {
+"name": "Berry Compote",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"jnxM90O5-e7GHmKF9e0dhA": {
+"name": "Bird Nest",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Bt9mnlMVnkipaZStzKEdmg": {
+"name": "Bittercap Mushroom",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"xRSgEk-klTdIZpOgGo5yxw": {
+"name": "Black Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 6
+},
+"herfn0Otdu77KRWx1KdD_Q": {
+"name": "Black Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 6
+},
+"W7PDB08-GCsvRcCkJBJM9w": {
+"name": "Black Greataxe",
+"category": "Tools",
+"max": 1,
+"rank": 6
+},
+"JSlAV05XOfg2HBO7L7dkqw": {
+"name": "Black Knight Helmet",
+"category": "Helms",
+"max": 1,
+"rank": 6
+},
+"A4rU30W0ig-T37mPaKBsgw": {
+"name": "Black Knight Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"dDoydESE59uZ7G-6OGUeQg": {
+"name": "Black Knight Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 6
+},
+"GE1KcEN1F8prN5WT6LnDZg": {
+"name": "Black Metal Bar",
+"category": "Bars",
+"max": 50,
+"rank": 6
+},
+"Sy-LHUCi7MgzAKel9DwJiw": {
+"name": "Black Metal Scraps",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"BofyKESeYThx2VqAw416Mw": {
+"name": "Black Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"3B_L6E3AevxvOce0OOAxTg": {
+"name": "Black Shield",
+"category": "Shields",
+"max": 1,
+"rank": 6
+},
+"_mTHz0WtLkARIJOwX01_Dw": {
+"name": "Black Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"CxUwQN-Me0qnNfyc207f0g": {
+"name": "Blightwood",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"yvkI8EKmmaD8zT-a7IVqOA": {
+"name": "Blightwood Battlestaff",
+"category": "Staves",
+"max": 1,
+"rank": 4
+},
+"uKPqYU1A71NI-XK-ZqStTg": {
+"name": "Blightwood Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 4
+},
+"_oShik-jE3kWgsG82AEuNQ": {
+"name": "Blightwood Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 4
+},
+"emA_O0RntNNsrNuNVOTmow": {
+"name": "Bloodblight Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"OeUUZEKiGnt36CqCIkqJgw": {
+"name": "Bloodwood Sap",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"Nzf1rECKpuLNgX25lvNy5g": {
+"name": "Blue Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"fb2RhkyQZbMp8siy7s1smA": {
+"name": "Blue Dragon Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 6
+},
+"tM_S1EEP0EUAbNCCQZi5Og": {
+"name": "Blue Dragon Scale",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"1qQozE_nJyZ7xv6VWcG7yw": {
+"name": "Blue Dragon Scale Dust",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"sM8FckDf5OipPo-BPZWpbw": {
+"name": "Blue Dragonhide",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"-cJ4kk5_eZwK-IiOoj8gIQ": {
+"name": "Blue Dragonhide Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"Bs2XUUW6ayb84R-jPoU-MA": {
+"name": "Blue Dragonhide Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 6
+},
+"YkQ4GEx0vEmn8emAt6fB_w": {
+"name": "Blue Dragonhide Coif",
+"category": "Basic Item",
+"max": 1,
+"rank": 6
+},
+"MBpKrUpzJFvrLS6J3i29KQ": {
+"name": "Blue Dyad Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"vYkYBU5IisN6p9Sp_-BDwg": {
+"name": "Blue Hex Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"Akm81UDVNK4UCl-h10JwxA": {
+"name": "Blurite Bar",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"HogQf0rvQPyH3MWRnZKfGw": {
+"name": "Blurite Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"FBidmkaAlCyLg6mpOaonMQ": {
+"name": "Blurite Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 4
+},
+"8sdCrU7VnKISn-mcBqKD0w": {
+"name": "Blurite Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 1
+},
+"HgH49UolaqYHza6Zg1IFYw": {
+"name": "Blurite Ore",
+"category": "Ores",
+"max": 99,
+"rank": 1
+},
+"DOsOLkIUyXaO8-yRed2iUg": {
+"name": "Bone Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"djtTEkaTg3ARdre_xsNXCg": {
+"name": "Bone Club",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"P02SmEivYDi2N5u8rZc7ug": {
+"name": "Bone Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 3
+},
+"Euv3-bBtDUmx110jaD1g1Q": {
+"name": "Bone Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"Xs6AJ0up43qfLeG1fRqk4g": {
+"name": "Bone Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 2
+},
+"4hYWzULKMjNsgOuwHL7UAA": {
+"name": "Bramblemead Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"sXt7z0fgUQNUKW69bItr-w": {
+"name": "Bread",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"B_9Rt0HRTRhbZfSgUrQNTg": {
+"name": "Broken Titan's Wrath",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"XvhWN00lBZJCFb6r0p-tMg": {
+"name": "Bronze Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"Y2Y48OMHukKIilN4srd7cA": {
+"name": "Bronze Bar",
+"category": "Bars",
+"max": 50,
+"rank": 3
+},
+"0Tp64UgXjCbF69aH3ZhQQA": {
+"name": "Bronze Barbed Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"jgYiuU8aQY7BNHaUKFjZpQ": {
+"name": "Bronze Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"CQbLYUZy7Pp_Ts6tlJow3A": {
+"name": "Bronze Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 3
+},
+"k_8lkkBlxSUG1qydAobddA": {
+"name": "Bronze Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 3
+},
+"G4zoMkig_jVt9RSGpbYarg": {
+"name": "Bronze Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"l8ARoEESskYD1mag4nRKlQ": {
+"name": "Bronze Fire Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"PSWEV0JzVwxsalWCFqPbOw": {
+"name": "Bronze Greatsword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"lhrErX7MF0q9XlhdPdhCrA": {
+"name": "Bronze Helmet",
+"category": "Helms",
+"max": 1,
+"rank": 3
+},
+"VBJg2XpMOEGTd6Qk9lB4Kw": {
+"name": "Bronze Logging Axe",
+"category": "Tools",
+"max": 1,
+"rank": 3
+},
+"lJqTrE_r-nkdhwyoPhfsAA": {
+"name": "Bronze Mace",
+"category": "Basic Item",
+"max": 1,
+"rank": 3
+},
+"V-CGfkBdlbxvc-6TkU-K_A": {
+"name": "Bronze Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 3
+},
+"N2kAI3uQgki-eP0rIoHYhQ": {
+"name": "Bronze Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 3
+},
+"wQPcKK1XV0iF1_CADXUwEw": {
+"name": "Bronze Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 3
+},
+"QT6fSk6ZdpTAdxOHQmBDDA": {
+"name": "Bronze Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"z1aZS0oEXuZ69Xe2iJ1A0A": {
+"name": "Bronze Shield",
+"category": "Shields",
+"max": 1,
+"rank": 3
+},
+"FTGL4ElVrhJ4zSmGTWqSQw": {
+"name": "Bronze Spade",
+"category": "Basic Item",
+"max": 1,
+"rank": 2
+},
+"eqrPvUI8qhvjnbGRoIxNug": {
+"name": "Bronze Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"jUhzF0avp4bpepKSoz7H2A": {
+"name": "Bronze Warhammer",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"IRhYFE04RuHPriOUTWp4Sg": {
+"name": "Bronze Watering Can",
+"category": "Rings",
+"max": 1,
+"rank": 3
+},
+"2wDHZkZRqZP5P3eH8whXPg": {
+"name": "Burnt Bread",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"C6qQW0EvfmEU_viIY32q5g": {
+"name": "Burnt Cabbage",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"y7xRMkrIHbH_Ny-uQuUjDA": {
+"name": "Burnt Cadavaberries",
+"category": "Food",
+"max": 99,
+"rank": 4
+},
+"o-3rKkQUKC8olaWc0SljQg": {
+"name": "Burnt Dwellberries",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"S2VJT0kN5V1UaoGPyQDShA": {
+"name": "Burnt Egg",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"yllgHEVevYQWCgidChNt1g": {
+"name": "Burnt Fillet",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"m4B55EJCdkotk0KEocQ6jg": {
+"name": "Burnt Flank",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"RM7sjkfd1Xqn-8Or6rNxdQ": {
+"name": "Burnt Haunch",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"tNmlCkWaQlxSRL-8PheVWw": {
+"name": "Burnt Maple Syrup",
+"category": "Food",
+"max": 50,
+"rank": 4
+},
+"lI4zAkyhtQZQlV-8jh1CpA": {
+"name": "Burnt Mushroom",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"KeCpwk28n4LHrHqsptOIHg": {
+"name": "Burnt Onion",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"FahQp0v2g1hVGVeYFfGXNw": {
+"name": "Burnt Peach",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"S5Ekb0vJkGcCBTWlV5Ie7g": {
+"name": "Burnt Potato",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"n8pSqEJCBDGqd3ukRXQVrw": {
+"name": "Burnt Pumpkin",
+"category": "Food",
+"max": 50,
+"rank": 4
+},
+"YPxUfkgrbaDlMGa0aQBgfw": {
+"name": "Burnt Rat Roast",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"ArdDhUW3LRqTHQG2zu5UYg": {
+"name": "Burnt Redberries",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"OcXO909VQEKBY16kWc3G9Q": {
+"name": "Burnt Steak",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"Cnqff0Rv5kfQht2qDEdYJg": {
+"name": "Burnt Tomato",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"vdz5gURsII92tQaXERfDsg": {
+"name": "Burnt Undead Steak",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"atK88UfDNGTVALumf_S7yw": {
+"name": "Burnt Watermelon",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"Hq4CrUEukmw8b7i4xolVRg": {
+"name": "BurntTrout",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"EHN6Hs9NFkur7chZVfchJg": {
+"name": "Cabbage",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"LRrgT0uxL009Hq-oGeINEg": {
+"name": "Cabbage seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"Pek92ERqvxrFO_Gh7xufqA": {
+"name": "Cadavaberries",
+"category": "Basic Item",
+"max": 99,
+"rank": 4
+},
+"4_zoG0eScTmPyFaVcIxIqw": {
+"name": "Cadavaberry Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"yhTo-0sFyMXGYMWrwVpQ7Q": {
+"name": "Cadaveberry Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"XMOdf0Zc5L04hfSCIdpybA": {
+"name": "Cauterised Undead Steak",
+"category": "Basic Item",
+"max": 50,
+"rank": 4
+},
+"45qRbkCgpbXsxAuswso8Aw": {
+"name": "Challenge Horn",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ZbaFNUQBjcQFiBmssky-4g": {
+"name": "Challenge Horn Mouthpiece",
+"category": "Food",
+"max": 1,
+"rank": 1
+},
+"x-SiNQenZEuF0yyTPkxhiw": {
+"name": "Charcoal",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"woAWUkDJFS_g2Y-viCDznQ": {
+"name": "Cheeky Fryup",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"SMdFlkruGF9Xveyh1Lz0lw": {
+"name": "Chef's Hat",
+"category": "Helms",
+"max": 1,
+"rank": 1
+},
+"lHKVrkMlSsZx5lKVZRH63Q": {
+"name": "Chieftan's Blade",
+"category": "Basic Item",
+"max": 1,
+"rank": 3
+},
+"LLV95ECQPPkItvyaC0gCzQ": {
+"name": "Clay",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"C-Blv0bNk7v6BOWLA8Cw-g": {
+"name": "Clay Decoration",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"sycphkkEs4cXKKC721kS2w": {
+"name": "Clay Decoration (Unfired)",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"zEg0M0VWEp6-wLOhkvYJ8A": {
+"name": "Clay Mould",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"FXYVR0dXwrzmeo-goNwTHA": {
+"name": "Clay Mould (Unfired)",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"uTmDj0pXttZKU7qob4UvNw": {
+"name": "Clay Vessel",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"xhvDCkkTzJPbihGOZo3Hvw": {
+"name": "Clay Vessel (Unfired)",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"hKYyX0vQ_pgLRAi2ugGK3w": {
+"name": "Clean Water",
+"category": "Herbs",
+"max": 99,
+"rank": 1
+},
+"MsQyukIFtzlttaiTzrbgxw": {
+"name": "Coal",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ISwwk0SMdhURciK1Sr3i6Q": {
+"name": "Coarse Animal Fur",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Dns4MEGuhT5fcRWocI5o9Q": {
+"name": "Coarse Thread",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"NUzVKEXAML0DLYSjTIBmNA": {
+"name": "Coclear Malificarum",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"8Ftd_kB5cANr16a6Bd8-OQ": {
+"name": "Compost Bucket",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"zjqmfU9J000ZgI2KPmKn1A": {
+"name": "Construction Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"JA0aYkWSKvomwwyEPugaew": {
+"name": "Construction Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"_4JQo0OOR41j8Pi0n5zQSg": {
+"name": "Cooking Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"0sNNgEVZ-PmegQSXC8jsVA": {
+"name": "Cooking Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"S7Kk_ZA9OEKZ8qwU9ciKCA": {
+"name": "Copper Bar",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"A8Lx3sZhHEeG4GXsl4ZLZw": {
+"name": "Copper Ore",
+"category": "Ores",
+"max": 99,
+"rank": 1
+},
+"MFf5wEQrgk_E0d6hEWWVZw": {
+"name": "Copper Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Qkty-0yfrzKyHcODIHnTag": {
+"name": "Corpse Cotton",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"eE35XEZgqujcuBymNjnyBQ": {
+"name": "Corpse Cotton Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"OILH0UHn-UXYOyCO-WZpeA": {
+"name": "Corrupted Bonemeal",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"uwJ2h0D8mYBU6yuUUpM1VA": {
+"name": "Corrupted Bones",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"fsPKUkCx54AbTpGD4r0PxA": {
+"name": "Corrupted Essence Sample",
+"category": "Runecrafting",
+"max": 99,
+"rank": 1
+},
+"aNR2BUvdBFibOMGlrhZQ3Q": {
+"name": "Crossbow Test",
+"category": "Crossbows",
+"max": 1,
+"rank": 2
+},
+"FK7SwEPmPfVFztSXScvKQA": {
+"name": "Crystal Bow",
+"category": "Bows",
+"max": 1,
+"rank": 3
+},
+"JYGJbEV-DrOkn5SNR5sYKQ": {
+"name": "Crystal Seed",
+"category": "Farming",
+"max": 99,
+"rank": 1
+},
+"ObT03UmkX-U-WJ667Rk0vA": {
+"name": "Curse Fragment (Despair)",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"o9Nec0TWzFiYJIeiYQBjVw": {
+"name": "Curse Fragment (Grief)",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"TQY6cUXdLjzqCIuXB3vAvw": {
+"name": "Curse Fragment (Rage)",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"6Q2aa09-rSWpFnuKzGU7Ng": {
+"name": "Cursed Essence",
+"category": "Runecrafting",
+"max": 99,
+"rank": 1
+},
+"-Snbh0BHw6XkZgSMX_PiEQ": {
+"name": "Cursed Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"M3Y6KEIGYrsnS8-j5ewQxw": {
+"name": "Dark Mage Hood",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"hWGilEcAZgtX2JWejH4ncA": {
+"name": "Dark Mage Robe Legs",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"9QZ0eUU7xVxKhq-_nMoCcQ": {
+"name": "Dark Mage Robes",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"MQy_2E_pqnq7HbWzzSZKSA": {
+"name": "Demonic Oil",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"m3q-xERQoHTPDJehWwOFtQ": {
+"name": "Diamond",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"wqBk-EZDxcfPtH6VdUnlNg": {
+"name": "Dire Wolf Hide",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Rex-3ECcbilpOVqd6zWpIQ": {
+"name": "Dire Wolf Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"xii8Q0dRJsnevvKv1g2bNQ": {
+"name": "Dirty Water",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"TODWPUpA_YR0EnaqhMstcQ": {
+"name": "Divine Cabbage",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"eWL0U0dnOlww-eCyIIbDFA": {
+"name": "Dorgeshuun Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 5
+},
+"I6vnJEJsqmY_vkCyq2O8ZQ": {
+"name": "Doric's Smithing Supplies",
+"category": "Basic Item",
+"max": 10,
+"rank": 1
+},
+"J7PEt0SHxNA7Ymi68Dqmww": {
+"name": "Doric's Superior Smithing Supplies",
+"category": "Basic Item",
+"max": 10,
+"rank": 1
+},
+"riwrC0Y5m40rZQmr4XkJoQ": {
+"name": "Dowdun Reach Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"jmA4D0DSEBYxDMWYne8frQ": {
+"name": "Draconic Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"YKrGVEhV12fODCGWxhK9qg": {
+"name": "Draconic Leather Scraps",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"ALn1jUyxkFwgIHmHAGkoxg": {
+"name": "Draconic Staff",
+"category": "Staves",
+"max": 1,
+"rank": 4
+},
+"9D2K3U9jvwZc85KkIZjAFQ": {
+"name": "Draconic Visage",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"5lnCBEUmEDbANTWVRn3nDA": {
+"name": "Dragon Blood",
+"category": "Basic Item",
+"max": 50,
+"rank": 6
+},
+"zGz3MkD3vLq_D1uuA2S44g": {
+"name": "Dragon Slayer Reward Pack",
+"category": "Basic Item",
+"max": 10,
+"rank": 6
+},
+"6LQtMkNzIZBdrgyeiP0fqg": {
+"name": "Dragon Slayer Reward Pack",
+"category": "Basic Item",
+"max": 10,
+"rank": 6
+},
+"qelCL0cKP9oFmYaJkKg6wA": {
+"name": "Dragon Tooth",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"1ReHrk6Keawr5E-eQ8WTCg": {
+"name": "Dragonbane Cape",
+"category": "Capes",
+"max": 1,
+"rank": 6
+},
+"RyuOEkWEWdGcvQqo2dPOgA": {
+"name": "Dragonblight Shield",
+"category": "Shields",
+"max": 1,
+"rank": 4
+},
+"4bMdm0gvxNqxKSaQjGtFmQ": {
+"name": "Dragonbone Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"qFp5MUMthbeEIx6vWCRNJA": {
+"name": "Dragoncurse Shield",
+"category": "Shields",
+"max": 1,
+"rank": 5
+},
+"GutTdkwskIsX75i6-CilJA": {
+"name": "Dragonkin Mage Hood",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"uDBybUNuv5UipiSXb8BG-A": {
+"name": "Dragonkin Mage Robe Legs",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"rXtN2EZOq9NpnL-WyVpF8Q": {
+"name": "Dragonkin Mage Robes",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"vMLqpkZGH4brfHatrG1ktg": {
+"name": "Dragonwolf Hide",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"wmCh2EyCLaKL77eM21cPww": {
+"name": "Dried Cadavaberries",
+"category": "Food",
+"max": 99,
+"rank": 4
+},
+"QpxVI0bu8fcLkpuM7HrEaw": {
+"name": "Dried Dwellberries",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"QhL0n0vYFVaK0Jyu0N96vg": {
+"name": "Dried Peach",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"sGZHV0IIuJLCDIyGNNBMbA": {
+"name": "Dried Redberries",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"EacnEk2SKqmy6zGxnrhpRw": {
+"name": "Druid's Bandosian Amulet",
+"category": "Amulets",
+"max": 99,
+"rank": 1
+},
+"PNna20ypp8utF-KAq0xgTA": {
+"name": "Dubious Meat Pie",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"P-cDcE4TaF32sN-q8Z3T3w": {
+"name": "Dust-covered Sketchbook",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"eCBq3UiiNADih26zDQBTVQ": {
+"name": "Dwellberries",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"TitYzk-CcDdnIrGzbUT7hg": {
+"name": "Dwellberry Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"08JlYEx5Tw0YVv-VhX8dmw": {
+"name": "Dwellberry Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"KxVJGk9-oaTznrKsVgwMPQ": {
+"name": "Dwellberry Glazed Roast Flank",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"Fy-bB0PP2zL0eQ6MBRBfrg": {
+"name": "Dwellberry Glazed Roast Meat",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"x0HE4knFLcQj2sGI_4fYAA": {
+"name": "Dwellberry Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"-jEah0znNr-2UVmbHK-Hqg": {
+"name": "Dwellberry Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"9TCHHEYRZOvy0KWszdfntA": {
+"name": "Dwellberry seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"lCE7i3iXGUuHv7FphIOcXg": {
+"name": "Earth Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"RduYgUn8zLSQC7-A2zSQ5Q": {
+"name": "Ectoplasm",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"rRqyCURhyronhl-sJzypDQ": {
+"name": "Egg",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"0NmV_UHzkAdk2cyGPwiWGA": {
+"name": "Emerald",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"SrnYYkzaT5NgG0qSqB2wWg": {
+"name": "Enchanted Blurite Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"lNc-PUngnrFoIP-h6Vlugg": {
+"name": "Enchanted Bronze Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"HMZvK0ItELqUlmm4i5HqSQ": {
+"name": "Enchanted Iron Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"J1kfmEkc5vYMULq4SD95pw": {
+"name": "Enchanted Mithril Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"sPbq7UpGgQcvbduqbSGJOg": {
+"name": "Enchanted Steel Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"cZ6va0BSo6_5Dg2Pi23lUQ": {
+"name": "Evasive Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"xyVlYUoDcHIK3m6-pTk6Zg": {
+"name": "Eventide - A New Spawn",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"CzzuQ0UmzK3-A5WiBJlCHw": {
+"name": "Fallen Hoplite's Aspis",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"GWoGx0DvRmSKv-C5qrN4XA": {
+"name": "Fallen Hoplite's Chest",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"-BgOoUB7RMsOpKWrA-TvlQ": {
+"name": "Fallen Hoplite's Helm",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"GJGz00NubkS7VNGcOcqFdA": {
+"name": "Fallen Hoplite's Tassets",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"2vSF4Se4MkWaZG0pHYcb8g": {
+"name": "Fang Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 2
+},
+"eUkqBUfmU0Z7i1eWFoBlhA": {
+"name": "Fang Barbed Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 2
+},
+"dc8yKUHcqpatyH2TAfF_vg": {
+"name": "Fang Fire Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 2
+},
+"8hjk70ccFwmYrzadV3T4MQ": {
+"name": "Farming Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"Zy0OukyYj_d3176y0io0zQ": {
+"name": "Farming Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"v5MSO2Wz4ke5xOGvKC5GlQ": {
+"name": "Feathers",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"bseydkEw3fTibEODEw9VJw": {
+"name": "Fellhollow Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"F92_I0JuQtcVUGeHNkKn_g": {
+"name": "Ferocious Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"igveHUWYg2AeXe69EwW1PA": {
+"name": "Ferocious Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"TBfPmUBQqV_F0pCG34_XkQ": {
+"name": "Fillet",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"cZiciUse9nReAtG6kIHa8w": {
+"name": "Fine Cloth",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"5MS2l0bmkh8K8PaYjdbviw": {
+"name": "Fine Thread",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"6Z9gGkjXwODcqvCBFRmlEA": {
+"name": "Fire Oil",
+"category": "Basic Item",
+"max": 999,
+"rank": 4
+},
+"LaW8m0ibg39l4ESl58Ddtg": {
+"name": "Fire Oil",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"_QMgbMYhjU-9jAD_euFbyQ": {
+"name": "Fire Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"NeMd5ktRmFW1ZWqnCwsxKA": {
+"name": "Flank Steak",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"J3Ord4Mjnk-zz-Of_0oL8w": {
+"name": "Flax",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"A9hQfkjtyPUlXI-8vKm2mA": {
+"name": "Flax seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"mZWtu9Ir9ECtl0a7cV7uJw": {
+"name": "Fleece",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"PZdR5E2sYqyUe-2JgBsCfA": {
+"name": "Fleet-Footed Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"O3DuSEokXuaKPYGrNvVlwA": {
+"name": "Focused Artisan Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"RomgrUiURBzTRI28nkVp8A": {
+"name": "Focused Attack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"MbWSZkyQnryh54WAtlg-xQ": {
+"name": "Focused Construction Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"_nUun0yU3ymRFRq8DWWDQA": {
+"name": "Focused Cooking Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"-kNFWkMMc8GUHZW1VaElAg": {
+"name": "Focused Farming Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"t1k7T0TV-Lou_TGjFa7tdQ": {
+"name": "Focused Mining Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"39PNfE4HZA4y90yp0QkUQw": {
+"name": "Focused Runecrafting Potion",
+"category": "Runes",
+"max": 50,
+"rank": 5
+},
+"WtYl3UJM-qk92JOuu7c7rg": {
+"name": "Focused Woodcutting Potion",
+"category": "Woodcutting",
+"max": 50,
+"rank": 1
+},
+"-OS_Ykn42MiPUQm0trK0mA": {
+"name": "Forager's Sandwich",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"KC5DW0XcQiikzPymCSlVZQ": {
+"name": "Fortifying Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"O9t9Kknjb4lXvNKsNl7Vrg": {
+"name": "Fortifying Soup",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"Xq3aqE2osbcagCKBy8A_kg": {
+"name": "Fortifying Stew",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"71LhGUmAvrlALY6KcS8W3Q": {
+"name": "Fractured Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"DQdI2EZLlP0EJB2C6_R28w": {
+"name": "Fried Cabbage",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"F1bM9Uvl1eIYiOmstBB_Qg": {
+"name": "Fried Egg",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"yEEiukHPM7htB4WeWEXeWg": {
+"name": "Fried Onions",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"i8oivkt7LRX5FSm2hBJC_A": {
+"name": "Fruit Pie",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"Br8lTU45wX65kDigZkkgAg": {
+"name": "Fuel Pellet",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"q6popEFaVyrZbq6kc0-Drg": {
+"name": "Garou Highborn's Cloak",
+"category": "Capes",
+"max": 1,
+"rank": 2
+},
+"XII5rkqVhw9I3sWWZNKteA": {
+"name": "Garou Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"EZGayEl5U_ZQaZSscJGZQg": {
+"name": "Ghostspeak Amulet",
+"category": "Amulets",
+"max": 99,
+"rank": 1
+},
+"vnB8VE9uS_fKRz6AHgTjMQ": {
+"name": "Glass Decoration",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"PeVzmkAypE8k92yqKOvaDQ": {
+"name": "Glass Owl",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"fVBHgEoB-OOVgcarewJngQ": {
+"name": "Glass Pane",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"fliBkkBZfNJwhpej98Q2xA": {
+"name": "Glass Vessel",
+"category": "Basic Item",
+"max": 20,
+"rank": 1
+},
+"2n1dCkUcVAbIIXGM5w7BOQ": {
+"name": "Glazed Pumpkin Sandwich",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"OJSTGEEY6uNu4beRiM4Qvw": {
+"name": "Goblin \"Swingslash\"",
+"category": "Basic Item",
+"max": 1,
+"rank": 2
+},
+"zm9DtUc8ieNZpWe7ioL_KA": {
+"name": "Goblin Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"24_UV0P2zlDAbcy48UOCkA": {
+"name": "Goblin War Banner",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"9jFU2lh9l0qPbNTspGCBFA": {
+"name": "Gold Bar",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"D-BzgHFSHkyc53teVzmBNA": {
+"name": "Gold Ore",
+"category": "Ores",
+"max": 99,
+"rank": 1
+},
+"N3j6PU0B10HRf2eg7RKk-g": {
+"name": "Gold Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"D-8qyESiEHxIW06KSbukYA": {
+"name": "Gourmand Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"83Kcm0CpBOcYsk-eo-dfMw": {
+"name": "Granite",
+"category": "Basic Item",
+"max": 99,
+"rank": 5
+},
+"yte2PUYaqeYZH02J_aviEg": {
+"name": "Granite Maul",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"FzZcg0K5osblXSuuSNACQA": {
+"name": "Granite Maul Blueprints",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"CRrbdEE2rAkyseGLyfPykw": {
+"name": "Green Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"UzelPUO0iC4x54K2-iWu4g": {
+"name": "Green Dragon Hide",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"Mlkavkm7yQziKpK9IHNYeQ": {
+"name": "Green Dragonhide Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"t4RxskBsdSppCcuzclu5dw": {
+"name": "Green Dragonhide Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 5
+},
+"tlpgIklcNBMK7I2F3J2yrw": {
+"name": "Green Dragonhide Coif",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"cVt3BEoa7Bh6k_KasKqLAA": {
+"name": "Green Dragonhide Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 6
+},
+"cJYRJkMwnjzYn8OanAzqPw": {
+"name": "Green Dyad Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"H6zBeUnAuw2IqmuEx2dwWQ": {
+"name": "Green Hex Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"hS_GuEyi70Xf932m1rq7PA": {
+"name": "Grieving Moon Staff",
+"category": "Staves",
+"max": 1,
+"rank": 3
+},
+"ftNa7ksUxtKfXxixt-o_8w": {
+"name": "Grilled Mushrooms",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"NyjLt0Sz3UzrqKWOZpiYmw": {
+"name": "Grilled Tomatoes",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"rWBJXE0R1i0I_muWFNMOnQ": {
+"name": "Grilled Trout",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"GXtUfUZIYgpsYAGE4y5vEg": {
+"name": "Ground Clay",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Cu5DREB0z4_XYRGkXu8U9A": {
+"name": "Ground Granite",
+"category": "Basic Item",
+"max": 99,
+"rank": 5
+},
+"c_9pmE2aOHVeZc67chNeNQ": {
+"name": "Ground Limestone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"FcnXn0Sq3OS7tJKuCRAc1A": {
+"name": "Ground Sandstone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"guCjkksBOmEcLFut-VH-qg": {
+"name": "Ground Stone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"UyIYrQzoTkaR04aJNXLTJQ": {
+"name": "Hard Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"80wGME-slvLF2weULpj8eQ": {
+"name": "Hard Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"h7tqvcgrDk2iGdD7TYwiSA": {
+"name": "Hard Leather Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 3
+},
+"7Ajx5nOVUUW6l8nU2YiLOA": {
+"name": "Hard Leather Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 3
+},
+"wLzThnOQEUaw90mBnn8QTw": {
+"name": "Hard Leather Cowl",
+"category": "Helms",
+"max": 1,
+"rank": 3
+},
+"OHb33k_owf3LCoO3uWcK3w": {
+"name": "Hard Leather Scraps",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"mJ4P8qzfy0Wg8OxrYc_NBA": {
+"name": "Harralander",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"xXgE7EGhfL-DrgWWABTBQw": {
+"name": "Harralander Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"pqhdt0z6D2sMGRWhCf5mkQ": {
+"name": "Haunch",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"rxKE_k4GIeA6PSC8dKu6TQ": {
+"name": "Healing Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"_gj4SUtBZXfY6Vm7zFko9w": {
+"name": "Hearty Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"j36nJ0b9Xat20KicKMGzHw": {
+"name": "Hearty Fortifying Soup",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"j3p4M0t12J8IVHeC1bN4yg": {
+"name": "Hearty Soup",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"SNCcLEdRbF7GAwSkvob6NQ": {
+"name": "Hearty Stew",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"DX96203Z9RTWnbiguX1FYg": {
+"name": "Herd Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"Hrp4NUzvyg8dz-Gm1-z2DQ": {
+"name": "Hermit Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"kSC5h08_DEq2H7CMAVDN9Q": {
+"name": "Hollow Bark",
+"category": "Bars",
+"max": 99,
+"rank": 1
+},
+"s7HI6EmvRXRq7T69epFpxg": {
+"name": "Hunter Stagbow",
+"category": "Bows",
+"max": 1,
+"rank": 4
+},
+"ALQSs0j7loBVpum0CaDH2w": {
+"name": "Imaru's Head",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"X_OJeEp1PR4l08yW6_vpUQ": {
+"name": "Imaru's Talon",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"TRQBZ0gufJDy-HWCsXysNw": {
+"name": "Imbued Granite Maul Head",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"1kW1mUsw1eKjlOiBCMXcUg": {
+"name": "Imbued Leather Wrappings",
+"category": "Basic Item",
+"max": 1,
+"rank": 2
+},
+"F73O1kqSP2Z-Y5SYg9F01A": {
+"name": "Infernal Fragment",
+"category": "Basic Item",
+"max": 999,
+"rank": 1
+},
+"ZT4FAUAaZw_DF6GNkkvZ8g": {
+"name": "Inspiring Amulet of Attack",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"x8-RhkKqeWm0aTeFQB7tFQ": {
+"name": "Inspiring Amulet of Magic",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"oO9ajk1av01ia2yV89in8g": {
+"name": "Inspiring Amulet of Ranged",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"hAKS80q9h0YE2fKH-W8HXw": {
+"name": "Inspiring Ring of Artisan",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"U1Os5ksV_1mgE-uIXQwTfg": {
+"name": "Inspiring Ring of Construction",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"4Nk2sUk3L3uP46uv4Ihn_A": {
+"name": "Inspiring Ring of Cooking",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"6hSlpEgZOEEhEWSHFD6dYQ": {
+"name": "Inspiring Ring of Farming",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"GFXou0YGkMmxiM2yPMitnw": {
+"name": "Inspiring Ring of Mining",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"qtlVPEDKintQLXmG96cfOQ": {
+"name": "Inspiring Ring of Runecrafting",
+"category": "Rings",
+"max": 1,
+"rank": 5
+},
+"ZLyl5EG2nofK0nqCQa2fRg": {
+"name": "Inspiring Ring of Woodcutting",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"_xTATEjgarvMXg2zfD5Sgw": {
+"name": "Irit",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"98YO40YpmUX_hU2NCcYo-w": {
+"name": "Irit Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"1-eS15sb9UW_8kRzIMyV6g": {
+"name": "Iron Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"Ng6eFNNuiU-VdxSoZtI6kA": {
+"name": "Iron Bar",
+"category": "Bars",
+"max": 50,
+"rank": 4
+},
+"Xde3IkVxOOQUi3KnyJlf4Q": {
+"name": "Iron Barbed Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"zqjy1Eimxm0DyYOgnCMLrQ": {
+"name": "Iron Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"igBY5kj2IGsY97C_dPJS2A": {
+"name": "Iron Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 4
+},
+"VlhCS0xKcZzgC3igVdQ38w": {
+"name": "Iron Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 4
+},
+"NmzyVLMIY0SYZfOAPICeKg": {
+"name": "Iron Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"WuWEGkTx52fygdqsgCtQlg": {
+"name": "Iron Fire Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"d-s3s5ciWkSi_Q4p-XaMoA": {
+"name": "Iron Greataxe",
+"category": "Tools",
+"max": 1,
+"rank": 4
+},
+"kpJmEG1D10ylMOFHGfJQrA": {
+"name": "Iron Greatsword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"PxHJuE6PgUKY-zugyUXSUQ": {
+"name": "Iron Helmet",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"YvBVZjzx_UKN9z1wIPzlrA": {
+"name": "Iron Logging Axe",
+"category": "Tools",
+"max": 1,
+"rank": 4
+},
+"hThLR2Lk6kODfRRmAs4YBQ": {
+"name": "Iron Mace",
+"category": "Basic Item",
+"max": 1,
+"rank": 4
+},
+"rTRm3cGOmUm1h1BMEYzTwA": {
+"name": "Iron Ore",
+"category": "Ores",
+"max": 99,
+"rank": 4
+},
+"VfaynRGcAkammV5YUusfbA": {
+"name": "Iron Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 4
+},
+"CAtRgsni70SltXq4uzs6Yg": {
+"name": "Iron Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"lWABtugu90SEqpE70Gf8ew": {
+"name": "Iron Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 4
+},
+"Tj74XUA3OnBMIT6cuvbIiQ": {
+"name": "Iron Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 4
+},
+"_zH6rkxCUB_Le9yGzumsmg": {
+"name": "Iron Secateurs",
+"category": "Basic Item",
+"max": 1,
+"rank": 4
+},
+"tkzekFdbDkCd-7MwOjfbnQ": {
+"name": "Iron Shield",
+"category": "Shields",
+"max": 1,
+"rank": 4
+},
+"gFA3V8-Y5UGLPAtJKYNnTw": {
+"name": "Iron Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"o9zzhev_YEulDWv5D8vI3A": {
+"name": "Iron Warhammer",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"hzztKE-CsjtgVaWFJoTw2w": {
+"name": "Jade",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"iTb_WUUHO2kAez65O2a4PA": {
+"name": "Kwuarm",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"8gFmQkZfAW468MqU3rXlug": {
+"name": "Kwuarm Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"GC6S207zgsmHryqJEdEQaQ": {
+"name": "Large Wardstone",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"_c9JTkwKy8s88GWv586hbQ": {
+"name": "Law Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"KejxKZhqBEy2BmyMUMidlA": {
+"name": "Leather",
+"category": "Basic Item",
+"max": 50,
+"rank": 2
+},
+"XT0Zft6J30iLvjVNxnzw6Q": {
+"name": "Leather Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 2
+},
+"Q6DUGmTWNkG5S1Ki_5Nz1w": {
+"name": "Leather Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 2
+},
+"-mOez0ZysUa2kkuZQY4s0w": {
+"name": "Leather Cowl",
+"category": "Helms",
+"max": 1,
+"rank": 2
+},
+"xPzvUUSCo45hlMKe0e53vw": {
+"name": "Leather Shield",
+"category": "Shields",
+"max": 1,
+"rank": 2
+},
+"E_DXg0sq6DA6beKuzxv_rA": {
+"name": "Leggings Of Lightness",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"0SFGhElEGrRq5ieWLSjREA": {
+"name": "Leonard The Bound",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"LbLCFEmVn7KnJBS59zUS4g": {
+"name": "Lesser Antipoison Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"u9KamEevDhDoqA-Ypsobrw": {
+"name": "Lesser Attack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"7NPyZ03E4wudmtm9dqvgWw": {
+"name": "Lesser Focused Artisan Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"Oza9k0LVE1OmNtyDc5w_8w": {
+"name": "Lesser Focused Attack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"WQaIa0s7EnIKmw65TZ5RbA": {
+"name": "Lesser Focused Construction Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"LrmZqkx8wzDkUYuVAfv2OA": {
+"name": "Lesser Focused Cooking Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"EUF4FU4_m_JXKUiL6yH6yg": {
+"name": "Lesser Focused Farming Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"CaDZQEFq2q9uXb-T17sxWA": {
+"name": "Lesser Focused Mining Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"CuP7oEL4UtnZaFWnPzenQg": {
+"name": "Lesser Focused Runecrafting Potion",
+"category": "Runes",
+"max": 50,
+"rank": 5
+},
+"6sTczU43FmxKI8aJ3SSWSA": {
+"name": "Lesser Focused Woodcutting Potion",
+"category": "Woodcutting",
+"max": 50,
+"rank": 1
+},
+"-9Zin0B1C7GQgVKwKSR0hQ": {
+"name": "Lesser Healing Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"PTH4UEM3VLs9biqjMeB0hg": {
+"name": "Lesser Lumberjack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"qLXWx0NDd_CRXlmojVy3xg": {
+"name": "Lesser Magic Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"x2HUXkgtMUWqJ3i_oD1AcA": {
+"name": "Lesser Quarrymaster Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"Zo2PkUiV8Im58oWLYPyhZQ": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"YVydsUwpZA6WfKWIbecQ5g": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"L8a_IkpD4aR_LHC7SD85xA": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"xSrYCktOQvdk2ae01DSUxw": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"kcc_Jk87s3ioZUyeJI_edQ": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"6k3tRk6VcDFr6D6eulRV_g": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Cs7b4U5s6SuaYi-wzmKYPg": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"SF3UEEViXZZmN-C3FVDhPg": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"PkzzMUGalquRRCyhTwQ_Uw": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"5gtt00N-XHLfD9-bYjzpTw": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"XOC2A06c5qYUarW6_XzFvg": {
+"name": "Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Bl-NTEpc9Mdkr_-BfBT_jA": {
+"name": "Limestone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"99TvyUt0VbALswaw-0FBPw": {
+"name": "Lumberjack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"rsh3kEIq_dINpkOrr8Xbhg": {
+"name": "Magic Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"Ze5ss0vtvZQvNiOaBhgXlw": {
+"name": "Magic Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"gzOyDURSCsyX8-6Q2MSm3A": {
+"name": "Magical Focus",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"RTzyGUFEMKua2nOYgqEqng": {
+"name": "Maple Battlestaff",
+"category": "Staves",
+"max": 1,
+"rank": 6
+},
+"xGCRrEMgJu73_oKeaTVKIg": {
+"name": "Maple Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"ihb_x8sSRkCU2Nnatr2Ytw": {
+"name": "Maple Logs",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"3sXwkkC6DYV0KQCK0VIG7Q": {
+"name": "Maple Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 6
+},
+"6elZUk7d7zVP8qCRjXN9uQ": {
+"name": "Maple Sap",
+"category": "Basic Item",
+"max": 999,
+"rank": 4
+},
+"eqO3EET2-sZUr8KIeWRVBw": {
+"name": "Maple Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 6
+},
+"fe0nGUckAo3g6m-XVSAkqQ": {
+"name": "Maple Syrup",
+"category": "Basic Item",
+"max": 50,
+"rank": 4
+},
+"OKB-WUFyUloiJoaQI8GlaQ": {
+"name": "Maple Toastie",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"OzJAo0L_wtEHut6bOPXo5Q": {
+"name": "Marentill Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"U3fAKU2mI0apYz-rc0qWcQ": {
+"name": "Marrentill",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"QfPOk0c4rF6PIUqOxt0ytg": {
+"name": "Meat Pizza",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"WUq2qkrD-1bDaOG3fN6dMw": {
+"name": "Meat Sandwich",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"CHZTiEgSmdmbf5Su1KhteA": {
+"name": "Meat Stew",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"uYBo5UuEdMMdOyicMA9ikQ": {
+"name": "Meat Stew",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"SXiW10MZjZ6nu7e3O4BOUw": {
+"name": "Meat Twist Sandwich",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"u-HYwkRw-MdC8hSQnS84Vw": {
+"name": "Medium Wardstone",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"jPpy8kY7hqir8kO87fzzZg": {
+"name": "Miner Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"ombTOkWnPt1RdyKucOTA3A": {
+"name": "Mining Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"tPRZTkbhQOmzrMaV2Yk_WA": {
+"name": "Mining Cape (Trimmed)",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"R49qY0KT-YjRmT6a0YB04g": {
+"name": "Missing Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"D_xL3kw1nvzcQxCqPSLymw": {
+"name": "Missing Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"3PChfUy1T0FfXUKg0Uqcgg": {
+"name": "Missing Letter",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Rmi6eEWsjAHV4U-c_KOydQ": {
+"name": "Mithril Arrows",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"CiyC5Y3Qx0u0CTQt12QR1w": {
+"name": "Mithril Bar",
+"category": "Bars",
+"max": 50,
+"rank": 6
+},
+"y5-f9kT-GnCQodazYiAcsA": {
+"name": "Mithril Barbed Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"nFcRVkw9jTo4lpC5TG6Fcg": {
+"name": "Mithril Bolts",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"LTpN7kJQaQKo4IWE_rXaVw": {
+"name": "Mithril Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 6
+},
+"h32JKEgvPpgESZ6Ls8ct_w": {
+"name": "Mithril Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 6
+},
+"cadgU0Sueb4ES9ucGlgbdA": {
+"name": "Mithril Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"Dhd-hEsLnKZWq7yFkXChWw": {
+"name": "Mithril Fire Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"12xn5kR5tqqCCMCFAxTwfQ": {
+"name": "Mithril Greataxe",
+"category": "Tools",
+"max": 1,
+"rank": 6
+},
+"pQc5DE2EQITw_c2lRJxZ9A": {
+"name": "Mithril Greatsword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"18exoUG2NUZ8mIajJy0eXA": {
+"name": "Mithril Helmet",
+"category": "Helms",
+"max": 1,
+"rank": 6
+},
+"Qy1xxEdt6crGaqGd5DVCCw": {
+"name": "Mithril Logging Axe",
+"category": "Tools",
+"max": 1,
+"rank": 6
+},
+"RCKyPkdEetFS7VWY7wIShw": {
+"name": "Mithril Mace",
+"category": "Basic Item",
+"max": 1,
+"rank": 6
+},
+"NE9ro1p-LEeiL-80nPPyhw": {
+"name": "Mithril Ore",
+"category": "Ores",
+"max": 99,
+"rank": 6
+},
+"MDWp7UesApT1kjqhUNoR4w": {
+"name": "Mithril Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 6
+},
+"ldb1VkxAV5TRQSq26Fm96Q": {
+"name": "Mithril Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"gxWXuEgU-z5m3uavbuBOGA": {
+"name": "Mithril Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 6
+},
+"tdu7-kbMc5g0n9-D2ywbSA": {
+"name": "Mithril Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"R_xU504s0-u5Vh2MT5-ckg": {
+"name": "Mithril Scimitar",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"gVZae0_5Q5EQfh-M02h3qA": {
+"name": "Mithril Shield",
+"category": "Shields",
+"max": 1,
+"rank": 6
+},
+"6W0QYE-dwt11yzu0iAGrlA": {
+"name": "Mithril Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"kY3YrUjljLRP25mmWyGy2A": {
+"name": "Mithril Warhammer",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 6
+},
+"_1F2mkEqVqGFC06z4Uw0Jw": {
+"name": "Mixed Grill",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"HjRGr0FDXpD-d-65HZbdXA": {
+"name": "Mixed Platter",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"qwgPgkOGqffCUdG9M7YR2Q": {
+"name": "Molten Glass",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"7MA-NkEejSNBooCvO4XI9w": {
+"name": "Monstrous Fang",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"y2L4-k3UhpNxZWuWioqAJA": {
+"name": "Moon Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"sIdr0kbfd2Vh-lG1MqtFaw": {
+"name": "Mule Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"5AYjnUqlwTP9f12w5x2rlQ": {
+"name": "Mushroom Kebab",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"bjjJ1kCgKXKvMPyJC4YQkQ": {
+"name": "Mysterious Orb [Charged]",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"kLFhCEF-uIEs1hW6ioa7pA": {
+"name": "Mysterious Orb [Uncharged]",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"tDzyYkIXSZN8A1m_VsrzWA": {
+"name": "Mystic Cloth",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"L90H-kMtgkcomlmEb1cedg": {
+"name": "Mystic Fibres",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"hceXwEDdifvrgFCOaBsV-w": {
+"name": "Mystic Thread",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"HoHTJUAlDeh09AeumxhAwA": {
+"name": "Naphtha",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"iKbF7k2XvufGqqyg5rK-vQ": {
+"name": "Nature Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"9lHlikx8lMT7K8eLUajs1A": {
+"name": "Necromancer's Crown",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"gA4ukk_Adi1spMuag9Tkow": {
+"name": "Necromancer's Robe Bottom",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"VC09I0jpA170BKygkhJ2UQ": {
+"name": "Necromancer's Robe Top",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"6khNUkAOBBavR761Jxbj3g": {
+"name": "Necromancer's Staff",
+"category": "Staves",
+"max": 1,
+"rank": 5
+},
+"ffhRi0ROvrJqaHW9odKKWQ": {
+"name": "Necrotic Bonemeal",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"8ivfA0axvgaP1smick68pw": {
+"name": "Oak Battlestaff",
+"category": "Staves",
+"max": 1,
+"rank": 3
+},
+"TsGMyBWLNEWhBdNu21CwCA": {
+"name": "Oak Logs",
+"category": "Woodcutting",
+"max": 99,
+"rank": 2
+},
+"UBB8W0_AMoWP5yKf7M9KRw": {
+"name": "Oak Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 3
+},
+"FaDdOe9tLUOzvrkYSPpb3Q": {
+"name": "Oak Plank",
+"category": "Woodcutting",
+"max": 99,
+"rank": 2
+},
+"g7aQPfflM0q63qyJZyWI8w": {
+"name": "Oak Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 3
+},
+"KdEPik9BM_2zKiOenCEJgQ": {
+"name": "Oak tree Seed",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"JsMp30dRbfOXIPuy-4NmFA": {
+"name": "Onion",
+"category": "Food",
+"max": 99,
+"rank": 3
+},
+"s7eNFE3W-S0tBnKewniiKQ": {
+"name": "Onion seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"GAnIKkuMoUfiGC2wiSfmqg": {
+"name": "Opal",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"541r5U652crDNBS00bHcdA": {
+"name": "Orange Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"RFgA4kE-5E71wiGpmjWkKA": {
+"name": "Ornate Maul Handle",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"6kYeY05XaTnhySas_bXdnw": {
+"name": "Padded Cloth",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"mkSObERGptKuVly00uIfTQ": {
+"name": "Paladin Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 4
+},
+"5PEcXkJHZY9PDqKb9Skqww": {
+"name": "Paladin's Helm",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"0LL6JE9-pi2e3VSDOwqqYw": {
+"name": "Paladin's Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"FPYmOkCqcOpLYpaP1DKYjA": {
+"name": "Peach",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"yBO0NEdxMTVnKD2dMKXIPA": {
+"name": "Phoenix Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"LoXsN0jDsW_KeC-xjR4TAg": {
+"name": "Pink Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"HCdglE6uSn0nY36BNP8tOg": {
+"name": "Pink Dyad Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"vXzmDEEKYJvFqymlqaOrEg": {
+"name": "Pink Hex Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"BOb1iEzyCdDhlNWQVxo_eA": {
+"name": "Pioneer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"TNwe-UTLT1bxEPKBM9GnAQ": {
+"name": "Pioneer's Scarf",
+"category": "Helms",
+"max": 1,
+"rank": 1
+},
+"laNSqkNnDER7ezCtp2lG8g": {
+"name": "Plan Bundle: Armadyl Flags",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"_r4tv0Or4Z_aYuCIdhISCw": {
+"name": "Plan Bundle: Bandos Flags",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"HyQ-yU9LWdZBuDK9NWpzxA": {
+"name": "Plan Bundle: Guthix Flags",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"T1-6GEAixEvLgCyqhPJmIA": {
+"name": "Plan Bundle: Saradomin Flags",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"eZGIUkNmYIYoiHeA00tLiQ": {
+"name": "Plan Bundle: Zamorak Flags",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"XXWU70NlMFVOmPO4gXCVwA": {
+"name": "Plant Cure",
+"category": "Basic Item",
+"max": 20,
+"rank": 1
+},
+"vxn3aEpxraaQXJi9Btd7Cw": {
+"name": "Poison Ichor",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Fypi50GPQu-8haahRVUasQ": {
+"name": "Poisoned Bronze Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 3
+},
+"NN7EB08_YDtZEeiIzRl1GQ": {
+"name": "Poisoned Fang Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 2
+},
+"cNekSUokIAxgCmaxWWEiHw": {
+"name": "Poisoned Iron Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 4
+},
+"sccIUU_309OurvKGEt8e_w": {
+"name": "Poisoned Mithril Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 6
+},
+"weTVSE6xbZDSgvqupBR0UQ": {
+"name": "Poisoned Steel Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"HwM2_HvXZUyt8FmT4F2iYQ": {
+"name": "Potato",
+"category": "Food",
+"max": 99,
+"rank": 2
+},
+"cW7jv0WM_XgkG_OsOz_YgQ": {
+"name": "Potato seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"j_sPzUBqZftQOjuet7eAzg": {
+"name": "Primordial Heart",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"wHJdjE9MS1vFXXqX9pNeWA": {
+"name": "Pumpkin",
+"category": "Basic Item",
+"max": 99,
+"rank": 4
+},
+"2_CkFkMTSN7b5_-eDlNPDQ": {
+"name": "Pumpkin Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"ziJyKkjO9ax3UsWGTvPMtw": {
+"name": "Pumpkin Soup",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"kZor20jQ-GKLW52SdVDwAw": {
+"name": "Pumpkin Spice Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"pU_QfU6ScaLWNcu2Chk9-g": {
+"name": "Pungent Omelette",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"GjJEvUEeLJDK4rC8sNKYXA": {
+"name": "Purified King's Token",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"tjyp-0ILfgtqr1K_O7O6pw": {
+"name": "Purple Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"J_6-sk2CKwAAW0Sgbwhb1g": {
+"name": "Quarrymaster Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"E5lUJEc3VidsqDGPkYhl4A": {
+"name": "Ram Horn",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"iBBfwk2Gnv0b5CqMNA5biw": {
+"name": "Ranged Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"dgUWeUtE1THccFOPOwoilw": {
+"name": "Ranged Cape - Trimmed",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"G3PQn0IrK3xN_KiFGiK1XA": {
+"name": "Ranger Hat",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"uRgtu0xFj-2S1suM_JFJoQ": {
+"name": "Ranger Tights",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"IalNEUbWy5_alu6a4ffmUw": {
+"name": "Ranger Tunic",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"0aufkk55nHU1TlSAXZ0o3g": {
+"name": "Rat Roast",
+"category": "Food",
+"max": 99,
+"rank": 1
+},
+"tosPpUxp9FZgwdGvvXrcjw": {
+"name": "Raw Bestial Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"6VtTq32kQkyOk-E3Ly05-A": {
+"name": "Raw Bird Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Ttc6u0zyAi-JMaOjrxwtNQ": {
+"name": "Raw Farm Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"Ua7XqsiwjUio_H540eRegw": {
+"name": "Raw Game Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"1k8-cj3JqEGeRgu1P7PK2g": {
+"name": "Raw Rat Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"-Rg5cUmrkSN3dROPddWxFQ": {
+"name": "Red Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"QNqJUkJWdSpXTleZ1KTEdQ": {
+"name": "Red Dyad Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"ivdulE2nDCtOoLePNKfp0w": {
+"name": "Red Hex Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"DY6MkEu_wT76ukyxwYr45g": {
+"name": "Red Topaz",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"GHxAwJ8gNkSe3vxloWof2A": {
+"name": "Redberries",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ipb2Z0dRiFIUUhqLsIqIxA": {
+"name": "Redberry Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"GBmnz07RWPG4dnKvJqcLPw": {
+"name": "Redberry Crunchies",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"kP1gFUp7vT74QYWp9gwnNg": {
+"name": "Redberry Glazed Roast Flank",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"h_Jzr26f5kiw_PRKFEkHrA": {
+"name": "Redberry Glazed Roast Meat",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"BHyv-U4eeKvSxeqdh5UswQ": {
+"name": "Redberry Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"AwUFeEoCOtrQnjq0M1wo8A": {
+"name": "Redberry Roast Rat",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"7lSIik5yoOFoPX-5w38Ytg": {
+"name": "Redberry seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"mkaB7UQN1fBbSkGNVTVRZw": {
+"name": "Reinforced Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 2
+},
+"YvIen0_ZFiR1Kn-5ucQrDA": {
+"name": "Reinforced Helmet",
+"category": "Helms",
+"max": 1,
+"rank": 2
+},
+"GZuI4kHd7c-hpqWq5Nbdpw": {
+"name": "Reinforced Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 2
+},
+"SRKw_UuOlGyEv4uAhkQh1A": {
+"name": "Relentless Infusion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"R9IjjUjvqfnoc3ml3yyurg": {
+"name": "Restless Ghosts Reward Pack",
+"category": "Basic Item",
+"max": 10,
+"rank": 1
+},
+"xPzAAUqcRS8ZetuUKSJG5Q": {
+"name": "Ring of Life",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"mETsn0hsQKyU-h-s1LRQ6g": {
+"name": "Ring of Pursuit",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"3NlCk0PLvMeVQ06pQp2V8g": {
+"name": "Ring of Pursuit",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"hN41hUB2BvFbvyiqYpSgyg": {
+"name": "Ring of Recoil",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"osDyaUIyzTvf1iaY4WQrKg": {
+"name": "Roast Dinner",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"u1SkBEnMIdkuQ0-028XVmw": {
+"name": "Roast Pumpkin",
+"category": "Food",
+"max": 50,
+"rank": 4
+},
+"GQcT3TAgK0ulDFXjsp-k1A": {
+"name": "Rough Cloth",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"qOY004ZJaEaR8DmcDqB2KA": {
+"name": "Rune Essence",
+"category": "Runes",
+"max": 99,
+"rank": 1
+},
+"8IK7e0kOy0gVVDKoVnHucA": {
+"name": "Runecrafting Cape",
+"category": "Runes",
+"max": 1,
+"rank": 5
+},
+"OlEZ-03KPyGi7U-IlAvobg": {
+"name": "Runecrafting Cape (Trimmed)",
+"category": "Runes",
+"max": 1,
+"rank": 5
+},
+"MRRcVkTaxPfC_0evKhclKA": {
+"name": "Sacred Oil",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"LD2aYUnB_pK6aHOn64cemw": {
+"name": "Salve Amulet",
+"category": "Amulets",
+"max": 1,
+"rank": 1
+},
+"f_tlM0y-QfSP8Ha6vD6Rmg": {
+"name": "Salve Crystal",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"RdhNn0ebpZZIPQqMviMjNg": {
+"name": "Sandstone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"TvL1Ik7Vc-NHKlCx--22Cg": {
+"name": "Sapphire",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ZTw--ktbOOeumxWjvwYW3g": {
+"name": "Saradomin Symbol",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"lbGGMk9q_D8NqFer1Phs6Q": {
+"name": "Shadow Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"_SPkA02pw6hv7kG38Dh4Yw": {
+"name": "Shadow Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 6
+},
+"biA3GUeX-fn65ZCLmkdsag": {
+"name": "Shadow Cowl",
+"category": "Helms",
+"max": 1,
+"rank": 6
+},
+"H95eaEnwm89xf7GyHBhdsQ": {
+"name": "Shadow Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 6
+},
+"Ewe_yEPwqy4Bx0ajfHlwvw": {
+"name": "Shadow Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"48BYVkZfcyg3uoyx2hBHmQ": {
+"name": "Shadow Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"NSARJEh5evOUK_Cs17GhLA": {
+"name": "Shadowscale Cape",
+"category": "Capes",
+"max": 1,
+"rank": 6
+},
+"mOrF6UCuMkbZY0mVJp3wSg": {
+"name": "Shadowscale Hood",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"hJyKREoYCuSo8E20uZBB9g": {
+"name": "Shard of the Dreaming Stone",
+"category": "Basic Item",
+"max": 14,
+"rank": 1
+},
+"6lzGokw1exVCJAmMfnUnkg": {
+"name": "Shocking Plant Bulb",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"fluVNEWmCK3dY4ybEOTJ7A": {
+"name": "Shrapnel",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"xuoyTUAlufgRGmy9Kr2hDw": {
+"name": "Shroud Of Noggin",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"gunABauXjk6khTFVIKifoA": {
+"name": "Silver Bar",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"xawyKY4sAkmNcNuINCw3ww": {
+"name": "Silver Ore",
+"category": "Ores",
+"max": 99,
+"rank": 1
+},
+"63n2EE_I8ZHdhimzuwvIVw": {
+"name": "Silver Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"FpVrUUuv6LynSPqjP9SwUw": {
+"name": "Skeleton Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"XWOefkcc3bliVpWrsPMokg": {
+"name": "Skullsplitter",
+"category": "Basic Item",
+"max": 1,
+"rank": 3
+},
+"EWuEEEhBQ59daI2TL5y9YQ": {
+"name": "Small Animal Fang",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"YczziUGCmgiUTD2RtEWmpQ": {
+"name": "Small Ash Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"xAyLrEN_5B3KGXOjhpGzrg": {
+"name": "Small Wardstone",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"VP4HYkC55gMC4pGC3c6L4w": {
+"name": "Snapdragon",
+"category": "Basic Item",
+"max": 99,
+"rank": 6
+},
+"WVHbYkW9ZZEfyEarxYImSw": {
+"name": "Snapdragon Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 6
+},
+"_a30PUP3vGbK6omuRTvw2Q": {
+"name": "Soft Animal Fur",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"wzNQOkfqch-Pm3avRapETg": {
+"name": "Soul Fragment",
+"category": "Basic Item",
+"max": 999,
+"rank": 1
+},
+"RcJw8Ede_CIqdmSZCv-D2A": {
+"name": "Spare Farmers Supplies",
+"category": "Basic Item",
+"max": 10,
+"rank": 1
+},
+"uqGAn0tZnBkZEJSwmx70KA": {
+"name": "Spectral Chinchompa Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"UBjRA0kZ03sJQmq-urBsTA": {
+"name": "Spectral Chinchompa Skull",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"tNBdikFL0zvyBmaARPJORA": {
+"name": "Spectral Silver Thread",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"TASgGUjnZPDyV6arZ72Yhg": {
+"name": "Splitbark Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"DIvBq0PMLtU5hRymvVGsqA": {
+"name": "Splitbark Helm",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"kx5mgkBuVkrt5oaFyFIjag": {
+"name": "Splitbark Legs",
+"category": "Leggings",
+"max": 1,
+"rank": 5
+},
+"P456RETd4H4vi_2X5C8XTA": {
+"name": "Splitbark Staff",
+"category": "Staves",
+"max": 1,
+"rank": 5
+},
+"iFw4Z0VzNkp7Dy6VdzfGiw": {
+"name": "Squeaking Sausage",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"Hcq0C0UjvN3n8q-X2uqa7w": {
+"name": "Staff of Light",
+"category": "Staves",
+"max": 1,
+"rank": 4
+},
+"gC-ZukCFUhIWbCyJIkj3LQ": {
+"name": "Steak",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"jS5_8UZSJZ_bkh-ojI0Rwg": {
+"name": "Steak 'N' Eggs",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"U1bXxkSd4aE-4TiyxP2L1w": {
+"name": "Steak Sandwich",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"ZBZGmUwRoHleCpi1KISp-g": {
+"name": "Steel Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"bDrJG99f7UKcLJ-z3G_e3w": {
+"name": "Steel Bar",
+"category": "Bars",
+"max": 50,
+"rank": 5
+},
+"0tQXR0oHEGdg44m6RHe5BA": {
+"name": "Steel Barbed Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"_1UJR0bdUz0CNMyyUwbTig": {
+"name": "Steel Bolt",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"Nro5M0QUOoJMnwyFVlNzuA": {
+"name": "Steel Crossbow",
+"category": "Crossbows",
+"max": 1,
+"rank": 5
+},
+"iMCDeEyx3QdQI06yZtaE8w": {
+"name": "Steel Crossbow Limbs",
+"category": "Crossbows",
+"max": 1,
+"rank": 5
+},
+"X7WHfk6N0b3zFdmwn2Vacg": {
+"name": "Steel Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"l_dStU-tZdJ-0SWqCljYMA": {
+"name": "Steel Fire Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 5
+},
+"vD5BTU75YhilvnGtFX3L0Q": {
+"name": "Steel Full Helm",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"ij6dREu-BJWgGwGB01XLdA": {
+"name": "Steel Greataxe",
+"category": "Tools",
+"max": 1,
+"rank": 5
+},
+"vI0ix0WJSchv2dysqMjcaw": {
+"name": "Steel Greatsword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"t6PZE0lGoToPSDq_5wY90g": {
+"name": "Steel Logging Axe",
+"category": "Tools",
+"max": 1,
+"rank": 5
+},
+"-OI9N0GCWiJtKNqmlBmAfw": {
+"name": "Steel Mace",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"gnsOeUlUW-HZZv6kTQo2AQ": {
+"name": "Steel Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 5
+},
+"uRhtpkdkwxqA1tih10PgbQ": {
+"name": "Steel Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"WpUQ9kNFlOMYxp-YGrfOlQ": {
+"name": "Steel Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 5
+},
+"iPIO-EarGDwHMbu3ED65iw": {
+"name": "Steel Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 5
+},
+"-AMBe0n3DyCGhIWsqB8r-Q": {
+"name": "Steel Scimitar",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"X2mSMUNh2YKRnuS037ghVA": {
+"name": "Steel Shield",
+"category": "Shields",
+"max": 1,
+"rank": 5
+},
+"Rah78Usgu3iPhOCdFtjVmQ": {
+"name": "Steel Spade",
+"category": "Basic Item",
+"max": 1,
+"rank": 3
+},
+"q_AyO0EBaOKF0su-tl7Gsg": {
+"name": "Steel Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"xHf190QoFqK2is6m53ViSQ": {
+"name": "Steel Warhammer",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"9FOjcUsCSkwoL6i8ln6M9g": {
+"name": "Steel Watering Can",
+"category": "Rings",
+"max": 1,
+"rank": 5
+},
+"_R44FI_bhEm8Gx61swlzpA": {
+"name": "Stone",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"vmEIW09ztuDtLmGpyzQBbQ": {
+"name": "Stone Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 1
+},
+"jEGEekTLabfTqtWElqNXLQ": {
+"name": "Stone Block",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"IJILMByu-kCq_0feZkzKBw": {
+"name": "Stone Club",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"f5pdM9IkUU2dZp0okjecuA": {
+"name": "Stone Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"0NWm0hwPokOAgp0ux3ambA": {
+"name": "Stone Logging Axe",
+"category": "Tools",
+"max": 1,
+"rank": 1
+},
+"BcoOLIbLs0SLeM3EhJJXSw": {
+"name": "Stone Pickaxe",
+"category": "Tools",
+"max": 1,
+"rank": 1
+},
+"KMexB0_3MwL8rEC0g0xd5g": {
+"name": "Stormtouched Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"eAqy2E05wXWCK4O5s2Dnwg": {
+"name": "Studded Leather Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"bZAEoUISHmuQXu6HlIFIyQ": {
+"name": "Studded Leather Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 4
+},
+"YVvQRk9Uv1a4PceWi3985w": {
+"name": "Studded Leather Cowl",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"v7vIfkOdeCdyHqa8oMhdDQ": {
+"name": "Subjugation Staff",
+"category": "Staves",
+"max": 1,
+"rank": 6
+},
+"zMkPh01oP5052KmW1ctXeA": {
+"name": "Sun Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"DJIQWUsnDB7Umey0E2dFgA": {
+"name": "Swamp Tar",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ehZX4E-aGmiITq6BdnbgFA": {
+"name": "Swamp Thread",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"zsimokwEIE-BaUmW949QtQ": {
+"name": "Swamp Weed",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"VbutMUHbEUrnNpGleFj_vw": {
+"name": "Swamp Weed Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"8qJOoUX9S5-1ogG8C5AcFA": {
+"name": "Sweet Veg Ball",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"mXFVTke_27MjRnGxbcyATw": {
+"name": "T1 Bleeding Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"P4DqJ03JPXW9Uf-z9vf9cA": {
+"name": "T1 Burning Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"wKLbQE45kY_FG3CqMpInFw": {
+"name": "T1 Poison Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"pmx4j0E3SP9r4gmY38QrYA": {
+"name": "T1 Shock Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"AQ-JQEAJEyOWJKuGTq7KCQ": {
+"name": "T2 Bleeding Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"GO-fJEIf4N7Y0EeG5D0YSw": {
+"name": "T2 Burning Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"UW6yfU2tUde27I2aZB9JHA": {
+"name": "T2 Poison Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"dKeIN0KKjY2p7NqOFSISdg": {
+"name": "T2 Shock Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"jWfoPkWonpdDzBWYUQ1qPg": {
+"name": "T3 Bleeding Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"Z4zEt0wViBus7gSH4qejYg": {
+"name": "T3 Burning Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"NA76rEFl7Di8f5aFj_L3SA": {
+"name": "T3 Poison Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"PPvgBkmqKmyUwki-TAtqig": {
+"name": "T3 Shock Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 3
+},
+"-ahw20RwuJqFDsKcOrryNQ": {
+"name": "T4 Bleeding Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"CN1GVEgi8t_uRs-yFmH_FQ": {
+"name": "T4 Burning Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"3LufGUl5SzS2zV2Vj7QCPg": {
+"name": "T4 Poison Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"5JCljkf2DRoxnQCI94gFJQ": {
+"name": "T4 Shock Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 4
+},
+"Vnjun0JNiDTYsG21iTb2gg": {
+"name": "Tainted King's Token",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"6L-fvUa58zMKWFabeAk0tg": {
+"name": "Tattered Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"ARf7DUYPa_AlyLOOsnTIYw": {
+"name": "Thane's Authority",
+"category": "Basic Item",
+"max": 1,
+"rank": 4
+},
+"3GRiakVrfak9eBKzKYJqeQ": {
+"name": "The Binding of Ib",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"GQ7na09L7n8GPkmXLLw01Q": {
+"name": "The Importance of Chaos",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"mt-zJkY9TORHawyjpD2CRw": {
+"name": "The Pride of the Avernic",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"I7Cpnk8nMRCVenu9yIrRsA": {
+"name": "The Wrath of Baba Potterington",
+"category": "Rings",
+"max": 99,
+"rank": 1
+},
+"7fPUAi9DYkOSI5B_t79TVw": {
+"name": "Tin Bar",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"h1AqBkRETk-Fu_65W6BjVw": {
+"name": "Tin Ore",
+"category": "Ores",
+"max": 99,
+"rank": 1
+},
+"ds7-v0heeg1F8sW65bvAzQ": {
+"name": "Tin Salvage Pile",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"YMXvUEKL-S_EPFm7a5xvHA": {
+"name": "Titan's Wrath",
+"category": "Basic Item",
+"max": 1,
+"rank": 6
+},
+"61d3bkS0nDQWlVqHDt5OaQ": {
+"name": "Toadflax",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"ePekjUBWSOdzQMmsbjvP8g": {
+"name": "Toadflax Seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"9sGUYUTljibjYSOO3fbgIQ": {
+"name": "Tomato",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"McU9BUE_ZXBScBa7M6QZRw": {
+"name": "Tomato seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"4z-8l0h5MJBHfpm2GOyiDw": {
+"name": "Tome of Attack - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"x4yO1keTodki4u2fuVOFqA": {
+"name": "Tome of Attack - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"xKjZUEBiIC72rFitwW4m6Q": {
+"name": "Tome of Construction - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"pwfJkkgr-BjVlw-gEXjXrw": {
+"name": "Tome of Construction - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"yxFSIE8VtUQs4c6l7eM_cw": {
+"name": "Tome of Cooking - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"xeKfT0nc_p4FcdSOi7korw": {
+"name": "Tome of Cooking - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"-c0ia0DAjcLPRlCGHFGi1A": {
+"name": "Tome of Farming - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"I7LcEEj5FmwWq3GNQclQrA": {
+"name": "Tome of Farming - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"2cTzA0DMigYJPoSk3U-WKw": {
+"name": "Tome of Magic - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"qubFp0_qYyO8K-mNKyS0GA": {
+"name": "Tome of Magic - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"NfrIoUsI1Obs-4KY7LuBkQ": {
+"name": "Tome of Mining - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"4xxJcEnzI6vYpCuDcVIhkw": {
+"name": "Tome of Mining - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"44ZDU03461OXgqSqIMb2IA": {
+"name": "Tome of Ranged - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"9pn4hkp6rYDf93WjY8uwbQ": {
+"name": "Tome of Ranged - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"U6OtnkxHtcHAIPy1kMGc8A": {
+"name": "Tome of Runecrafting - Vol 1",
+"category": "Runes",
+"max": 99,
+"rank": 5
+},
+"A16R9EEWxwuqhsykRimejQ": {
+"name": "Tome of Runecrafting - Vol 2",
+"category": "Runes",
+"max": 99,
+"rank": 5
+},
+"llpKZU92JhzHdva7AC5vqw": {
+"name": "Tome of the Artisan - Vol 1",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"Oom9EkKGmERNFOWbQDqK-A": {
+"name": "Tome of the Artisan - Vol 2",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"KlQuMkdkj3bNzr2LWvCBxw": {
+"name": "Tome of the Dragon Slayer",
+"category": "Tombs",
+"max": 99,
+"rank": 6
+},
+"9_oomElWmcQ3vDWxNIfvbA": {
+"name": "Tome of the Undying",
+"category": "Tombs",
+"max": 99,
+"rank": 1
+},
+"1lnRvU1YsQeoDdyR_9s6Ug": {
+"name": "Tome of Woodcutting - Vol 1",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"7hpoTUnHdDAIftKIzaRVVA": {
+"name": "Tome of Woodcutting - Vol 2",
+"category": "Woodcutting",
+"max": 99,
+"rank": 1
+},
+"lWGe1hSwiECAS9xhsMzJfg": {
+"name": "Torch",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"iO8n7UBZaw3mT3m27D2frw": {
+"name": "Twilight Lily",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"5Y972kmdvcs4vSqWaXZltw": {
+"name": "Ulv's Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 5
+},
+"wEJ4yUvsp9EeQvK1IvMN9g": {
+"name": "Undead Bone",
+"category": "Basic Item",
+"max": 99,
+"rank": 3
+},
+"ztBa9UgwHvLRyD-ko9Ea3w": {
+"name": "Undead Draconic Visage",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"C12YuEnnFEKdJhWmXv3hFg": {
+"name": "Undead Meat",
+"category": "Basic Item",
+"max": 99,
+"rank": 4
+},
+"cEEQVE9__6Ch0naJHHXmvQ": {
+"name": "Undead Ranger's Bow",
+"category": "Bows",
+"max": 1,
+"rank": 5
+},
+"yxA67EjEbE--tVi4u0pn6A": {
+"name": "Undead Spade",
+"category": "Basic Item",
+"max": 1,
+"rank": 5
+},
+"ksnsjULZfCA4oa63yNWkkg": {
+"name": "Unholy Symbol",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"XgIbvE39a-uFSJKWcwYDSA": {
+"name": "Unholy Water",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"PGr-_U1RdW7DxSyRq38KHw": {
+"name": "Unusual Trout",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"52QCB0uSNJD0UoC21lRJvA": {
+"name": "Vault Core",
+"category": "Ores",
+"max": 25,
+"rank": 1
+},
+"T8l7pktHUJoUuxi9mkrT7g": {
+"name": "Vault Shard",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"V8Zm8EJdBfS9TYyDcNaosQ": {
+"name": "Vegan Fryup",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"lUXT6k3qLQtJa4CdnnJw5g": {
+"name": "Vegetable Soup",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"3zU6qknpEF2Wg6STSQMHtQ": {
+"name": "Velgar's Head",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"r8vHFkQKCscKp1OoC17YCQ": {
+"name": "Vile Ashes",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"z-xbJy9IS0iWNNx9WciARQ": {
+"name": "Vine Root",
+"category": "Basic Item",
+"max": 20,
+"rank": 1
+},
+"bbLdJRhwPEWt1ScENYRUCg": {
+"name": "Water Rune",
+"category": "Runes",
+"max": 999,
+"rank": 5
+},
+"Oj3BdU4ZfC9iOtq4vXaOww": {
+"name": "Watermelon",
+"category": "Basic Item",
+"max": 99,
+"rank": 4
+},
+"DwwoW0qeygf3xt-AJSJ8YA": {
+"name": "Watermelon Jerky",
+"category": "Basic Item",
+"max": 50,
+"rank": 4
+},
+"GX_XpEZAZdX7koKAEyFSKQ": {
+"name": "Watermelon seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"ukjoSEXQTWbO6zSJvP5Z4Q": {
+"name": "Weak Antipoison Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"CPT7I01jfIBmhyCQLJH31A": {
+"name": "Weak Focused Artisan Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"Gl810k3TcUSB866zC50I2g": {
+"name": "Weak Focused Attack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"m4bFA0UwQOecAhah3hNtSA": {
+"name": "Weak Focused Construction Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"K7le0EXS_TjIx-Wb9d9PZg": {
+"name": "Weak Focused Cooking Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"HCnG10E8sW72-wa0bbZZfg": {
+"name": "Weak Focused Farming Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"8gh6wkTHrHGgAMSeSMHNTw": {
+"name": "Weak Focused Mining Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"0PXPSUTx8SdrxW6J26Ljfw": {
+"name": "Weak Focused Runecraft Potion",
+"category": "Runes",
+"max": 50,
+"rank": 5
+},
+"U3WBak2LNdsGzrajcaLGpw": {
+"name": "Weak Focused Woodcutting Potion",
+"category": "Woodcutting",
+"max": 50,
+"rank": 1
+},
+"qRA1TEfZJkMoanWXc_l-Sg": {
+"name": "Weak Healing Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"ni4XGUQ7iWkplmuumD7kkA": {
+"name": "Weak Lumberjack Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"2aa7lkBxEmc_Zuy6bPQ-Ag": {
+"name": "Weak Quarrymaster Potion",
+"category": "Potions",
+"max": 50,
+"rank": 1
+},
+"gMtJMk-b5kwQmSKqmGSimw": {
+"name": "Weapon Barbs",
+"category": "Bars",
+"max": 50,
+"rank": 1
+},
+"0h15KUoKwZakrXihaEqoqg": {
+"name": "Weapon Poison",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"tZixd0Fg53WIeDKDenVy4A": {
+"name": "Weeds",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"1PhTmE-FuOrQnFSxSVMfUQ": {
+"name": "Wheat",
+"category": "Basic Item",
+"max": 99,
+"rank": 2
+},
+"muWQNEPDzvIGl3ekVbIVRQ": {
+"name": "Wheat seeds",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"3wV1xUv5zBDHRiaAk2qv7w": {
+"name": "Whetstone",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"qANQGE8VKB_lSNeI-PHxGQ": {
+"name": "Whispering Cape",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"HbmyZUThqBt2KcOj76C94w": {
+"name": "White Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"xtEdM0Yqszwm-EecebIkmg": {
+"name": "White Full Helm",
+"category": "Helms",
+"max": 1,
+"rank": 5
+},
+"ayHkBEYv_2a4B12L34FYzg": {
+"name": "White Platebody",
+"category": "Chestplates",
+"max": 1,
+"rank": 5
+},
+"Mbvs0E3m6SxphTmzqShZxw": {
+"name": "White Platelegs",
+"category": "Leggings",
+"max": 1,
+"rank": 5
+},
+"LURhZ0Q6FaLGzh-siBuT7g": {
+"name": "Wild Anima",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"fr5LJkUvJRZ-DbqVbKaB4w": {
+"name": "Wild Archer Body",
+"category": "Chestplates",
+"max": 1,
+"rank": 4
+},
+"l6qWl0-xTPdrhweMah3eTg": {
+"name": "Wild Archer Chaps",
+"category": "Leggings",
+"max": 1,
+"rank": 4
+},
+"gIoZIUIT52OUDkGFuzSBlw": {
+"name": "Wild Archer Cowl",
+"category": "Helms",
+"max": 1,
+"rank": 4
+},
+"Ub1yCE7dcEADMJKZcOHMMQ": {
+"name": "Wild Pie",
+"category": "Food",
+"max": 50,
+"rank": 1
+},
+"NqTlRkd7Zw4BE9GM_mDbtw": {
+"name": "Wild Scout's Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 3
+},
+"rwa8v0ugnp7LnvGKd3V29g": {
+"name": "Willow Logs",
+"category": "Woodcutting",
+"max": 99,
+"rank": 2
+},
+"h9TzWU4BA7oNtFC_5A8DLg": {
+"name": "Willow Longbow",
+"category": "Bows",
+"max": 1,
+"rank": 5
+},
+"djB3Z0qsYhwDyyS0xxKMuQ": {
+"name": "Willow Shortbow",
+"category": "Bows",
+"max": 1,
+"rank": 5
+},
+"ztu0Ik00blWibq6-8Y9f2g": {
+"name": "Willow tree seed",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"QezLIU6YRuQdDUKbCkZqBA": {
+"name": "Willow tree seed",
+"category": "Farming",
+"max": 999,
+"rank": 1
+},
+"7MEFaERG0Ka6-jO7J8Vc3A": {
+"name": "Wither Water",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"fS-ZKE_Ymkc-RL-2ySIl9A": {
+"name": "Withered Heart",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"rCw_tULBJw2cbgiNTYjmuQ": {
+"name": "Withering Heights Reward Pack",
+"category": "Rings",
+"max": 10,
+"rank": 1
+},
+"h0jHf-hTx0KeGyukdCnN4Q": {
+"name": "Wizard Hat",
+"category": "Helms",
+"max": 1,
+"rank": 3
+},
+"FlnNkilo_EyfB0gbqf32AQ": {
+"name": "Wizard Robe Legs",
+"category": "Chestplates",
+"max": 1,
+"rank": 3
+},
+"2-okKxsy7k-FRgP-vgQEQA": {
+"name": "Wizard Robes",
+"category": "Chestplates",
+"max": 1,
+"rank": 3
+},
+"sJPSNEYJF6H5AqaDdl0pQQ": {
+"name": "Wolfbane Dagger",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 5
+},
+"tONipUK6uHIncbGoHW67Ww": {
+"name": "Woodcutting Cape",
+"category": "Woodcutting",
+"max": 1,
+"rank": 1
+},
+"bIwxyUxgeaVtw_-2_uCxKw": {
+"name": "Woodcutting Cape (Trimmed)",
+"category": "Woodcutting",
+"max": 1,
+"rank": 1
+},
+"v1ZsjAYc-EC084k4NAV-rA": {
+"name": "Wooden Arrow",
+"category": "Arrows",
+"max": 999,
+"rank": 1
+},
+"vcTl56joPka7MwbZ3Mvxbg": {
+"name": "Wooden Club",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 1
+},
+"XiatxUToDUaswQb3Xrz6NQ": {
+"name": "Wooden Shield",
+"category": "Shields",
+"max": 1,
+"rank": 1
+},
+"fgdBl0_xCWAS7oeytewVnA": {
+"name": "Wooden Spade",
+"category": "Woodcutting",
+"max": 1,
+"rank": 1
+},
+"fLnzAkbRMzh0TW-4zuBoLQ": {
+"name": "Wooden Training Sword",
+"category": "Melee Weapons",
+"max": 1,
+"rank": 2
+},
+"KdTx0k1z9bKZ6EeFI_R9NA": {
+"name": "Wooden Watering Can",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"ZdUEQUlgodd2eLeZKYrHFA": {
+"name": "Woodsman Ring",
+"category": "Rings",
+"max": 1,
+"rank": 1
+},
+"Jf2AM4PfnUqwTuW0cPXheA": {
+"name": "Wool Cloth",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"vgsjm0jT19zFn1uH9N2Rbg": {
+"name": "Wool Thread",
+"category": "Basic Item",
+"max": 50,
+"rank": 1
+},
+"KWy6hkjlCUL1a0eynn0ptg": {
+"name": "Yellow Adventurer's Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"n7f1sU8i2d5NTeqr79Q2jw": {
+"name": "Yellow Dyad Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"5ObYyU8L58JkwhCmQRd4ow": {
+"name": "Yellow Hex Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"8L37OE7i2JOHvnKTu-_-xw": {
+"name": "Zamorak Cape",
+"category": "Capes",
+"max": 1,
+"rank": 1
+},
+"Y6JG90UQGtCjaEWeXeohyA": {
+"name": "Zamorak Hood",
+"category": "Helms",
+"max": 1,
+"rank": 6
+},
+"qoTWm0fCuyU02EaXPn_WYw": {
+"name": "Zamorak Robe Legs",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"OezNHEUySdZx5LKVOe5__A": {
+"name": "Zamorak Robes",
+"category": "Chestplates",
+"max": 1,
+"rank": 6
+},
+"IpM2CEjR22G7q_eELH0Iow": {
+"name": "Zamorak Staff",
+"category": "Staves",
+"max": 1,
+"rank": 6
+},
+"jiVl80bzK87SNYiQaaybXQ": {
+"name": "Zamorakian Mage Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"0ZKBCU6_6BuBFhCE66pz0A": {
+"name": "Zamorakian Warrior Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"Xu0iS035hkxA9PKMNalJdQ": {
+"name": "Zogre Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"z0Cq8kyZGceXi3KE508GDg": {
+"name": "Zombie Axe",
+"category": "Tools",
+"max": 1,
+"rank": 5
+},
+"YCNMyE4JSnEKtNmJJL1sMw": {
+"name": "Zombie Pack",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"LbZ25U9zDiMV9Y2mZiUkdA": {
+"name": "Abysal Lantern",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"L910nkHgsySXXwio7CfE7w": {
+"name": "Dreamstone Lantern",
+"category": "Basic Item",
+"max": 99,
+"rank": 1
+},
+"CgBtgUYiZCZC5QmnqvAebw": {
+"name": "Gatekeeper Greatsword",
+"category": "Melee Weapons",
+"max": 99,
+"rank": 1
+},
+"lZVUXUVhycw9AC-chq6hvg": {
+"name": "Lantern Handle",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"HHXDR0_DJmuYJ423pebA5g": {
+"name": "Lantern Lens",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"kKE0g096uQ-0_7eA5qolUg": {
+"name": "Large Dream Shard",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"HRS8Uk9eJ7jNYTaxeR6-xw": {
+"name": "Lens Mould",
+"category": "Basic Item",
+"max": 25,
+"rank": 1
+},
+"aqAX10VI_108ALiidaJH_A": {
+"name": "Page from Demon Master's Journal",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"aS0zgEZbMtsDiiKNGvsyVg": {
+"name": "Page from Ratmaster's Journal",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"7e6im0NkLJ8wwPiVslzvdw": {
+"name": "Page from the Houndmaster's Journal",
+"category": "Basic Item",
+"max": 1,
+"rank": 1
+},
+"HoxsiUzCz6tQz7SvHZ74Qw": {
+"name": "Portal Sigil",
+"category": "Basic Item",
+"max": 8,
+"rank": 1
+}
+}
+}

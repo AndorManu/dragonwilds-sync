@@ -566,6 +566,35 @@ class Controller(QObject):
             log.exception("Offering listing failed")
         return payloads
 
+    def conjure_item(self, char_path, item_data: str, count: int, done=None):
+        from .core import items as items_mod
+
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — items conjured "
+                                               "while it runs are lost.")
+                    return
+                slot = characters.spawn_item(
+                    char_path, item_data, count,
+                    self._char_backup_root(Path(char_path).stem))
+                if slot is not None:
+                    name = items_mod.name(item_data)
+                    self.toast.emit("success", f"{name} ×{count} conjured into bag slot "
+                                               f"{slot}. Experimental — if the game "
+                                               f"rejects it, restore the checkpoint.")
+                else:
+                    self.toast.emit("warning", "No free bag slot — make room first.")
+            except Exception:
+                log.exception("Conjure failed")
+                self.toast.emit("error", "The conjuring failed — the character file "
+                                         "was left untouched.")
+            finally:
+                if done:
+                    self.run_on_ui.emit(done)
+
+        threading.Thread(target=worker, daemon=True, name="conjure").start()
+
     def receive_gift(self, char_path, item_entry: dict, source: str, done=None):
         def worker():
             try:
