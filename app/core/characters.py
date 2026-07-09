@@ -736,14 +736,15 @@ class EditPlan:
     repair_all: bool = False                            # every Durability -> max
     item_counts: dict = field(default_factory=dict)     # slot key -> new Count
     item_repairs: set = field(default_factory=set)      # slot keys to repair
+    item_swaps: dict = field(default_factory=dict)      # slot key -> new ItemData
     cleanse: bool = False                               # clear all status effects
     disable_hardcore: bool = False                      # turn off hardcore
     appearance: dict = field(default_factory=dict)      # customization slot -> rowName
 
     def empty(self) -> bool:
         return not (self.skill_xp or self.heal_vitals or self.repair_all
-                    or self.item_counts or self.item_repairs or self.cleanse
-                    or self.disable_hardcore or self.appearance)
+                    or self.item_counts or self.item_repairs or self.item_swaps
+                    or self.cleanse or self.disable_hardcore or self.appearance)
 
 
 REPAIR_VALUE = 9999
@@ -797,6 +798,32 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
         changes.append("vitals restored")
 
     inventory = progress.get("Inventory") or {}
+    loadout = progress.get("Loadout") or {}
+
+    # tier swaps — transmute an item into another material tier, in place. Done
+    # before counts so a stackable's Count clamps to the new item's cap. The slot
+    # (and its GUID) is kept; only the ItemData and its storage shape change.
+    if plan.item_swaps:
+        from . import items as _items
+        for slot_key, new_id in plan.item_swaps.items():
+            key = str(slot_key)
+            container = loadout if key.startswith("L") else inventory
+            slot = container.get(key[1:] if key.startswith("L") else key)
+            if not isinstance(slot, dict) or not new_id:
+                continue
+            old_id = slot.get("ItemData")
+            if new_id == old_id:
+                continue
+            slot["ItemData"] = new_id
+            if _items.is_stackable(new_id):
+                keep = int(slot.get("Count") or 1)
+                slot["Count"] = max(1, min(keep, _items.max_stack(new_id)))
+                slot.pop("Durability", None)
+            else:
+                slot["Durability"] = REPAIR_VALUE
+                slot.pop("Count", None)
+            changes.append(f"{_items.name(old_id)} → {_items.name(new_id)}")
+
     if plan.repair_all:
         repaired = 0
         for key, slot in inventory.items():
@@ -814,8 +841,10 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
     for slot_key, new_count in (plan.item_counts or {}).items():
         slot = inventory.get(str(slot_key))
         if isinstance(slot, dict) and "Count" in slot:
+            from . import items as _items
+            cap = _items.max_stack(slot.get("ItemData"))   # clamp to the item's real cap
             old = slot.get("Count")
-            new_count = max(1, int(new_count))
+            new_count = max(1, min(int(new_count), cap))
             if old != new_count:
                 slot["Count"] = new_count
                 changes.append(f"slot {slot_key}: count {old} → {new_count}")

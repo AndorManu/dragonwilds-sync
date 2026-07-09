@@ -84,3 +84,51 @@ def test_spawn_respects_backup_and_unknowns(tmp_path):
     after = json.loads(path.read_text(encoding="utf-8"))
     assert after["Backup"] == 53184729
     assert after["meta_data"] == before["meta_data"]
+
+
+def _by_name() -> dict:
+    return {e["name"]: i for i, e in items._catalog().items()}
+
+
+def test_tier_ladder_orders_materials_low_to_high():
+    by = _by_name()
+    ladder = [m["id"] for m in items.tier_ladder(by["Bronze Dagger"])]
+    assert ladder == [by["Bronze Dagger"], by["Iron Dagger"],
+                      by["Steel Dagger"], by["Mithril Dagger"]]
+    assert items.tier_position(by["Steel Dagger"]) == (3, 4)
+    assert items.tier_position("totally-made-up") == (0, 0)
+
+
+def test_tier_neighbors_walk_and_stop_at_the_ends():
+    by = _by_name()
+    assert items.tier_neighbor(by["Bronze Dagger"], -1) is None
+    assert items.tier_neighbor(by["Bronze Dagger"], +1)["id"] == by["Iron Dagger"]
+    assert items.tier_neighbor(by["Mithril Dagger"], +1) is None
+    assert items.tier_neighbor(by["Mithril Dagger"], -1)["id"] == by["Steel Dagger"]
+
+
+def test_tier_neighbor_skips_equal_ranks():
+    # Copper and Tin ore share a rank; an upgrade jumps to the next real tier.
+    by = _by_name()
+    up = items.tier_neighbor(by["Copper Ore"], +1)
+    assert up and up["name"] == "Iron Ore"
+    assert items.tier_neighbor(by["Copper Ore"], -1) is None
+
+
+def test_untiered_and_unknown_items_have_no_ladder():
+    assert items.tier_ladder("totally-made-up") == []
+    assert items.tier_neighbor("totally-made-up", +1) is None
+
+
+def test_is_stackable():
+    by = _by_name()
+    assert items.is_stackable(by["Bronze Arrow"])
+    assert not items.is_stackable(by["Bronze Dagger"])
+
+
+def test_category_icons_are_own_glyphs_not_skill_emblems():
+    # ores no longer borrow the mining pickaxe; ammo has a single-arrow glyph.
+    assert items.CATEGORY_ICON["Ores"] == "cat-ore"
+    assert items.CATEGORY_ICON["Arrows"] == "cat-arrow"
+    assert items.CATEGORY_ICON["Woodcutting"] == "cat-log"
+    assert not any(v.startswith("skill-") for v in items.CATEGORY_ICON.values())

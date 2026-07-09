@@ -11,12 +11,13 @@ import math
 import random
 from pathlib import Path
 
-from PySide6.QtCore import (Property, QEasingCurve, QPointF, QPropertyAnimation,
-                            Qt, QTimer, Signal)
+from PySide6.QtCore import (Property, QEasingCurve, QPoint, QPointF,
+                            QPropertyAnimation, Qt, QTimer, Signal)
 from PySide6.QtGui import QBrush, QColor, QIntValidator, QLinearGradient, QPainter, QPen
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame, QGridLayout,
-                               QHBoxLayout, QLabel, QLineEdit, QPushButton,
-                               QScrollArea, QStackedWidget, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+                               QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMenu,
+                               QPushButton, QScrollArea, QStackedWidget,
+                               QVBoxLayout, QWidget)
 
 from ..core import characters, items, levels
 from ..core.characters import SKILL_NAME_CHOICES, EditPlan, skill_label
@@ -73,40 +74,51 @@ class XPBar(QWidget):
 
 class SlotCell(QWidget):
     """One bag slot: category glyph tinted by rarity, count badge, durability
-    sliver, name tooltip, hover glow."""
+    pip, name tooltip, hover glow. Left-click opens its detail popover;
+    right-click opens the quick menu. Its shown state reflects pending edits, so
+    changing a count or upgrading a tier updates the cell instantly."""
 
-    clicked = Signal(object)   # the SlotCell itself
+    clicked = Signal(object)         # the SlotCell itself
+    menu_requested = Signal(object)  # right-click -> quick actions menu
 
-    def __init__(self, key, slot, edited=False, parent=None):
+    def __init__(self, key, slot, parent=None):
         super().__init__(parent)
         self.key = key
-        self.slot = slot
+        self.slot = slot              # the original, untouched inventory slot
         self._hover = False
         self._selected = False
-        self._edited = edited
-        self._name = items.name(slot.item_data)
-        self._rarity_label, self._rarity_color = items.rarity(slot.item_data)
-        self._icon = items.icon_key(slot.item_data)
         self.setFixedSize(46, 46)
         self.setCursor(Qt.PointingHandCursor)
         self.setAttribute(Qt.WA_Hover, True)
-        count = f"  ×{slot.count}" if slot.count is not None else ""
-        dur = f"\nDurability {slot.durability}" if slot.durability is not None else ""
-        cat = items.category(slot.item_data)
-        self.setToolTip(f"{self._name}{count}\n{self._rarity_label} · {cat}"
-                        f"{dur}\nBag slot {slot.index}")
+        self.set_display(slot.item_data, slot.count, slot.durability, edited=False)
+
+    def set_display(self, item_data, count, durability, edited):
+        """Show an item + count/durability (may be the staged, not saved, state)."""
+        self._item_data = item_data
+        self._count = count
+        self._durability = durability
+        self._edited = edited
+        self._name = items.name(item_data)
+        self._rarity_label, self._rarity_color = items.rarity(item_data)
+        self._icon = items.icon_key(item_data)
+        cat = items.category(item_data)
+        c = f"  ×{count}" if count is not None else ""
+        d = f"\nDurability {durability}" if durability is not None else ""
+        mark = "  · pending" if edited else ""
+        self.setToolTip(f"{self._name}{c}{mark}\n{self._rarity_label} · {cat}{d}"
+                        f"\nClick for details · right-click for quick actions")
+        self.update()
 
     def set_selected(self, on):
         self._selected = on
         self.update()
 
-    def set_edited(self, on):
-        self._edited = on
-        self.update()
-
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
             self.clicked.emit(self)
+
+    def contextMenuEvent(self, e):
+        self.menu_requested.emit(self)
 
     def event(self, e):
         if e.type() in (e.Type.HoverEnter, e.Type.HoverLeave):
@@ -140,23 +152,29 @@ class SlotCell(QWidget):
         p.drawPixmap(rect.center().x() - 9, rect.top() + 6, glyph)
 
         # count badge
-        if self.slot.count is not None:
+        if self._count is not None:
             p.setPen(QPen(QColor(theme.TEXT)))
             f = p.font()
             f.setPixelSize(9)
             f.setBold(True)
             p.setFont(f)
             p.drawText(rect.adjusted(0, 0, -4, -3),
-                       Qt.AlignRight | Qt.AlignBottom, str(self.slot.count))
+                       Qt.AlignRight | Qt.AlignBottom, str(self._count))
 
-        # durability sliver
-        if self.slot.durability is not None:
-            frac = max(0.06, min(1.0, self.slot.durability / 2000))
+        # durability sliver (repaired items read full; low durability turns amber)
+        if self._durability is not None:
+            frac = max(0.06, min(1.0, self._durability / 1000))
             bar = QColor(theme.ACCENT if frac > 0.3 else theme.AMBER)
             p.setPen(Qt.NoPen)
             p.setBrush(QBrush(bar))
             p.drawRoundedRect(rect.left() + 5, rect.bottom() - 4,
                               int((rect.width() - 10) * frac), 2, 1, 1)
+
+        # a pending-edit dot in the top-left corner
+        if self._edited:
+            p.setPen(Qt.NoPen)
+            p.setBrush(QBrush(QColor(theme.ACCENT)))
+            p.drawEllipse(rect.left() + 4, rect.top() + 4, 4, 4)
 
 
 class TabChip(QPushButton):
@@ -179,6 +197,178 @@ class TabChip(QPushButton):
             }}""")
 
 
+class ItemPopover(QFrame):
+    """A floating detail card anchored beside a bag slot — name, rarity, live
+    stats and every per-item action (count, repair, tier up/down). Replaces the
+    old detail strip that sat awkwardly at the bottom of the bag. The body is
+    rebuilt wholesale on each change (small, and dodges stale-widget glitches)."""
+
+    def __init__(self, page):
+        super().__init__(page, Qt.Popup)
+        self.page = page
+        self.key = None
+        self.setObjectName("GlassCard")
+        self.setStyleSheet(
+            f"QFrame#GlassCard {{ background: {theme.SURFACE};"
+            f" border: 1px solid {theme.BORDER}; border-radius: 12px; }}")
+        self.setFixedWidth(236)
+        self._outer = QVBoxLayout(self)
+        self._outer.setContentsMargins(0, 0, 0, 0)
+        self._body = None
+
+    def open_for(self, cell):
+        self.key = cell.key
+        self._rebuild()
+        self.adjustSize()
+        self._position(cell)
+        self.show()
+
+    def refresh(self):
+        if self.isVisible() and self.key is not None:
+            self._rebuild()
+            self.adjustSize()
+
+    # -- internals ------------------------------------------------------------
+    def _rebuild(self):
+        if self._body is not None:
+            self._outer.removeWidget(self._body)
+            self._body.deleteLater()
+        self._body = QWidget()
+        self._body.setStyleSheet("background: transparent;")
+        box = QVBoxLayout(self._body)
+        box.setContentsMargins(14, 12, 14, 12)
+        box.setSpacing(7)
+        self._populate(box)
+        self._outer.addWidget(self._body)
+
+    def _chip(self, text, tip=""):
+        b = QPushButton(text)
+        b.setProperty("variant", "chip")
+        b.setCursor(Qt.PointingHandCursor)
+        b.setFixedHeight(26)
+        if tip:
+            b.setToolTip(tip)
+        return b
+
+    def _section(self, text):
+        lbl = QLabel(text.upper())
+        lbl.setStyleSheet(
+            f"background: transparent; border: none; color: {theme.EMBER};"
+            f"font-family: '{theme.display_family()}'; font-size: 9.5px;"
+            f"font-weight: 600; letter-spacing: 1.4px;")
+        return lbl
+
+    def _populate(self, box):
+        page = self.page
+        cell = page._bag_cells.get(self.key)
+        if not cell:
+            return
+        slot = cell.slot
+        edit = page._bag_edits.get(self.key)
+        item_data, count, durability = page._effective(slot, edit)
+        r_label, r_color = items.rarity(item_data)
+        cat = items.category(item_data)
+
+        title = QLabel(items.name(item_data))
+        title.setWordWrap(True)
+        title.setStyleSheet(
+            f"font-family: '{theme.display_family()}'; font-size: 15px;"
+            f"font-weight: 700; color: {r_color}; background: transparent;")
+        box.addWidget(title)
+
+        pos, length = items.tier_position(item_data)
+        tier_txt = f"  ·  tier {pos}/{length}" if length else ""
+        sub = QLabel(f"{r_label} · {cat}{tier_txt}")
+        sub.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 11px;"
+                          f"background: transparent;")
+        box.addWidget(sub)
+
+        if count is not None:
+            cap = items.max_stack(item_data)
+            stat = QLabel(f"×{count}  /  {cap} max")
+        elif durability is not None:
+            full = "  · full" if durability >= 1000 else ""
+            stat = QLabel(f"Durability {durability}{full}")
+        else:
+            stat = QLabel("")
+        stat.setStyleSheet(f"color: {theme.TEXT}; font-size: 12px; font-weight: 600;"
+                           f"background: transparent;")
+        box.addWidget(stat)
+
+        # count controls (stackable items)
+        if count is not None:
+            field = QLineEdit(str(count))
+            field.setValidator(QIntValidator(1, 999999))
+            field.setFixedHeight(26)
+            field.setFixedWidth(66)
+            field.editingFinished.connect(
+                lambda: page._stage_count(self.key, field.text()))
+            row1 = QHBoxLayout()
+            row1.setSpacing(5)
+            row1.addWidget(field)
+            row1.addWidget(self._act("−", lambda: page._nudge_count(self.key, -1)))
+            row1.addWidget(self._act("+", lambda: page._nudge_count(self.key, +1)))
+            row1.addStretch(1)
+            box.addLayout(row1)
+            row2 = QHBoxLayout()
+            row2.setSpacing(5)
+            row2.addWidget(self._act("Max", lambda: page._stage_count(
+                self.key, items.max_stack(item_data))))
+            row2.addWidget(self._act("×2", lambda: page._nudge_count(self.key, "x2")))
+            row2.addWidget(self._act("+100", lambda: page._nudge_count(self.key, +100)))
+            row2.addStretch(1)
+            box.addLayout(row2)
+
+        # repair (anything with durability)
+        if durability is not None:
+            staged = bool(edit and edit.get("repair"))
+            rb = self._act("Repaired ✓" if staged else "Repair to full",
+                           lambda: page._stage_repair(self.key))
+            box.addWidget(rb, alignment=Qt.AlignLeft)
+
+        # tier ladder
+        down = items.tier_neighbor(item_data, -1)
+        up = items.tier_neighbor(item_data, +1)
+        if down or up:
+            box.addWidget(self._section("Change tier"))
+            trow = QHBoxLayout()
+            trow.setSpacing(6)
+            if down:
+                trow.addWidget(self._act(
+                    f"▼ {down['material']}",
+                    lambda nid=down["id"]: page._stage_swap(self.key, nid),
+                    tip=f"Downgrade to {down['name']}"))
+            if up:
+                trow.addWidget(self._act(
+                    f"▲ {up['material']}",
+                    lambda nid=up["id"]: page._stage_swap(self.key, nid),
+                    tip=f"Upgrade to {up['name']}"))
+            trow.addStretch(1)
+            box.addLayout(trow)
+
+        if edit and page._is_edited(edit):
+            undo = self._act("Undo pending change",
+                             lambda: page._clear_edit(self.key))
+            box.addWidget(undo, alignment=Qt.AlignLeft)
+
+    def _act(self, text, fn, tip=""):
+        b = self._chip(text, tip)
+        b.clicked.connect(lambda _=False: fn())
+        return b
+
+    def _position(self, cell):
+        anchor = cell.mapToGlobal(QPoint(cell.width() + 10, -6))
+        x, y = anchor.x(), anchor.y()
+        screen = QApplication.primaryScreen().availableGeometry()
+        if x + self.width() > screen.right() - 6:
+            x = cell.mapToGlobal(QPoint(-self.width() - 10, -6)).x()
+        x = max(screen.left() + 6, x)
+        if y + self.height() > screen.bottom() - 6:
+            y = screen.bottom() - self.height() - 6
+        y = max(screen.top() + 6, y)
+        self.move(x, y)
+
+
 class GrimoirePage(QWidget):
     back_requested = Signal()
     bargain_requested = Signal(object, object)          # char_path, EditPlan
@@ -198,9 +388,11 @@ class GrimoirePage(QWidget):
         self._infos = []
         self._labels = {}
         self._skill_edits = {}
-        self._bag_edits = {}        # slot index -> {"count": int|None, "repair": bool}
+        self._bag_edits = {}        # slot key -> {"count": int|None, "repair": bool, "swap": id|None}
         self._bag_cells = {}
+        self._bag_pouches = []      # (header_widget, grid_widget, [cells]) for search
         self._bag_selected = None
+        self._popover = None
         self._ritual_pending = False
 
         self._angle = 0.0
@@ -525,6 +717,8 @@ class GrimoirePage(QWidget):
     def _render_bag(self):
         box = self._fresh_body(self._bag_tab)
         self._bag_cells = {}
+        self._bag_pouches = []
+        self._close_popover()
         data = self._current_data()
         if not data:
             self._empty_note(box, "No characters found on this PC.")
@@ -534,6 +728,13 @@ class GrimoirePage(QWidget):
         if not slots and not equipped:
             self._empty_note(box, "The bag is empty — go pick something up first.")
             return
+
+        self.bag_search = QLineEdit()
+        self.bag_search.setPlaceholderText("Search the bag…")
+        self.bag_search.setClearButtonEnabled(True)
+        self.bag_search.setFixedHeight(30)
+        self.bag_search.textChanged.connect(self._bag_filter)
+        box.addWidget(self.bag_search)
 
         card = QFrame()
         card.setObjectName("GlassCard")
@@ -552,38 +753,12 @@ class GrimoirePage(QWidget):
             group = by_pouch.get(pouch_name)
             if group:
                 self._add_pouch(wrap, pouch_name, [("", s) for s in group])
-        wrap.addSpacing(2)
-
-        self.bag_editor = QWidget()
-        self.bag_editor.setStyleSheet("background: transparent;")
-        ed = QHBoxLayout(self.bag_editor)
-        ed.setContentsMargins(0, 2, 0, 0)
-        ed.setSpacing(8)
-        self.bag_label = QLabel("Pick a slot above")
-        self.bag_label.setStyleSheet(f"border: none; background: transparent;"
-                                     f"color: {theme.TEXT_DIM}; font-size: 12px;")
-        ed.addWidget(self.bag_label, 1)
-        self.bag_count = QLineEdit()
-        self.bag_count.setPlaceholderText("count")
-        self.bag_count.setValidator(QIntValidator(1, 9999))
-        self.bag_count.setFixedSize(70, 28)
-        self.bag_count.textEdited.connect(self._bag_count_edited)
-        ed.addWidget(self.bag_count)
-        for text, value in (("Max", "max"), ("×2", None)):
-            chip = QPushButton(text)
-            chip.setProperty("variant", "chip")
-            chip.setCursor(Qt.PointingHandCursor)
-            chip.setFixedHeight(24)
-            chip.clicked.connect(lambda _=False, v=value: self._bag_quick(v))
-            ed.addWidget(chip)
-        self.bag_repair = QPushButton("Repair")
-        self.bag_repair.setProperty("variant", "chip")
-        self.bag_repair.setCursor(Qt.PointingHandCursor)
-        self.bag_repair.setFixedHeight(24)
-        self.bag_repair.clicked.connect(self._bag_repair_clicked)
-        ed.addWidget(self.bag_repair)
-        wrap.addWidget(self.bag_editor)
         box.addWidget(card)
+
+        hint = QLabel("Click an item for its details · right-click for quick actions")
+        hint.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 11px;"
+                           f"background: transparent;")
+        box.addWidget(hint)
 
         beyond = QLabel("BEYOND THE BAG")
         beyond.setObjectName("SettingsSection")
@@ -621,7 +796,19 @@ class GrimoirePage(QWidget):
         if info:
             signal.emit(info.path)
 
+    def _pouch_btn(self, text, tip=""):
+        b = QPushButton(text)
+        b.setProperty("variant", "chip")
+        b.setCursor(Qt.PointingHandCursor)
+        b.setFixedHeight(22)
+        if tip:
+            b.setToolTip(tip)
+        return b
+
     def _add_pouch(self, wrap, title, keyed_slots):
+        slots = [slot for _p, slot in keyed_slots]
+        keys = [f"{prefix}{slot.index}" for prefix, slot in keyed_slots]
+
         head = QHBoxLayout()
         head.setSpacing(6)
         lbl = QLabel(title.upper())
@@ -635,79 +822,211 @@ class GrimoirePage(QWidget):
                             f"color: {theme.TEXT_FAINT}; font-size: 10px;")
         head.addWidget(count)
         head.addStretch(1)
+
+        # pouch-wide bulk actions, only when they'd do something
+        if any(items.is_stackable(s.item_data) for s in slots):
+            b = self._pouch_btn("Max all", "Fill every stack in this pouch")
+            b.clicked.connect(lambda _=False, k=list(keys): self._bulk_max(k))
+            head.addWidget(b)
+        if any(s.durability is not None for s in slots):
+            b = self._pouch_btn("Repair all", "Repair everything in this pouch")
+            b.clicked.connect(lambda _=False, k=list(keys): self._bulk_repair(k))
+            head.addWidget(b)
+        if any(items.tier_neighbor(s.item_data, +1) for s in slots):
+            b = self._pouch_btn("Upgrade all", "Raise every item here one tier")
+            b.clicked.connect(lambda _=False, k=list(keys): self._bulk_upgrade(k))
+            head.addWidget(b)
+
+        header_widget = QWidget()
+        header_widget.setStyleSheet("background: transparent;")
+        header_widget.setLayout(head)
         wrap.addSpacing(2)
-        wrap.addLayout(head)
+        wrap.addWidget(header_widget)
 
         grid = QGridLayout()
         grid.setSpacing(6)
+        cells = []
         for i, (prefix, slot) in enumerate(keyed_slots):
             key = f"{prefix}{slot.index}"
-            cell = SlotCell(key, slot, edited=(key in self._bag_edits))
-            cell.clicked.connect(self._select_slot)
+            cell = SlotCell(key, slot)
+            cell.clicked.connect(self._open_popover)
+            cell.menu_requested.connect(self._open_menu)
             self._bag_cells[key] = cell
+            cells.append(cell)
             grid.addWidget(cell, i // BAG_COLUMNS, i % BAG_COLUMNS)
+            if key in self._bag_edits:
+                self._refresh_cell(key)
         grid.setColumnStretch(BAG_COLUMNS, 1)
-        wrap.addLayout(grid)
+        grid_widget = QWidget()
+        grid_widget.setStyleSheet("background: transparent;")
+        grid_widget.setLayout(grid)
+        wrap.addWidget(grid_widget)
+        self._bag_pouches.append((header_widget, grid_widget, cells))
 
-    def _select_slot(self, cell):
-        self._bag_selected = cell
-        for key, other in self._bag_cells.items():
-            other.set_selected(key == cell.key)
-        slot = cell.slot
-        rarity_label, rarity_color = items.rarity(slot.item_data)
-        name = items.name(slot.item_data)
-        parts = [f"<b>{name}</b>",
-                 f"<span style='color:{rarity_color}'>{rarity_label}</span>"]
-        if slot.count is not None:
-            parts.append(f"×{slot.count}")
-        if slot.durability is not None:
-            parts.append(f"dura {slot.durability}")
-        pending = self._bag_edits.get(cell.key) or {}
-        tail = []
-        if pending.get("count"):
-            tail.append(f"→ ×{pending['count']}")
-        if pending.get("repair"):
-            tail.append("→ repaired")
-        text = "  ·  ".join(parts)
-        if tail:
-            text += f"  <span style='color:{theme.ACCENT}'>{' '.join(tail)}</span>"
-        self.bag_label.setText(text)
-        self.bag_count.setEnabled(slot.count is not None)
-        self.bag_count.setText(str(pending.get("count") or ""))
-        max_stack = items.max_stack(slot.item_data)
-        self.bag_count.setToolTip(f"Max stack for this item: {max_stack}")
-        self.bag_repair.setEnabled(slot.durability is not None)
+    def _bag_filter(self, text):
+        q = (text or "").strip().lower()
+        for header, grid_widget, cells in self._bag_pouches:
+            any_visible = False
+            for cell in cells:
+                shown = (not q) or q in items.name(cell.slot.item_data).lower() \
+                    or q in items.name(cell._item_data).lower()
+                cell.setVisible(shown)
+                any_visible = any_visible or shown
+            header.setVisible(any_visible)
+            grid_widget.setVisible(any_visible)
 
+    # -- staging (edits are held until "Seal the bargain") -----------------------
     def _bag_edit(self, key) -> dict:
-        return self._bag_edits.setdefault(key, {"count": None, "repair": False})
+        return self._bag_edits.setdefault(
+            key, {"count": None, "repair": False, "swap": None})
 
-    def _bag_count_edited(self, text):
-        if not self._bag_selected:
-            return
-        edit = self._bag_edit(self._bag_selected.key)
-        edit["count"] = int(text) if text.strip() else None
-        self._bag_selected.set_edited(bool(edit["count"] or edit["repair"]))
+    def _effective(self, slot, edit):
+        """(item_data, count, durability) after applying a pending edit."""
+        edit = edit or {}
+        item_data = edit.get("swap") or slot.item_data
+        if items.is_stackable(item_data):
+            base = edit.get("count") or slot.count or 1
+            return item_data, max(1, min(int(base), items.max_stack(item_data))), None
+        dur = characters.REPAIR_VALUE if (edit.get("repair") or edit.get("swap")) \
+            else slot.durability
+        return item_data, None, dur
 
-    def _bag_quick(self, value):
-        if not self._bag_selected or self._bag_selected.slot.count is None:
-            return
-        cap = items.max_stack(self._bag_selected.slot.item_data)
-        if value == "max":
-            value = cap
-        elif value is None:   # ×2
-            base = int(self.bag_count.text()) if self.bag_count.text().strip() \
-                else self._bag_selected.slot.count
-            value = min(cap, base * 2)
-        self.bag_count.setText(str(value))
-        self._bag_count_edited(self.bag_count.text())
+    @staticmethod
+    def _is_edited(edit):
+        return bool(edit and (edit.get("count") or edit.get("repair") or edit.get("swap")))
 
-    def _bag_repair_clicked(self):
-        if not self._bag_selected:
+    def _refresh_cell(self, key):
+        cell = self._bag_cells.get(key)
+        if not cell:
             return
-        edit = self._bag_edit(self._bag_selected.key)
-        edit["repair"] = not edit["repair"]
-        self._bag_selected.set_edited(bool(edit["count"] or edit["repair"]))
-        self._select_slot(self._bag_selected)
+        edit = self._bag_edits.get(key)
+        item_data, count, dur = self._effective(cell.slot, edit)
+        cell.set_display(item_data, count, dur, self._is_edited(edit))
+        if not self._is_edited(edit):
+            self._bag_edits.pop(key, None)
+
+    def _after_stage(self, key):
+        self._refresh_cell(key)
+        if (self._popover is not None and self._popover.isVisible()
+                and self._popover.key == key):
+            self._popover.refresh()
+
+    def _stage_count(self, key, value):
+        cell = self._bag_cells.get(key)
+        if not cell:
+            return
+        edit = self._bag_edit(key)
+        item_data = edit.get("swap") or cell.slot.item_data
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            return
+        value = max(1, min(value, items.max_stack(item_data)))
+        edit["count"] = None if (value == cell.slot.count and not edit.get("swap")) \
+            else value
+        self._after_stage(key)
+
+    def _nudge_count(self, key, delta):
+        cell = self._bag_cells.get(key)
+        if not cell:
+            return
+        _id, cur, _d = self._effective(cell.slot, self._bag_edits.get(key))
+        cur = cur or 1
+        self._stage_count(key, cur * 2 if delta == "x2" else cur + delta)
+
+    def _stage_repair(self, key, on=None):
+        edit = self._bag_edit(key)
+        edit["repair"] = (not edit.get("repair")) if on is None else bool(on)
+        self._after_stage(key)
+
+    def _stage_swap(self, key, new_id):
+        cell = self._bag_cells.get(key)
+        if not cell:
+            return
+        edit = self._bag_edit(key)
+        edit["swap"] = None if new_id == cell.slot.item_data else new_id
+        # a swap can flip stackable <-> gear; drop the now-meaningless field
+        eff_id = edit.get("swap") or cell.slot.item_data
+        if items.is_stackable(eff_id):
+            edit["repair"] = False
+        else:
+            edit["count"] = None
+        self._after_stage(key)
+
+    def _clear_edit(self, key):
+        self._bag_edits.pop(key, None)
+        self._after_stage(key)
+
+    def _bulk_max(self, keys):
+        for key in keys:
+            cell = self._bag_cells.get(key)
+            if not cell:
+                continue
+            eff_id = (self._bag_edits.get(key) or {}).get("swap") or cell.slot.item_data
+            if items.is_stackable(eff_id):
+                self._stage_count(key, items.max_stack(eff_id))
+
+    def _bulk_repair(self, keys):
+        for key in keys:
+            cell = self._bag_cells.get(key)
+            if cell and cell.slot.durability is not None:
+                self._stage_repair(key, True)
+
+    def _bulk_upgrade(self, keys):
+        for key in keys:
+            cell = self._bag_cells.get(key)
+            if not cell:
+                continue
+            eff_id = (self._bag_edits.get(key) or {}).get("swap") or cell.slot.item_data
+            up = items.tier_neighbor(eff_id, +1)
+            if up:
+                self._stage_swap(key, up["id"])
+
+    # -- popover + right-click menu ----------------------------------------------
+    def _ensure_popover(self):
+        if self._popover is None:
+            self._popover = ItemPopover(self)
+        return self._popover
+
+    def _open_popover(self, cell):
+        self._bag_selected = cell
+        for k, c in self._bag_cells.items():
+            c.set_selected(k == cell.key)
+        self._ensure_popover().open_for(cell)
+
+    def _close_popover(self):
+        if self._popover is not None:
+            self._popover.hide()
+
+    def _open_menu(self, cell):
+        key = cell.key
+        edit = self._bag_edits.get(key)
+        item_data, count, dur = self._effective(cell.slot, edit)
+        menu = QMenu(self)
+        if count is not None:
+            cap = items.max_stack(item_data)
+            menu.addAction(f"Set to max ({cap})", lambda: self._stage_count(key, cap))
+            menu.addAction("+100", lambda: self._nudge_count(key, +100))
+            menu.addAction("+1000", lambda: self._nudge_count(key, +1000))
+            menu.addAction("×2", lambda: self._nudge_count(key, "x2"))
+        if dur is not None:
+            menu.addAction("Repair to full", lambda: self._stage_repair(key, True))
+        up = items.tier_neighbor(item_data, +1)
+        down = items.tier_neighbor(item_data, -1)
+        if up or down:
+            menu.addSeparator()
+            if up:
+                menu.addAction(f"▲ Upgrade to {up['name']}",
+                               lambda nid=up["id"]: self._stage_swap(key, nid))
+            if down:
+                menu.addAction(f"▼ Downgrade to {down['name']}",
+                               lambda nid=down["id"]: self._stage_swap(key, nid))
+        if self._is_edited(edit):
+            menu.addSeparator()
+            menu.addAction("Undo pending change", lambda: self._clear_edit(key))
+        menu.addSeparator()
+        menu.addAction("Open details…", lambda: self._open_popover(cell))
+        menu.exec(cell.mapToGlobal(QPoint(cell.width() // 2, cell.height() // 2)))
 
     # -- mirror tab (the barbershop) ---------------------------------------------------
     def _render_mirror(self):
@@ -995,6 +1314,8 @@ class GrimoirePage(QWidget):
             if level:
                 plan.skill_xp[skill_id] = levels.xp_for_level(level)
         for key, edit in self._bag_edits.items():
+            if edit.get("swap"):
+                plan.item_swaps[key] = edit["swap"]
             if edit.get("count"):
                 plan.item_counts[key] = edit["count"]
             if edit.get("repair"):
