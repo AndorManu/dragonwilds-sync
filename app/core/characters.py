@@ -305,6 +305,45 @@ SPELL_BAR_PATH = ("GameProgress", "Spellcasting", "SelectedSpells")
 # 32-zero GUID were wrong). Treat blank / "none" / all-zero as empty to be safe.
 SPELL_BAR_EMPTY = ""
 
+# Some entries in the spell catalogue are abilities, not castable wheel spells:
+# melee combos, weapon secondaries/specials, tool actions, and passive buffs
+# (Whetstone, Magic Focus). The game draws a red "PLACEHOLDER" for these on the
+# spell wheel, so we never place them on the bar. (Resolved from SpellID names.)
+NON_WHEEL_SPELL_IDS = frozenset({
+    "NejB6kiCxneFTLCV74PdyA",  # Whetstone
+    "hEHOdkiaq6a7BlePtC1iPQ",  # Magic Focus
+    "XwE9BU8KKWN6WZ6viiXs_g",  # Air Combo 01
+    "8o08LE73eJjctoGjv_vzKQ",  # Air Combo 02
+    "oDfh7U8rSUrg5X2Lau8eFA",  # Air Combo 03
+    "rKok00vpMXFZc2-Yv4OGIg",  # Air Combo 04
+    "AIZpC08xmENZNmSb4Zxk-A",  # Fire Combo 01
+    "1ctCsE-JDLHUzXmApYjzOw",  # Fire Combo 02
+    "_pMm7EPf4pJ7N6aYpMoGvg",  # Fire Combo 03
+    "65hGRkrDCQ6bDEuhLRE_aA",  # Fire Combo 04
+    "0OpS6kVJ-lh8GDOdwPTlTw",  # Air Secondary
+    "huAskUYwVsZ6F92wCWOgww",  # Fire Secondary
+    "4am1VErR1YnWaOihA5QLdQ",  # Special Abyssalwhip
+    "OJCh50N4Nd3rzGq2TBKMzQ",  # Special Crystalbow
+    "2HzikUcK_T42Wx6FUMDfxg",  # Special Plantseed
+    "-9GntEZev_8OuiiQbuv1hw",  # Special Shoveldig
+    "kZ9mM0xEAmBWXpWfSDYuBA",  # Special Treeplanting
+    "bhzZtkt0UYI1m36Icneq3w",  # Pour Bucket
+    "TheHhkmHO3y97Mel68COeQ",  # Pour Wateringcan
+    "FVQYBUF_XKesgUiJkT5lpQ",  # Get Water From Water Source
+    "YZOJIURm2He0FSiVNikuuw",  # Access Personal Chest
+    "sHhBPkIlFuw4ffSrxCVdAQ",  # Targeting Common
+    "wcO9mEIVOY4TWbyMOzwmRw",  # Harvest
+    "dl7aeEv1ddNVT4OvxeGwKA",  # Humidify
+    "zwTCFUQoHsHe_UaxwTSBAQ",  # Rapid Growth
+    "WQCDSUyy97TiwtqgAIcITQ",  # Runes To Rune Essence
+    "XbLZDUaQ2Q3Z-oKlsq4RVw",  # Siphon Runes
+    "FagbeUYSePGrCsq3N8e4mQ",  # Internal Alchemy
+    "Cu31OUKzpI0YPYeJ1lawdQ",  # Enchant Chefs Tools
+    "vkzCtkyTAZHeMsChxxAd3g",  # Detect Ore Alt
+    "cg4l50WO4NBxlbKWqlvKRg",  # Weapon Barbs
+    "wqneg0hPWkksXvuHwmKHDw",  # Weapon Poison
+})
+
 
 def _is_bar_empty(slot) -> bool:
     s = str(slot).strip()
@@ -346,7 +385,8 @@ def _sync_spell_bar(data: dict):
     if not isinstance(bar, list) or not isinstance(unlocked, list):
         return 0
     on_bar = {str(s) for s in bar if not _is_bar_empty(s)}
-    missing = [str(s) for s in unlocked if str(s) not in on_bar]
+    missing = [str(s) for s in unlocked
+               if str(s) not in on_bar and str(s) not in NON_WHEEL_SPELL_IDS]
     added = 0
     for i, slot in enumerate(bar):
         if not missing:
@@ -355,6 +395,27 @@ def _sync_spell_bar(data: dict):
             bar[i] = missing.pop(0)
             added += 1
     return added
+
+
+def clean_spell_bar(path, backup_root) -> int:
+    """Remove non-castable abilities (Whetstone, Magic Focus, combos, tool
+    actions) that show as PLACEHOLDER on the wheel; revert their slots to empty.
+    Checkpoint-first. Returns how many were removed."""
+    path = Path(path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    bar = _get_path(data, SPELL_BAR_PATH)
+    if not isinstance(bar, list):
+        return 0
+    to_remove = [i for i, s in enumerate(bar) if str(s) in NON_WHEEL_SPELL_IDS]
+    if not to_remove:
+        return 0
+    stamp = datetime.now().strftime("%H:%M")
+    backups.create_checkpoint(path.parent, path.stem,
+                              f"Before bar cleanup ({stamp})", backup_root)
+    for i in to_remove:
+        bar[i] = SPELL_BAR_EMPTY
+    _write_character(path, data)
+    return len(to_remove)
 
 
 def fill_spell_bar(path, backup_root) -> int:

@@ -146,6 +146,43 @@ def test_fill_spell_bar_places_unlocked_into_empty_string_slots(tmp_path):
     assert characters.fill_spell_bar(path, tmp_path / "bk") == 0
 
 
+def test_bar_fill_skips_non_wheel_abilities(tmp_path):
+    whetstone = "NejB6kiCxneFTLCV74PdyA"   # a known non-castable ability
+    real_spell = "n_deu0x83JSQ0e2grNvJKA"  # Surge, a real wheel spell
+    path = make_character(tmp_path, "Caster")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["GameProgress"].setdefault("Progress", {})["SpellsUnlocked"] = [
+        whetstone, real_spell]
+    data["GameProgress"]["Spellcasting"] = {"SelectedSpells": ["", "", ""]}
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+    characters.fill_spell_bar(path, tmp_path / "bk")
+    bar = json.loads(path.read_text(encoding="utf-8"))[
+        "GameProgress"]["Spellcasting"]["SelectedSpells"]
+    assert real_spell in bar
+    assert whetstone not in bar   # non-castable stays off the wheel
+
+
+def test_clean_spell_bar_removes_placeholders(tmp_path):
+    whetstone = "NejB6kiCxneFTLCV74PdyA"
+    magic_focus = "hEHOdkiaq6a7BlePtC1iPQ"
+    real_spell = "n_deu0x83JSQ0e2grNvJKA"
+    path = make_character(tmp_path, "Caster")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["GameProgress"]["Spellcasting"] = {
+        "SelectedSpells": [real_spell, whetstone, magic_focus, ""]}
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+    removed = characters.clean_spell_bar(path, tmp_path / "bk")
+    assert removed == 2
+    bar = json.loads(path.read_text(encoding="utf-8"))[
+        "GameProgress"]["Spellcasting"]["SelectedSpells"]
+    assert bar[0] == real_spell
+    assert whetstone not in bar and magic_focus not in bar
+    assert bar.count("") == 3
+    assert characters.clean_spell_bar(path, tmp_path / "bk") == 0  # idempotent
+
+
 def test_complete_codex_noop_when_nothing_missing(tmp_path):
     path = make_character(tmp_path)
     data = json.loads(path.read_text(encoding="utf-8"))
