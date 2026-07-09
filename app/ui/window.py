@@ -146,6 +146,7 @@ class MainWindow(QWidget):
         self.grimoire_page.offer_requested.connect(c.export_offering)
         self.grimoire_page.gift_browse_requested.connect(self._browse_gifts)
         self.grimoire_page.conjure_requested.connect(self._conjure_item)
+        self.grimoire_page.complete_codex_requested.connect(self._complete_codex)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -440,6 +441,25 @@ class MainWindow(QWidget):
             lambda item_data, count: self.controller.conjure_item(
                 char_path, item_data, count, done=self._open_grimoire))
         picker.exec()
+
+    def _complete_codex(self, char_path):
+        preview = self.controller.codex_preview(char_path)
+        if not preview:
+            self.toasts.show_toast("info", "This character already knows everything "
+                                           "unlockable.")
+            return
+        labels = {"spells": "spells", "recipes": "recipes",
+                  "buildings": "buildings", "journal": "journal entries"}
+        bits = [f"{n} {labels.get(k, k)}" for k, n in preview.items()]
+        summary = ", ".join(bits)
+        if self.confirm.ask(
+                "Complete the codex?",
+                f"This character will learn: {summary}. Unlocked spells will also "
+                f"be placed on your spell bar.\n\n"
+                f"Knowledge is only ever added, never removed, and a checkpoint is "
+                f"taken first. Reopen the game afterwards to see the changes.",
+                danger_label="Learn it all", safe_label="Not now"):
+            self.controller.complete_codex(char_path, done=self._open_grimoire)
 
     def _browse_gifts(self, char_path):
         from PySide6.QtWidgets import QInputDialog

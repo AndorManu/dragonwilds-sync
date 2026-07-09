@@ -538,6 +538,40 @@ class Controller(QObject):
 
         threading.Thread(target=worker, daemon=True, name="absorb").start()
 
+    def codex_preview(self, char_path) -> dict:
+        try:
+            data = json.loads(Path(char_path).read_text(encoding="utf-8"))
+            return characters.count_grantable(data, characters.load_unlock_catalogs())
+        except Exception:
+            log.exception("Codex preview failed")
+            return {}
+
+    def complete_codex(self, char_path, done=None):
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — unlocks granted "
+                                               "while it runs are lost.")
+                    return
+                gains = characters.grant_all_unlocks(
+                    char_path, characters.load_unlock_catalogs(),
+                    self._char_backup_root(Path(char_path).stem))
+                if gains:
+                    self.toast.emit("success", "Codex completed — every recipe, spell "
+                                               "and building learned, and the spell bar "
+                                               "filled. Reopen the game to see them.")
+                else:
+                    self.toast.emit("info", "This character already knows everything.")
+            except Exception:
+                log.exception("Complete codex failed")
+                self.toast.emit("error", "The codex wouldn't complete — the character "
+                                         "file was left untouched.")
+            finally:
+                if done:
+                    self.run_on_ui.emit(done)
+
+        threading.Thread(target=worker, daemon=True, name="codex").start()
+
     def export_offering(self, char_path):
         def worker():
             try:

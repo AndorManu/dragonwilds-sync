@@ -190,6 +190,7 @@ class GrimoirePage(QWidget):
     offer_requested = Signal(object)                    # char_path
     gift_browse_requested = Signal(object)              # char_path
     conjure_requested = Signal(object)                  # char_path
+    complete_codex_requested = Signal(object)           # char_path
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -832,6 +833,30 @@ class GrimoirePage(QWidget):
             grid.addWidget(card, shown // 3, shown % 3)
             shown += 1
         box.addLayout(grid)
+
+        fix_head = QLabel("AFTER LEVELLING")
+        fix_head.setObjectName("SettingsSection")
+        fix_head.setStyleSheet("background: transparent;")
+        box.addWidget(fix_head)
+        fix_note = QLabel("Raising a skill's level doesn't replay the game's "
+                          "unlock events, so you can end up missing spells, "
+                          "recipes and buildings your level has earned — and "
+                          "spells that never made it onto your spell bar. This "
+                          "grants everything unlockable and fills the bar.")
+        fix_note.setWordWrap(True)
+        fix_note.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 11.5px;"
+                               f"background: transparent;")
+        box.addWidget(fix_note)
+        codex_row = QHBoxLayout()
+        codex = widgets.make_button("Complete the codex", "ember", "book-open",
+                                    height=36)
+        codex.setToolTip("Learn every recipe, spell and building, and put "
+                         "unlocked spells on your spell bar")
+        codex.clicked.connect(
+            lambda: self._emit_with_char(self.complete_codex_requested))
+        codex_row.addWidget(codex)
+        codex_row.addStretch(1)
+        box.addLayout(codex_row)
 
         actions_head = QLabel("SHARE KNOWLEDGE")
         actions_head.setObjectName("SettingsSection")
