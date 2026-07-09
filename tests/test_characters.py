@@ -98,6 +98,62 @@ def test_portrait_descriptor_compact(tmp_path):
     assert len(desc) < 160
 
 
+def test_cleanse_and_hardcore(tmp_path):
+    path = make_character(tmp_path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["Hardcore"] = {"IsHardcore": True, "AssociatedWorld": "x"}
+    data["GameProgress"]["Character"]["StatusEffects"] = {
+        "Poison": {"Hash": 1, "Value": 5, "Active": [True]},
+        "Cold": {"Hash": 2, "Value": 0, "Active": [False]},
+    }
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+    assert characters.is_hardcore(json.loads(path.read_text(encoding="utf-8")))
+    assert characters.active_status_effects(
+        json.loads(path.read_text(encoding="utf-8"))) == ["Poison"]
+
+    characters.apply_edits(path, characters.EditPlan(cleanse=True,
+                                                     disable_hardcore=True),
+                           tmp_path / "bk")
+    after = json.loads(path.read_text(encoding="utf-8"))
+    assert after["Hardcore"]["IsHardcore"] is False
+    assert after["GameProgress"]["Character"]["StatusEffects"]["Poison"]["Value"] == 0
+    assert after["GameProgress"]["Character"]["StatusEffects"]["Poison"]["Active"] == [False]
+    assert not characters.active_status_effects(after)
+
+
+def test_appearance_edit(tmp_path):
+    path = make_character(tmp_path)
+    plan = characters.EditPlan(appearance={"SkinTone": "SkinTone3",
+                                           "HairColor": "Color2"})
+    changes = characters.apply_edits(path, plan, tmp_path / "bk")
+    assert changes
+    data = json.loads(path.read_text(encoding="utf-8"))
+    cust = data["Customization"]["CustomizationData"]
+    assert cust["SkinTone"]["rowName"] == "SkinTone3"
+    assert cust["HairColor"]["rowName"] == "Color2"
+    # a slot we didn't touch is unchanged
+    assert cust["EyeColor"]["rowName"] == "Color2"
+
+
+def test_list_loadout_equipped(tmp_path):
+    path = make_character(tmp_path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    equipped = characters.list_loadout(data)
+    # fixture loadout has one real gear slot (durability) + hotbar-index refs
+    assert any(s.durability is not None for s in equipped)
+    assert all(s.item_data for s in equipped)
+
+
+def test_repair_equipped_via_L_key(tmp_path):
+    path = make_character(tmp_path)
+    changes = characters.apply_edits(
+        path, characters.EditPlan(item_repairs={"L0"}), tmp_path / "bk")
+    assert any("equipped" in c for c in changes)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data["GameProgress"]["Loadout"]["0"]["Durability"] == characters.REPAIR_VALUE
+
+
 def test_edit_skill_xp(tmp_path):
     path = make_character(tmp_path)
     root = tmp_path / "backups"

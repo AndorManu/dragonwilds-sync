@@ -91,6 +91,24 @@ def icon_key(item_data: str) -> str:
     return CATEGORY_ICON.get(category(item_data), "gem")
 
 
+# The game splits the flat inventory into visual pouches by category. We
+# mirror that so the grimoire reads like the in-game bag.
+POUCHES = [
+    ("Gear & Tools", ("Melee Weapons", "Bows", "Crossbows", "Staves",
+                      "Shields", "Helms", "Chestplates", "Leggings", "Capes",
+                      "Rings", "Amulets", "Tools")),
+    ("Runes", ("Runes", "Runecrafting")),
+    ("Ammo", ("Arrows",)),
+    ("Consumables", ("Food", "Potions", "Herbs")),
+    ("Materials", ("Ores", "Bars", "Woodcutting", "Farming", "Bones")),
+]
+_CATEGORY_POUCH = {cat: name for name, cats in POUCHES for cat in cats}
+
+
+def pouch(item_data: str) -> str:
+    return _CATEGORY_POUCH.get(category(item_data), "Materials")
+
+
 def categories() -> list[str]:
     seen = {}
     for entry in _catalog().values():

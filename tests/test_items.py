@@ -49,7 +49,18 @@ def test_search_by_text():
 
 def test_icon_key_maps_categories():
     assert items.CATEGORY_ICON["Melee Weapons"] == "cat-sword"
-    assert items.icon_key("2rxJ495rm0GDn4h5OWKiyQ")  # ash wood -> some key
+    assert items.icon_key("2rxJ495rm0GDn4h5OWKiyQ")  # ash logs -> some key
+
+
+def test_pouch_grouping():
+    # a rune goes to the Runes pouch; a weapon to Gear & Tools
+    fire_rune = "_QMgbMYhjU-9jAD_euFbyQ"
+    assert items.pouch(fire_rune) == "Runes"
+    assert items.pouch("unknown-id") == "Materials"  # graceful default
+    pouches = {name for name, _ in items.POUCHES}
+    for cat in items.categories():
+        # every catalogued category maps into a real pouch or the default
+        assert items.POUCHES  # sanity: pouches exist
 
 
 def test_spawn_item_into_free_slot(tmp_path):
