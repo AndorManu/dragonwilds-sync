@@ -235,8 +235,7 @@ def main():
     window2._open_characters()
     shoot(window2, "21_characters")
 
-    # the grimoire
-    controller2.cfg["grimoire_unlocked"] = True
+    # the grimoire (opened the way anyone opens it: through the eye)
     window2._open_grimoire()
     shoot(window2, "22_grimoire")
 
