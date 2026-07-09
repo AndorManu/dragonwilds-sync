@@ -12,6 +12,7 @@ a = Analysis(
         ("app/assets/fonts/CinzelDecorative-Bold.ttf", "app/assets/fonts"),
         ("app/assets/fonts/EBGaramond.ttf", "app/assets/fonts"),
         ("app/assets/items.json", "app/assets"),
+        ("app/assets/unlocks.json", "app/assets"),
     ],
     hiddenimports=[],
     excludes=[

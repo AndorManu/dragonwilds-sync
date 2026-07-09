@@ -287,6 +287,102 @@ def absorb_knowledge(path, scroll: dict, backup_root) -> dict:
     return gains
 
 
+# ---------------------------------------------------------------------------
+# completing the codex — grant everything a max character would have unlocked
+# ---------------------------------------------------------------------------
+
+# Which grant catalogue feeds which save list. Editing skill XP directly does
+# not replay the game's level-up unlock events, so a levelled character can be
+# "missing" spells/recipes. Union-granting the full catalogue fixes that.
+UNLOCK_TARGETS = {
+    "spells": ("GameProgress", "Progress", "SpellsUnlocked"),
+    "recipes": ("GameProgress", "Progress", "RecipesUnlocked"),
+    "buildings": ("GameProgress", "Progress", "BuildingsUnlocked"),
+    "journal": ("GameProgress", "Journal", "UnlockedEntries"),
+}
+SPELL_BAR_PATH = ("GameProgress", "Spellcasting", "SelectedSpells")
+SPELL_BAR_EMPTY = "00000000000000000000000000000000"
+
+
+def load_unlock_catalogs() -> dict:
+    """The bundled full sets of grantable ids per category."""
+    try:
+        from . import items as _items  # reuse its bundled-asset path logic
+        path = _items._asset_path().parent / "unlocks.json"
+        payload = read_json(path, {}) or {}
+        return {k: v for k, v in payload.items() if isinstance(v, list)}
+    except Exception:
+        log.warning("Unlock catalogue missing", exc_info=True)
+        return {}
+
+
+def count_grantable(data: dict, catalogs: dict) -> dict:
+    """{category: how many catalogue ids this character doesn't yet own}."""
+    gains = {}
+    for cat, target in UNLOCK_TARGETS.items():
+        catalog = catalogs.get(cat) or []
+        existing = _get_path(data, target)
+        if not isinstance(existing, list):
+            continue
+        have = set(map(str, existing))
+        missing = [x for x in catalog if str(x) not in have]
+        if missing:
+            gains[cat] = len(missing)
+    return gains
+
+
+def _sync_spell_bar(data: dict):
+    """Put every unlocked spell that isn't on the 48-slot bar into an empty
+    placeholder slot, so learned spells actually show in the spell wheel."""
+    bar = _get_path(data, SPELL_BAR_PATH)
+    unlocked = _get_path(data, UNLOCK_TARGETS["spells"])
+    if not isinstance(bar, list) or not isinstance(unlocked, list):
+        return 0
+    on_bar = {str(s) for s in bar if str(s) != SPELL_BAR_EMPTY}
+    missing = [str(s) for s in unlocked if str(s) not in on_bar]
+    added = 0
+    for i, slot in enumerate(bar):
+        if not missing:
+            break
+        if str(slot) == SPELL_BAR_EMPTY:
+            bar[i] = missing.pop(0)
+            added += 1
+    return added
+
+
+def grant_all_unlocks(path, catalogs: dict, backup_root) -> dict:
+    """Union the full unlock catalogues into a character; sync the spell bar.
+
+    Append-only (never removes), checkpoint-first, atomic verified write —
+    the same contract as every bargain. Returns the per-category gains.
+    """
+    path = Path(path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    gains = count_grantable(data, catalogs)
+    if not gains:
+        return {}
+
+    stamp = datetime.now().strftime("%H:%M")
+    backups.create_checkpoint(path.parent, path.stem,
+                              f"Before the codex ({stamp})", backup_root)
+
+    for cat, target in UNLOCK_TARGETS.items():
+        catalog = catalogs.get(cat) or []
+        existing = _get_path(data, target)
+        if not isinstance(existing, list):
+            continue
+        have = set(map(str, existing))
+        existing.extend(x for x in catalog if str(x) not in have)
+
+    bar_added = _sync_spell_bar(data)
+    if bar_added:
+        gains["spell_bar"] = bar_added
+
+    _write_character(path, data)
+    log.info("Codex completed for %s: %s", path.name, gains)
+    return gains
+
+
 def knowledge_counts(info_or_data) -> dict:
     """{category: count} for the UI stat cards (map as region count)."""
     data = info_or_data

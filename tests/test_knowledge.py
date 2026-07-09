@@ -77,6 +77,64 @@ def test_absorb_nothing_new_is_a_noop(tmp_path):
     assert backups.list_checkpoints(tmp_path / "bk") == []
 
 
+def test_complete_codex_grants_and_fills_bar(tmp_path):
+    path = make_character(tmp_path, "Adept")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    prog = data["GameProgress"].setdefault("Progress", {})
+    prog["SpellsUnlocked"] = ["spell_a", "spell_b"]
+    prog["RecipesUnlocked"] = ["recipe_x"]
+    prog["BuildingsUnlocked"] = []
+    data["GameProgress"].setdefault("Journal", {})["UnlockedEntries"] = []
+    # a 4-slot spell bar: one real spell, three empty placeholders
+    data["GameProgress"]["Spellcasting"] = {"SelectedSpells": [
+        "spell_a", characters.SPELL_BAR_EMPTY, characters.SPELL_BAR_EMPTY,
+        characters.SPELL_BAR_EMPTY]}
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+
+    catalogs = {
+        "spells": ["spell_a", "spell_b", "spell_c", "spell_d"],
+        "recipes": ["recipe_x", "recipe_y"],
+        "buildings": ["bld_1", "bld_2", "bld_3"],
+        "journal": ["j1"],
+    }
+    gains = characters.grant_all_unlocks(path, catalogs, tmp_path / "bk")
+    assert gains["spells"] == 2         # c, d were missing
+    assert gains["recipes"] == 1
+    assert gains["buildings"] == 3
+    assert gains["journal"] == 1
+    assert gains["spell_bar"] >= 1      # spell_b (unlocked, not on bar) placed
+
+    after = json.loads(path.read_text(encoding="utf-8"))
+    ap = after["GameProgress"]["Progress"]
+    assert set(ap["SpellsUnlocked"]) == {"spell_a", "spell_b", "spell_c", "spell_d"}
+    assert set(ap["BuildingsUnlocked"]) == {"bld_1", "bld_2", "bld_3"}
+    # the bar now shows spell_b in a former placeholder slot, real one kept
+    bar = after["GameProgress"]["Spellcasting"]["SelectedSpells"]
+    assert bar[0] == "spell_a"
+    assert "spell_b" in bar
+    assert after["Backup"] == 1675531120  # untouched
+    from app.core import backups
+    assert len(backups.list_checkpoints(tmp_path / "bk")) == 1
+
+
+def test_complete_codex_noop_when_nothing_missing(tmp_path):
+    path = make_character(tmp_path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data["GameProgress"].setdefault("Progress", {})["SpellsUnlocked"] = ["a", "b"]
+    path.write_text(json.dumps(data, indent="\t"), encoding="utf-8")
+    before = path.read_bytes()
+    gains = characters.grant_all_unlocks(path, {"spells": ["a", "b"]}, tmp_path / "bk")
+    assert gains == {}
+    assert path.read_bytes() == before
+
+
+def test_bundled_unlock_catalogs_load():
+    catalogs = characters.load_unlock_catalogs()
+    assert len(catalogs.get("spells", [])) > 40
+    assert len(catalogs.get("recipes", [])) > 400
+    assert len(catalogs.get("buildings", [])) > 100
+
+
 def test_inventory_listing_and_free_slot(tmp_path):
     path = make_character(tmp_path)
     data = json.loads(path.read_text(encoding="utf-8"))
