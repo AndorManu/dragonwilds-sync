@@ -92,8 +92,12 @@ def create_checkpoint(save_dir, world_name: str, name: str, backup_root) -> Back
     root = Path(backup_root) / CHECKPOINTS_DIRNAME
     root.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now()
-    dest = root / stamp.strftime("%Y%m%d-%H%M%S")
-    dest.mkdir(parents=True, exist_ok=True)
+    base = stamp.strftime("%Y%m%d-%H%M%S")
+    dest, n = root / base, 2
+    while dest.exists():            # two checkpoints in one second must not collide
+        dest = root / f"{base}-{n}"
+        n += 1
+    dest.mkdir(parents=True)
     for f in files:
         shutil.copy2(f, dest / f.name)
     (dest / "checkpoint.json").write_text(
