@@ -179,20 +179,293 @@ def portrait_descriptor(info: CharacterInfo) -> str:
 
 
 # ---------------------------------------------------------------------------
+# knowledge — the Scroll of Knowledge
+# ---------------------------------------------------------------------------
+
+# Category -> path inside the character JSON. All are lists of opaque ids
+# except the map bitmap (an int we OR together). Union-merging these between
+# characters never invents ids, so it can't create anything the game doesn't
+# already recognise.
+KNOWLEDGE_PATHS = {
+    "recipes": ("GameProgress", "Progress", "RecipesUnlocked"),
+    "recipes_new": ("GameProgress", "Progress", "RecipesNew"),
+    "buildings": ("GameProgress", "Progress", "BuildingsUnlocked"),
+    "building_pieces_new": ("GameProgress", "Progress", "BuildingPiecesNew"),
+    "spells": ("GameProgress", "Progress", "SpellsUnlocked"),
+    "spells_new": ("GameProgress", "Progress", "SpellsNew"),
+    "shrines": ("GameProgress", "Progress", "ShrinesUnlocked"),
+    "journal": ("GameProgress", "Journal", "UnlockedEntries"),
+    "mounts": ("GameProgress", "Character", "Mount", "MountsUnlockedList"),
+    "landmarks": ("GameProgress", "RevealedLandmarks", "RevealedLandmarkNames"),
+}
+MAP_BITMAP_PATH = ("GameProgress", "RevealedFog", "RevealedRegionsBitmap")
+
+# What the UI shows for each category (display name, headline categories first)
+KNOWLEDGE_DISPLAY = [
+    ("recipes", "Recipes"), ("buildings", "Buildings"), ("spells", "Spells"),
+    ("journal", "Journal"), ("shrines", "Shrines"), ("mounts", "Mounts"),
+    ("landmarks", "Landmarks"),
+]
+
+SCROLL_VERSION = 1
+
+
+def _get_path(data: dict, path: tuple):
+    node = data
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return node
+
+
+def extract_knowledge(data: dict) -> dict:
+    """Everything a character has unlocked, as a portable scroll payload."""
+    knowledge = {}
+    for name, path in KNOWLEDGE_PATHS.items():
+        value = _get_path(data, path)
+        if isinstance(value, list):
+            knowledge[name] = list(value)
+    bitmap = _get_path(data, MAP_BITMAP_PATH)
+    if isinstance(bitmap, int):
+        knowledge["map_bitmap"] = bitmap
+    return knowledge
+
+
+def diff_knowledge(data: dict, scroll: dict) -> dict:
+    """{category: how much is new} — what absorbing the scroll would add."""
+    gains = {}
+    for name, path in KNOWLEDGE_PATHS.items():
+        incoming = scroll.get(name) or []
+        existing = _get_path(data, path)
+        if not isinstance(existing, list):
+            continue
+        have = set(map(str, existing))
+        new = [x for x in incoming if str(x) not in have]
+        if new:
+            gains[name] = len(new)
+    incoming_bits = scroll.get("map_bitmap")
+    existing_bits = _get_path(data, MAP_BITMAP_PATH)
+    if isinstance(incoming_bits, int) and isinstance(existing_bits, int):
+        added = (existing_bits | incoming_bits) & ~existing_bits
+        if added:
+            gains["map_regions"] = bin(added).count("1")
+    return gains
+
+
+def absorb_knowledge(path, scroll: dict, backup_root) -> dict:
+    """Union-merge a scroll into a character file. Returns the gains applied.
+
+    Same safety contract as apply_edits: checkpoint first, only the listed
+    knowledge fields change (append-only unions / bitmap OR), atomic write.
+    """
+    path = Path(path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    gains = diff_knowledge(data, scroll)
+    if not gains:
+        return {}
+
+    stamp = datetime.now().strftime("%H:%M")
+    backups.create_checkpoint(path.parent, path.stem,
+                              f"Before the scroll ({stamp})", backup_root)
+
+    for name, kpath in KNOWLEDGE_PATHS.items():
+        incoming = scroll.get(name) or []
+        existing = _get_path(data, kpath)
+        if not isinstance(existing, list) or not incoming:
+            continue
+        have = set(map(str, existing))
+        existing.extend(x for x in incoming if str(x) not in have)
+    incoming_bits = scroll.get("map_bitmap")
+    existing_bits = _get_path(data, MAP_BITMAP_PATH)
+    if isinstance(incoming_bits, int) and isinstance(existing_bits, int):
+        parent = _get_path(data, MAP_BITMAP_PATH[:-1])
+        parent[MAP_BITMAP_PATH[-1]] = existing_bits | incoming_bits
+
+    _write_character(path, data)
+    log.info("Scroll absorbed into %s: %s", path.name, gains)
+    return gains
+
+
+def knowledge_counts(info_or_data) -> dict:
+    """{category: count} for the UI stat cards (map as region count)."""
+    data = info_or_data
+    counts = {}
+    for name, path in KNOWLEDGE_PATHS.items():
+        value = _get_path(data, path)
+        if isinstance(value, list):
+            counts[name] = len(value)
+    bitmap = _get_path(data, MAP_BITMAP_PATH)
+    if isinstance(bitmap, int):
+        counts["map_regions"] = bin(max(0, bitmap)).count("1")
+    return counts
+
+
+def write_scroll(char_path, dest_path, author: str) -> Path:
+    data = json.loads(Path(char_path).read_text(encoding="utf-8"))
+    info = parse_character(char_path)
+    payload = {
+        "scroll_version": SCROLL_VERSION,
+        "author": author,
+        "character": info.name if info else Path(char_path).stem,
+        "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "knowledge": extract_knowledge(data),
+    }
+    dest = Path(dest_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    write_json(dest, payload)
+    return dest
+
+
+def read_scroll(path) -> dict | None:
+    payload = read_json(Path(path))
+    if not isinstance(payload, dict) or "knowledge" not in payload:
+        return None
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# the bag — inventory + Gift Across the Void
+# ---------------------------------------------------------------------------
+
+@dataclass
+class InventorySlot:
+    index: int
+    item_data: str
+    guid: str
+    count: int | None = None
+    durability: int | None = None
+
+
+def list_inventory(data: dict) -> tuple[list[InventorySlot], int]:
+    """(occupied slots sorted by index, MaxSlotIndex)."""
+    inventory = _get_path(data, ("GameProgress", "Inventory")) or {}
+    slots = []
+    max_index = int(inventory.get("MaxSlotIndex", -1))
+    for key, value in inventory.items():
+        if key == "MaxSlotIndex" or not isinstance(value, dict):
+            continue
+        try:
+            index = int(key)
+        except ValueError:
+            continue
+        slots.append(InventorySlot(
+            index=index,
+            item_data=str(value.get("ItemData", "")),
+            guid=str(value.get("GUID", "")),
+            count=value.get("Count"),
+            durability=value.get("Durability"),
+        ))
+    slots.sort(key=lambda s: s.index)
+    return slots, max_index
+
+
+def first_free_slot(data: dict) -> int | None:
+    slots, max_index = list_inventory(data)
+    used = {s.index for s in slots}
+    for i in range(max(max_index + 1, 1)):
+        if i not in used:
+            return i
+    return None
+
+
+def new_item_guid() -> str:
+    """Fresh id in the game's observed format: 16 random bytes, base64url."""
+    import base64
+    import os as _os
+    return base64.urlsafe_b64encode(_os.urandom(16)).rstrip(b"=").decode("ascii")
+
+
+def export_offering(char_path, dest_path, author: str) -> Path:
+    """Write this character's inventory as a gift catalogue for friends."""
+    data = json.loads(Path(char_path).read_text(encoding="utf-8"))
+    slots, _ = list_inventory(data)
+    items = []
+    for s in slots:
+        entry = {"ItemData": s.item_data, "slot": s.index}
+        if s.count is not None:
+            entry["Count"] = int(s.count)
+        if s.durability is not None:
+            entry["Durability"] = int(s.durability)
+        items.append(entry)
+    payload = {
+        "gift_version": SCROLL_VERSION,
+        "author": author,
+        "character": Path(char_path).stem,
+        "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "items": items,
+    }
+    dest = Path(dest_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    write_json(dest, payload)
+    return dest
+
+
+def read_offering(path) -> dict | None:
+    payload = read_json(Path(path))
+    if not isinstance(payload, dict) or "items" not in payload:
+        return None
+    return payload
+
+
+def receive_gift(char_path, item_entry: dict, backup_root) -> int | None:
+    """Copy one offered item entry into the first free slot. Experimental:
+    checkpoint-first, fresh GUID, respects the bag's MaxSlotIndex.
+
+    Returns the slot index used, or None if the bag is full / entry invalid.
+    """
+    path = Path(char_path)
+    data = json.loads(path.read_text(encoding="utf-8"))
+    item_data = str(item_entry.get("ItemData") or "")
+    if not item_data:
+        return None
+    free = first_free_slot(data)
+    if free is None:
+        return None
+
+    stamp = datetime.now().strftime("%H:%M")
+    backups.create_checkpoint(path.parent, path.stem,
+                              f"Before the gift ({stamp})", backup_root)
+
+    slot = {"GUID": new_item_guid(), "ItemData": item_data}
+    if item_entry.get("Count") is not None:
+        slot["Count"] = max(1, int(item_entry["Count"]))
+    if item_entry.get("Durability") is not None:
+        slot["Durability"] = max(1, int(item_entry["Durability"]))
+    inventory = _get_path(data, ("GameProgress", "Inventory"))
+    inventory[str(free)] = slot
+
+    _write_character(path, data)
+    log.info("Gift placed in slot %d of %s", free, path.name)
+    return free
+
+
+def _write_character(path: Path, data: dict):
+    """Serialize like the game (tabs, raw unicode), verify, atomic replace."""
+    new_text = json.dumps(data, indent="\t", ensure_ascii=False)
+    if json.loads(new_text) != data:
+        raise ValueError("round-trip verification failed; file left untouched")
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(new_text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+# ---------------------------------------------------------------------------
 # editing — The Dragon's Bargain
 # ---------------------------------------------------------------------------
 
 @dataclass
 class EditPlan:
     """What the grimoire wants changed. Only these values are touched."""
-    skill_xp: dict = field(default_factory=dict)       # skill Id -> new Xp int
-    heal_vitals: bool = False                          # health/stamina to max-ish
-    repair_all: bool = False                           # every Durability -> max seen
-    item_counts: dict = field(default_factory=dict)    # slot key -> new Count int
+    skill_xp: dict = field(default_factory=dict)        # skill Id -> new Xp int
+    heal_vitals: bool = False                           # health/stamina to max-ish
+    repair_all: bool = False                            # every Durability -> max
+    item_counts: dict = field(default_factory=dict)     # slot key -> new Count
+    item_repairs: set = field(default_factory=set)      # slot keys to repair
 
     def empty(self) -> bool:
         return not (self.skill_xp or self.heal_vitals or self.repair_all
-                    or self.item_counts)
+                    or self.item_counts or self.item_repairs)
 
 
 REPAIR_VALUE = 9999
@@ -269,18 +542,17 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
                 slot["Count"] = new_count
                 changes.append(f"slot {slot_key}: count {old} → {new_count}")
 
+    for slot_key in (plan.item_repairs or ()):
+        slot = inventory.get(str(slot_key))
+        if isinstance(slot, dict) and "Durability" in slot:
+            slot["Durability"] = REPAIR_VALUE
+            changes.append(f"slot {slot_key}: repaired")
+
     if not changes:
         return []
 
-    # 2. serialize like the game does (tabs, unescaped unicode) and verify
-    new_text = json.dumps(data, indent="\t", ensure_ascii=False)
-    if json.loads(new_text) != data:  # paranoia: round-trip must be exact
-        raise ValueError("round-trip verification failed; file left untouched")
-
-    # 3. atomic replace
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(new_text, encoding="utf-8")
-    os.replace(tmp, path)
+    # 2 + 3. serialize like the game, verify the round trip, atomic replace
+    _write_character(path, data)
     log.info("Dragon's bargain applied to %s: %s", path.name, "; ".join(changes))
     return changes
 

@@ -481,6 +481,116 @@ class Controller(QObject):
 
         threading.Thread(target=worker, daemon=True, name="bargain").start()
 
+    # -- scrolls & gifts (the grimoire's deeper pages) -----------------------------------
+    def _grimoire_dir(self) -> Path:
+        return Path(self.active_world()["sync_dir"]) / "_grimoire"
+
+    def inscribe_scroll(self, char_path):
+        def worker():
+            try:
+                dest = self._grimoire_dir() / f"{_safe_dirname(self.player_name)}.scroll.json"
+                characters.write_scroll(char_path, dest, self.player_name)
+                self.toast.emit("success", "Your scroll is inscribed in the shared "
+                                           "folder — friends can absorb it from "
+                                           "their own grimoire.")
+            except Exception:
+                log.exception("Scroll inscription failed")
+                self.toast.emit("error", "The scroll would not take — is the shared "
+                                         "folder reachable?")
+
+        threading.Thread(target=worker, daemon=True, name="scroll").start()
+
+    def list_scrolls(self) -> list:
+        payloads = []
+        try:
+            folder = self._grimoire_dir()
+            if folder.exists():
+                for p in sorted(folder.glob("*.scroll.json")):
+                    payload = characters.read_scroll(p)
+                    if payload:
+                        payloads.append(payload)
+        except Exception:
+            log.exception("Scroll listing failed")
+        return payloads
+
+    def absorb_knowledge(self, char_path, knowledge: dict, source: str, done=None):
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — knowledge "
+                                               "absorbed while it runs is lost.")
+                    return
+                gains = characters.absorb_knowledge(
+                    char_path, knowledge, self._char_backup_root(Path(char_path).stem))
+                if gains:
+                    self.toast.emit("success", f"Knowledge of {source} absorbed. "
+                                               f"A checkpoint of the old self was kept.")
+                else:
+                    self.toast.emit("info", "Nothing new in it — this one already "
+                                            "knows all of that.")
+            except Exception:
+                log.exception("Absorb failed")
+                self.toast.emit("error", "The absorption failed — the character "
+                                         "file was left untouched.")
+            finally:
+                if done:
+                    self.run_on_ui.emit(done)
+
+        threading.Thread(target=worker, daemon=True, name="absorb").start()
+
+    def export_offering(self, char_path):
+        def worker():
+            try:
+                dest = self._grimoire_dir() / f"{_safe_dirname(self.player_name)}.gift.json"
+                characters.export_offering(char_path, dest, self.player_name)
+                self.toast.emit("success", "Your bag's catalogue is in the shared "
+                                           "folder — friends can now receive gifts "
+                                           "from it.")
+            except Exception:
+                log.exception("Offering export failed")
+                self.toast.emit("error", "The offering would not take — is the "
+                                         "shared folder reachable?")
+
+        threading.Thread(target=worker, daemon=True, name="offer").start()
+
+    def list_offerings(self) -> list:
+        payloads = []
+        try:
+            folder = self._grimoire_dir()
+            if folder.exists():
+                for p in sorted(folder.glob("*.gift.json")):
+                    payload = characters.read_offering(p)
+                    if payload:
+                        payloads.append(payload)
+        except Exception:
+            log.exception("Offering listing failed")
+        return payloads
+
+    def receive_gift(self, char_path, item_entry: dict, source: str, done=None):
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — gifts placed "
+                                               "while it runs are lost.")
+                    return
+                slot = characters.receive_gift(
+                    char_path, item_entry, self._char_backup_root(Path(char_path).stem))
+                if slot is not None:
+                    self.toast.emit("success", f"The gift from {source} rests in bag "
+                                               f"slot {slot}. Experimental — if the "
+                                               f"game rejects it, restore the checkpoint.")
+                else:
+                    self.toast.emit("warning", "No free bag slot — make room first.")
+            except Exception:
+                log.exception("Gift failed")
+                self.toast.emit("error", "The gift slipped through — the character "
+                                         "file was left untouched.")
+            finally:
+                if done:
+                    self.run_on_ui.emit(done)
+
+        threading.Thread(target=worker, daemon=True, name="gift").start()
+
     # -- identify ritual ----------------------------------------------------------------
     def skill_labels(self) -> dict:
         return characters.load_skill_labels(paths.APP_DIR)
