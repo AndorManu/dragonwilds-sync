@@ -285,6 +285,17 @@ def main():
     print("  wrote 22d_conjure.png")
     picker.close()
 
+    # the Learn picker (recipes, with output-item icons)
+    from app.ui.learn_picker import LearnPicker
+    lp = LearnPicker({"recipes": set(), "spells": set(), "buildings": set()}, window2)
+    lp.setAttribute(Qt.WA_DontShowOnScreen, True)
+    lp.show()
+    lp.search.setText("bronze")
+    QTest.qWait(120)
+    lp.grab().save(str(OUT / "22f_learn.png"))
+    print("  wrote 22f_learn.png")
+    lp.close()
+
     # the saga
     from app.core import saga as saga_mod
     saga_mod.bump_stats(shared, "Andor", 4520)

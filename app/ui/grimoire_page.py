@@ -191,6 +191,7 @@ class GrimoirePage(QWidget):
     gift_browse_requested = Signal(object)              # char_path
     conjure_requested = Signal(object)                  # char_path
     complete_codex_requested = Signal(object)           # char_path
+    learn_requested = Signal(object)                    # char_path
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -862,6 +863,15 @@ class GrimoirePage(QWidget):
         actions_head.setObjectName("SettingsSection")
         actions_head.setStyleSheet("background: transparent;")
         box.addWidget(actions_head)
+
+        pick_row = QHBoxLayout()
+        learn = widgets.make_button("Learn a spell, recipe or building…", "ember",
+                                    "book-open", height=34)
+        learn.setToolTip("Browse and pick exactly what to unlock")
+        learn.clicked.connect(lambda: self._emit_with_char(self.learn_requested))
+        pick_row.addWidget(learn)
+        pick_row.addStretch(1)
+        box.addLayout(pick_row)
 
         row1 = QHBoxLayout()
         row1.setSpacing(8)

@@ -538,6 +538,49 @@ class Controller(QObject):
 
         threading.Thread(target=worker, daemon=True, name="absorb").start()
 
+    def unlocked_ids(self, char_path) -> dict:
+        """{kind: set of ids the character already knows} for the Learn picker."""
+        try:
+            data = json.loads(Path(char_path).read_text(encoding="utf-8"))
+            return {
+                "spells": {str(x) for x in
+                           characters._get_path(data, characters.UNLOCK_TARGETS["spells"]) or []},
+                "recipes": {str(x) for x in
+                            characters._get_path(data, characters.UNLOCK_TARGETS["recipes"]) or []},
+                "buildings": {str(x) for x in
+                              characters._get_path(data, characters.UNLOCK_TARGETS["buildings"]) or []},
+            }
+        except Exception:
+            return {}
+
+    def learn_specific(self, char_path, kind: str, ids: list, done=None):
+        def worker():
+            try:
+                if game.find_game_process():
+                    self.toast.emit("warning", "Close the game first — unlocks granted "
+                                               "while it runs are lost.")
+                    return
+                gains = characters.grant_all_unlocks(
+                    char_path, {kind: list(ids)},
+                    self._char_backup_root(Path(char_path).stem))
+                n = gains.get(kind, 0)
+                if n:
+                    word = {"spells": "spell", "recipes": "recipe",
+                            "buildings": "building"}.get(kind, kind)
+                    self.toast.emit("success", f"Learned {n} {word}{'s' if n != 1 else ''}."
+                                               f" Reopen the game to see them.")
+                else:
+                    self.toast.emit("info", "Already known.")
+            except Exception:
+                log.exception("Learn failed")
+                self.toast.emit("error", "Couldn't learn that — the character file "
+                                         "was left untouched.")
+            finally:
+                if done:
+                    self.run_on_ui.emit(done)
+
+        threading.Thread(target=worker, daemon=True, name="learn").start()
+
     def codex_preview(self, char_path) -> dict:
         try:
             data = json.loads(Path(char_path).read_text(encoding="utf-8"))
