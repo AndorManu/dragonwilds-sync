@@ -50,14 +50,15 @@ every conflict guarantee.
   (`1⁧⁧Minblyat`) — handled, and honestly, respect.
 
 ### The Secret (don't read this aloud in the group chat)
-Click the **dragon eye in the titlebar five times, quickly**. It stays
-unlocked afterwards (bottom of the world menu: *The Dragon's Bargain*).
-Skill XP rewrites, restore-vitals, repair-everything. Skill names are
-opaque GUIDs in the file, so the grimoire ships with an **identify ritual**:
-begin it, train exactly one skill in game, finish it, and name what you
-trained — the label sticks forever. Every bargain: game-closed check →
-auto-checkpoint → only the asked-for numbers change → the game's own
-`.backup` twin stays untouched as a second net.
+Click the **dragon eye in the titlebar five times, quickly** — that's the
+only door, every time. There is deliberately no menu entry, no unlock flag,
+no visible trace anywhere (your call, and the right one). Inside: per-skill
+**level picker** (the game's own 99-level XP table, wiki-verified),
+restore-vitals, repair-everything, all skills under their real names with
+hand-drawn emblems. Every bargain: game-closed check → auto-checkpoint →
+only the asked-for numbers change → the game's own `.backup` twin stays
+untouched as a second net. The identify ritual remains for any skill a
+future game update adds.
 
 ### Judgment calls (v1.3)
 1. **Character travel is per-player and opt-in** (Characters page toggle) —
