@@ -123,6 +123,7 @@ class MainWindow(QWidget):
         self.main_page.saga_clicked.connect(self._open_saga)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
+        # (the grimoire deliberately has no menu entry — see _awaken_secret)
 
         # characters
         self.characters_page.back_requested.connect(lambda: self._show_page(self.main_page))
@@ -133,7 +134,6 @@ class MainWindow(QWidget):
 
         # the secret
         self.titlebar.secret_awakened.connect(self._awaken_secret)
-        self.main_page.grimoire_clicked.connect(self._open_grimoire)
         self.grimoire_page.back_requested.connect(
             lambda: self._show_page(self.characters_page))
         self.grimoire_page.bargain_requested.connect(self._strike_bargain)
@@ -186,7 +186,6 @@ class MainWindow(QWidget):
         cfg = self.controller.cfg or {}
         self.main_page.set_player_name(cfg.get("player_name", ""))
         self.main_page.set_worlds(config.worlds(cfg), cfg.get("active_world"))
-        self.main_page.set_grimoire(self.controller.grimoire_unlocked())
 
     def _on_confirm_request(self, request):
         answer = self.confirm.ask(request["title"], request["body"],
@@ -402,16 +401,11 @@ class MainWindow(QWidget):
 
     # -- the secret --------------------------------------------------------------------
     def _awaken_secret(self):
+        """The eye is the only door. No menu entry, no trace — five quick
+        clicks on the titlebar mark, every time."""
         if not self.controller.has_config:
             return
-        if self.controller.grimoire_unlocked():
-            self._open_grimoire()
-            return
-        self.controller.unlock_grimoire()
-        self.main_page.set_grimoire(True)
-        self.toasts.show_toast(
-            "success", "The dragon's eye opens. Something old has been added "
-                       "to the world menu…")
+        self._open_grimoire()
 
     def _open_grimoire(self):
         self.grimoire_page.load(self.controller.list_characters(),

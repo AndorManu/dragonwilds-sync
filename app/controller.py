@@ -457,14 +457,6 @@ class Controller(QObject):
         threading.Thread(target=worker, daemon=True, name="char-checkpoint").start()
 
     # -- the Dragon's Bargain ----------------------------------------------------------
-    def grimoire_unlocked(self) -> bool:
-        return bool((self.cfg or {}).get("grimoire_unlocked"))
-
-    def unlock_grimoire(self):
-        if not self.cfg.get("grimoire_unlocked"):
-            self.cfg["grimoire_unlocked"] = True
-            self._save_all()
-
     def apply_bargain(self, char_path, plan, done=None):
         def worker():
             try:
