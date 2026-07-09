@@ -238,6 +238,13 @@ def main():
     # the grimoire (opened the way anyone opens it: through the eye)
     window2._open_grimoire()
     shoot(window2, "22_grimoire")
+    window2.grimoire_page._switch_tab(1)
+    window2.grimoire_page._select_slot(
+        next(iter(window2.grimoire_page._bag_cells.values())).slot)
+    shoot(window2, "22b_grimoire_bag")
+    window2.grimoire_page._switch_tab(2)
+    shoot(window2, "22c_grimoire_scrolls")
+    window2.grimoire_page._switch_tab(0)
 
     # the saga
     from app.core import saga as saga_mod

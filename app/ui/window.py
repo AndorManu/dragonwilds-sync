@@ -3,7 +3,7 @@
 import logging
 import threading
 
-from PySide6.QtCore import QPropertyAnimation, Qt
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (QFrame, QGraphicsDropShadowEffect,
                                QGraphicsOpacityEffect, QMenu, QStackedWidget,
@@ -32,6 +32,7 @@ from .tray import TrayManager
 log = logging.getLogger("dwsync.window")
 
 WINDOW_W, WINDOW_H = 512, 784
+GRIMOIRE_W, GRIMOIRE_H = 678, 812    # the book is larger on the inside
 SHADOW_MARGIN = 16
 
 
@@ -135,11 +136,15 @@ class MainWindow(QWidget):
         # the secret
         self.titlebar.secret_awakened.connect(self._awaken_secret)
         self.grimoire_page.back_requested.connect(
-            lambda: self._show_page(self.characters_page))
+            lambda: self._show_page(self.main_page))
         self.grimoire_page.bargain_requested.connect(self._strike_bargain)
         self.grimoire_page.ritual_started.connect(self._start_ritual)
         self.grimoire_page.ritual_finished.connect(self._finish_ritual)
         self.grimoire_page.label_saved.connect(c.save_skill_label)
+        self.grimoire_page.inscribe_requested.connect(c.inscribe_scroll)
+        self.grimoire_page.absorb_requested.connect(self._absorb_knowledge)
+        self.grimoire_page.offer_requested.connect(c.export_offering)
+        self.grimoire_page.gift_browse_requested.connect(self._browse_gifts)
 
         # controller -> UI
         c.status_checking.connect(self.main_page.set_checking)
@@ -408,10 +413,72 @@ class MainWindow(QWidget):
         self._open_grimoire()
 
     def _open_grimoire(self):
+        self.grimoire_page.set_scrolls(self.controller.list_scrolls())
         self.grimoire_page.load(self.controller.list_characters(),
                                 self.controller.skill_labels(),
                                 self.controller.pending_ritual())
         self._show_page(self.grimoire_page)
+
+    def _absorb_knowledge(self, char_path, knowledge, source, summary):
+        if not summary:
+            self.toasts.show_toast("info", f"Nothing new to learn from {source}.")
+            return
+        if self.confirm.ask(
+                f"Absorb the knowledge of {source}?",
+                f"This character gains: {summary}.\n\n"
+                f"Knowledge is only ever added — nothing is forgotten or "
+                f"removed, and a checkpoint is taken first.",
+                danger_label="Absorb", safe_label="Not now"):
+            self.controller.absorb_knowledge(char_path, knowledge, source,
+                                             done=self._open_grimoire)
+
+    def _browse_gifts(self, char_path):
+        from PySide6.QtWidgets import QInputDialog
+        offerings = self.controller.list_offerings()
+        if not offerings:
+            self.toasts.show_toast("info", "No offerings in the shared folder yet — "
+                                           "a friend must “Offer my bag” first.")
+            return
+        offer_labels = [f"{o.get('author', '?')} · {len(o.get('items', []))} items"
+                        for o in offerings]
+        choice, ok = QInputDialog.getItem(
+            self, "Gifts across the void", "Whose offering?", offer_labels, 0, False)
+        if not ok:
+            return
+        offering = offerings[offer_labels.index(choice)]
+        items = offering.get("items") or []
+        if not items:
+            self.toasts.show_toast("info", "That offering is empty.")
+            return
+
+        def describe(entry):
+            if entry.get("Count") is not None:
+                base = f"stack of {entry['Count']}"
+            elif entry.get("Durability") is not None:
+                base = f"gear · durability {entry['Durability']}"
+            else:
+                base = "a single item"
+            return f"{base}  (their slot {entry.get('slot', '?')})"
+
+        item_labels = [describe(e) for e in items]
+        pick, ok = QInputDialog.getItem(
+            self, "Gifts across the void",
+            "Item names live inside the game — match by their bag layout:",
+            item_labels, 0, False)
+        if not ok:
+            return
+        entry = items[item_labels.index(pick)]
+        if self.confirm.ask(
+                "Receive this gift?",
+                f"{describe(entry).capitalize()} from {offering.get('author', '?')} "
+                f"will be copied into your first free bag slot.\n\n"
+                f"This is the experimental bargain: a checkpoint is taken first, "
+                f"and if the game rejects the item, restore it from "
+                f"Characters → Backups.",
+                danger_label="Receive", safe_label="Not now"):
+            self.controller.receive_gift(char_path, entry,
+                                         offering.get("author", "?"),
+                                         done=self._open_grimoire)
 
     def _strike_bargain(self, char_path, plan):
         wants = []
@@ -422,6 +489,12 @@ class MainWindow(QWidget):
             wants.append("restore vitals")
         if plan.repair_all:
             wants.append("repair everything")
+        if plan.item_counts:
+            wants.append(f"reshape {len(plan.item_counts)} stack"
+                         f"{'s' if len(plan.item_counts) != 1 else ''}")
+        if plan.item_repairs:
+            wants.append(f"repair {len(plan.item_repairs)} item"
+                         f"{'s' if len(plan.item_repairs) != 1 else ''}")
         if not self.confirm.ask(
                 "Seal the bargain?",
                 "The dragon will " + ", ".join(wants) + ".\n\n"
@@ -516,17 +589,48 @@ class MainWindow(QWidget):
 
     # -- page transitions ---------------------------------------------------------------------
     def _show_page(self, page):
+        # the grimoire is a larger book: the window itself opens for it
+        if page is self.grimoire_page:
+            self._animate_window(GRIMOIRE_W, GRIMOIRE_H)
+        elif self.width() != WINDOW_W or self.height() != WINDOW_H:
+            self._animate_window(WINDOW_W, WINDOW_H)
+
         self.pages.setCurrentWidget(page)
         if not self.isVisible():
             return
         fx = QGraphicsOpacityEffect(page)
         page.setGraphicsEffect(fx)
         anim = QPropertyAnimation(fx, b"opacity", page)
-        anim.setDuration(170)
+        anim.setDuration(200)
         anim.setStartValue(0.0)
         anim.setEndValue(1.0)
         anim.finished.connect(lambda: page.setGraphicsEffect(None))
         anim.start(QPropertyAnimation.DeleteWhenStopped)
+
+    def _animate_window(self, w, h):
+        if self.width() == w and self.height() == h:
+            return
+        if not self.isVisible():
+            self.setFixedSize(w, h)
+            return
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(16777215, 16777215)
+        start = self.geometry()
+        target = QRect(start.x() - (w - start.width()) // 2,
+                       start.y() - (h - start.height()) // 2, w, h)
+        screen = self.screen().availableGeometry() if self.screen() else None
+        if screen:
+            target.moveLeft(max(screen.left(),
+                                min(target.left(), screen.right() - w + 1)))
+            target.moveTop(max(screen.top(),
+                               min(target.top(), screen.bottom() - h + 1)))
+        self._resize_anim = QPropertyAnimation(self, b"geometry", self)
+        self._resize_anim.setDuration(300)
+        self._resize_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._resize_anim.setStartValue(start)
+        self._resize_anim.setEndValue(target)
+        self._resize_anim.finished.connect(lambda: self.setFixedSize(w, h))
+        self._resize_anim.start()
 
     # -- tray & lifecycle --------------------------------------------------------------------------
     def _show_from_tray(self):
