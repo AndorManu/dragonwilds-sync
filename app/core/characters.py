@@ -664,15 +664,20 @@ def spawn_item(char_path, item_data: str, count: int, backup_root,
                durability: int | None = None) -> int | None:
     """Conjure a catalogue item into the first free bag slot.
 
-    Same safety contract as every bargain: checkpoint first, fresh GUID,
+    Stackable items get a Count clamped to their real max stack; non-stackable
+    items (gear, tools) get Durability instead — matching how the game stores
+    each. Same safety contract as every bargain: checkpoint first, fresh GUID,
     respects MaxSlotIndex, atomic verified write. Returns the slot index or
     None if the bag is full.
     """
+    from . import items as _items
+
     entry = {"ItemData": item_data}
-    if count is not None:
-        entry["Count"] = max(1, int(count))
-    if durability is not None:
-        entry["Durability"] = max(1, int(durability))
+    cap = _items.max_stack(item_data)
+    if cap > 1:
+        entry["Count"] = max(1, min(int(count or 1), cap))
+    else:
+        entry["Durability"] = max(1, int(durability)) if durability else REPAIR_VALUE
     return receive_gift(char_path, entry, backup_root, checkpoint_label="conjuring")
 
 

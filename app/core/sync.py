@@ -124,8 +124,11 @@ def _backup_files(files: list[Path], label: str, backup_root: Path):
     if not files:
         return None
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    dest = Path(backup_root) / f"{stamp}_{label}"
-    dest.mkdir(parents=True, exist_ok=True)
+    dest, n = Path(backup_root) / f"{stamp}_{label}", 2
+    while dest.exists():          # avoid same-second collisions losing a backup
+        dest = Path(backup_root) / f"{stamp}_{label}-{n}"
+        n += 1
+    dest.mkdir(parents=True)
     for f in files:
         shutil.copy2(f, dest / f.name)
     # Keep only the newest few backup folders.
