@@ -200,7 +200,7 @@ suite on Windows and Linux.
 
 ## Credits & license
 
-- Code: [MIT](LICENSE). Built by Andor Danse.
+- Code: [MIT](LICENSE). Built by [AndorManu](https://github.com/AndorManu).
 - Fonts: Cinzel, Cinzel Decorative and EB Garamond, under the
   [SIL Open Font License](app/assets/fonts/OFL-Cinzel.txt).
 - Item and unlock ID tables (`app/assets/*.json`) are derived from the
