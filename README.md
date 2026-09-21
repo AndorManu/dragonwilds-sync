@@ -8,6 +8,15 @@ updates — all through your own cloud drive, no server anywhere.
 
 ![Main screen](docs/screenshots/06_main_up_to_date.png)
 
+## Download
+
+Grab `DragonwildsSync.exe` from the **[latest release](https://github.com/AndorManu/dragonwilds-sync/releases/latest)**.
+One file, no install, no Python, no account. Windows only (the game is).
+
+SmartScreen will warn the first time because the exe isn't code-signed —
+**More info → Run anyway**. If you'd rather not trust a stranger's exe, the
+whole thing is Python: build it yourself in two commands (see below).
+
 ## How it works
 
 Everyone in the group points the app at the **same shared folder** — any
@@ -29,10 +38,8 @@ a paid server).
 
 ## Joining a friend's world (the 60-second version)
 
-1. Get `DragonwildsSync.exe` from your friend and double-click it.
-   No install, no Python, no account.
-   - SmartScreen may warn because the exe isn't code-signed:
-     **More info → Run anyway**.
+1. Download `DragonwildsSync.exe` (see above, or take your friend's copy)
+   and double-click it.
 2. Type your name, pick **“Join with an invite code”**, paste the code your
    friend sent you.
 3. The app opens their share link — sign in to Google and click
@@ -81,10 +88,10 @@ No store, no manual re-sending of the exe:
   the shared folder; open it from your phone's cloud-drive app to see who's
   playing without launching anything.
 
-## For the maintainer: building from source
+## Building from source
 
 ```powershell
-git clone <this repo>
+git clone https://github.com/AndorManu/dragonwilds-sync.git
 cd dragonwilds-sync
 .\build.ps1        # creates .venv, runs tests, builds dist\DragonwildsSync.exe
 ```
@@ -112,9 +119,20 @@ app/
   ui/          theme, widgets, screens (PySide6)
   controller.py  worker threads in, Qt signals out
   main.py      entry point (--tray starts quietly in the tray)
-tests/         pytest suite (52 tests)
+tests/         pytest suite (184 tests)
 tools/         icon generator, screenshot harness
 ```
+
+## Why it's built this way
+
+The sync core is deliberately small and boring: a `version.json` manifest,
+a monotonic version counter, and content hashes compared on **both** pull
+and push. Every overwrite is preceded by a backup, and every manifest write
+is atomic (temp file + rename), so a cloud client dying mid-sync can't leave
+a half-written state. The core has no Qt in it and is tested in isolation;
+everything user-facing lives in a controller layer around it. Cloud drives
+were chosen over a server on purpose — a group of friends already has one,
+it's free, and there's nothing to host, patch, or pay for.
 
 Per-user data lives in `%APPDATA%\DragonwildsSync\` (config, per-world state,
 logs, safety backups). v1.0 configs migrate automatically; the originals are
@@ -134,3 +152,15 @@ kept as `config.v1.bak` / `state.v1.bak`.
 - **App won't quit** — it lives in the tray by default so it can ping you;
   right-click the tray icon → Quit, or turn it off in Settings.
 - Logs: **Settings → Open log folder**.
+
+## Credits & license
+
+- Code: [MIT](LICENSE). Built by Andor Danse.
+- Fonts: Cinzel, Cinzel Decorative and EB Garamond, under the
+  [SIL Open Font License](app/assets/fonts/OFL-Cinzel.txt).
+- Item and unlock ID tables (`app/assets/*.json`) are derived from the
+  community datamine in [PEAKEGames/DWCharacterEditor](https://github.com/PEAKEGames/DWCharacterEditor).
+  No game assets are shipped; all icons and artwork in the app are drawn
+  procedurally.
+- *RuneScape: Dragonwilds* is a trademark of Jagex Ltd. This is an
+  independent fan-made tool, not affiliated with or endorsed by Jagex.
