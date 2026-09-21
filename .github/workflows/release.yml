@@ -28,7 +28,11 @@ jobs:
       - run: python -m PyInstaller --noconfirm DragonwildsSync.spec
       - name: Print SHA-256 (compare against your download)
         run: (Get-FileHash dist/DragonwildsSync.exe -Algorithm SHA256).Hash
-      - name: Attach exe to the release
-        run: gh release upload "${{ github.ref_name }}" dist/DragonwildsSync.exe --clobber
+      - name: Create the release if the tag is new, then attach the exe
+        shell: bash
+        run: |
+          tag="${{ github.ref_name }}"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "Dragonwilds Sync ${tag#v}" --generate-notes
+          gh release upload "$tag" dist/DragonwildsSync.exe --clobber
         env:
           GH_TOKEN: ${{ github.token }}

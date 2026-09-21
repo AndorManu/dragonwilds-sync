@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1 — 2026-09-21
+
+**Out in the open.**
+
+- First public release on GitHub, MIT licensed.
+- Every release exe is now built by GitHub Actions from the tagged source;
+  the SHA-256 is printed in the build log.
+- Tests run in CI on Windows and Linux.
+- README rewritten around the actual problem: a world tied to one PC.
+- No functional changes; sync protocol unchanged, compatible with 1.0–1.3.
+
 ## 1.3.0 — 2026-07-09
 
 **Your characters join the story.**
