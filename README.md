@@ -1,12 +1,31 @@
 # Dragonwilds Sync
 
-**One world, shared between friends.** Take turns playing the same
-*RuneScape: Dragonwilds* world without renting a server — whoever plays next
-always picks up the newest save, automatically. A dark-fantasy launcher for
-your group's shared world, with invites, presence, backups, and one-click
-updates — all through your own cloud drive, no server anywhere.
+[![tests](https://github.com/AndorManu/dragonwilds-sync/actions/workflows/tests.yml/badge.svg)](https://github.com/AndorManu/dragonwilds-sync/actions/workflows/tests.yml)
+[![release](https://img.shields.io/github/v/release/AndorManu/dragonwilds-sync?label=download&color=3ddc97)](https://github.com/AndorManu/dragonwilds-sync/releases/latest)
+[![license](https://img.shields.io/badge/license-MIT-d9a441)](LICENSE)
+![python](https://img.shields.io/badge/python-3.12-blue)
+![platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 
-![Main screen](docs/screenshots/06_main_up_to_date.png)
+**Your world shouldn't need one PC.**
+
+In *RuneScape: Dragonwilds* a world lives on the computer of whoever created
+it. If that person isn't online, nobody else can play it. Dragonwilds Sync
+moves the world into a shared cloud folder instead, so **anyone in the group
+can host**: tonight you, tomorrow a friend, next week you alone for an hour.
+Whoever presses Play always gets the newest save, and their progress goes
+back to the group when they quit. No server, no subscription, nothing to
+keep running.
+
+Around that core: invite codes, live "who's playing", turn-passing with tray
+pings, conflict detection in both directions, automatic backups, one-click
+self-updates through the same folder, and a Characters page — all in a
+dark-fantasy launcher that fits the game.
+
+<p align="center">
+  <img src="docs/screenshots/06_main_up_to_date.png" width="30%" alt="Main screen: up to date, Play button, recent sessions">
+  <img src="docs/screenshots/08_main_friend_playing.png" width="30%" alt="A friend is playing right now">
+  <img src="docs/screenshots/17_conflict.png" width="30%" alt="Conflict warning before an overwrite">
+</p>
 
 ## Download
 
@@ -14,8 +33,10 @@ Grab `DragonwildsSync.exe` from the **[latest release](https://github.com/AndorM
 One file, no install, no Python, no account. Windows only (the game is).
 
 SmartScreen will warn the first time because the exe isn't code-signed —
-**More info → Run anyway**. If you'd rather not trust a stranger's exe, the
-whole thing is Python: build it yourself in two commands (see below).
+**More info → Run anyway**. The exe on every release is built by
+[GitHub Actions](.github/workflows/release.yml) from the tagged source on a
+clean runner, not on anyone's laptop; and if you'd rather not trust it at
+all, the whole thing is Python — build it yourself in two commands (see below).
 
 ## How it works
 
@@ -138,6 +159,22 @@ Per-user data lives in `%APPDATA%\DragonwildsSync\` (config, per-world state,
 logs, safety backups). v1.0 configs migrate automatically; the originals are
 kept as `config.v1.bak` / `state.v1.bak`.
 
+## Security notes, honestly
+
+- **Nothing leaves your PC except into the shared folder you chose.** No
+  telemetry, no accounts, no calls to any server of mine (there isn't one).
+  Webhooks and Discord presence are off unless you turn them on.
+- **The shared folder is the trust boundary.** Anyone who can write to it can
+  change the world save, and — because updates travel through the same
+  folder — can publish an app update that everyone else's app will offer to
+  install. Only share the folder with people you'd hand your save to anyway.
+  The update bar always asks; it never auto-installs.
+- **The exe isn't code-signed** (certificates cost money; this is a hobby
+  project). Verify a release by building it yourself, or compare the exe's
+  SHA-256 with the one printed in the GitHub Actions log of that release.
+- **Save files are only ever replaced after a backup is written**, and the
+  game's own `.backup` twin of each character file is never touched.
+
 ## Troubleshooting
 
 - **“Shared folder not found”** — your cloud client isn't running or the
@@ -152,6 +189,14 @@ kept as `config.v1.bak` / `state.v1.bak`.
 - **App won't quit** — it lives in the tray by default so it can ping you;
   right-click the tray icon → Quit, or turn it off in Settings.
 - Logs: **Settings → Open log folder**.
+
+## Contributing
+
+Issues and pull requests are welcome. Keep the sync core (`app/core/sync.py`)
+boring: any change there needs a test in `tests/test_sync.py`, and the
+protocol must stay readable by older versions (the manifest is plain JSON on
+purpose). Run `python -m pytest tests` before opening a PR — CI runs the same
+suite on Windows and Linux.
 
 ## Credits & license
 
