@@ -4,3 +4,6 @@ dist/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# grimoire screenshots stay out of the public tree
+docs/screenshots/22*.png
