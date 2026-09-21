@@ -25,7 +25,7 @@ def enrich(path: Path, recipes=(), spells=(), bitmap=None, mounts=()):
 
 
 def test_extract_and_counts(tmp_path):
-    path = make_character(tmp_path, "Negrito")
+    path = make_character(tmp_path, "Ashvale")
     enrich(path, recipes=["r1", "r2", "r3"], spells=["s1"], bitmap=0b10111)
     data = json.loads(path.read_text(encoding="utf-8"))
     knowledge = characters.extract_knowledge(data)

@@ -68,7 +68,7 @@ def seed_world():
          "portrait": "male_A_01|SkinTone3|Preset2|Color2|M_B_Preset2|Color1"},
         {"version": 13, "editor": "Andor", "timestamp": ts(7),
          "note": "Built the gatehouse, found the swamp cave", "duration_s": 4520,
-         "character": "Negrito",
+         "character": "Ashvale",
          "portrait": "male_A_01|SkinTone1|Preset7|Color8|M_D_Preset4|Color2"},
         {"version": 14, "editor": "Elise", "timestamp": ts(1.8), "duration_s": 6300,
          "character": "Sylwen", "color": "#5EA2EF",
@@ -230,18 +230,18 @@ def main():
     _sys.path.insert(0, str(ROOT / "tests"))
     from test_characters import make_character
     chars_dir = scratch / "SaveCharacters"
-    make_character(chars_dir, "Negrito")
-    make_character(chars_dir, "Minblyat")
+    make_character(chars_dir, "Ashvale")
+    make_character(chars_dir, "Wrenholt")
     controller2.cfg["characters_dir"] = str(chars_dir)
 
-    # give Negrito a believable real-item bag so the demo reads naturally
+    # give Ashvale a believable real-item bag so the demo reads naturally
     from app.core import items as _items
     _sample = _items.search(min_rank=0)
     _picks = {}
     for _r in _sample:                       # a spread across rarities
         _picks.setdefault(_r["rank"], _r)
-    _neg = chars_dir / "Negrito.json"
-    _data = json.loads(_neg.read_text(encoding="utf-8"))
+    _ash = chars_dir / "Ashvale.json"
+    _data = json.loads(_ash.read_text(encoding="utf-8"))
     _inv = {"MaxSlotIndex": 30}
     for _i, _row in enumerate(list(_picks.values()) * 3):
         _slot = {"GUID": f"g{_i}", "ItemData": _row["id"]}
@@ -251,14 +251,14 @@ def main():
             _slot["Durability"] = 300 + _i * 90
         _inv[str(_i)] = _slot
     _data["GameProgress"]["Inventory"] = _inv
-    _neg.write_text(json.dumps(_data, indent="\t"), encoding="utf-8")
+    _ash.write_text(json.dumps(_data, indent="\t"), encoding="utf-8")
     window2._open_characters()
     shoot(window2, "21_characters")
 
     # the grimoire (opened the way anyone opens it: through the eye)
     window2._open_grimoire()
     shoot(window2, "22_grimoire")
-    window2.grimoire_page.char_combo.setCurrentText("Negrito")
+    window2.grimoire_page.char_combo.setCurrentText("Ashvale")
     QTest.qWait(60)
     window2.grimoire_page._switch_tab(1)
     shoot(window2, "22b_grimoire_bag")

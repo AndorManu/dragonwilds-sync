@@ -16,7 +16,7 @@ SKILL_A = "4zYUGF5u_0KbMLkWJmmBbQ"
 SKILL_B = "Wf3i7Ha-B06DH719j1vtBw"
 
 
-def make_character(folder: Path, name="Negrito", backup_value=1675531120) -> Path:
+def make_character(folder: Path, name="Ashvale", backup_value=1675531120) -> Path:
     data = {
         "Version": 75,
         "meta_data": {
@@ -72,7 +72,7 @@ def make_character(folder: Path, name="Negrito", backup_value=1675531120) -> Pat
 def test_parse_character(tmp_path):
     path = make_character(tmp_path)
     info = characters.parse_character(path)
-    assert info.name == "Negrito"
+    assert info.name == "Ashvale"
     assert info.playtime_s == pytest.approx(13336.56)
     assert info.health == pytest.approx(122.5)
     assert info.total_xp == 5636 + 4433
@@ -83,12 +83,12 @@ def test_parse_character(tmp_path):
 
 
 def test_list_characters_sorted_and_weird_names(tmp_path):
-    make_character(tmp_path, "Negrito")
-    weird = make_character(tmp_path, "1⁧⁧Minblyat")  # real-world case
+    make_character(tmp_path, "Ashvale")
+    weird = make_character(tmp_path, "1⁧⁧Wrenholt")  # real-world case
     assert weird.exists()
     infos = characters.list_characters(tmp_path)
     assert len(infos) == 2
-    assert {i.name for i in infos} == {"Negrito", "1⁧⁧Minblyat"}
+    assert {i.name for i in infos} == {"Ashvale", "1⁧⁧Wrenholt"}
 
 
 def test_portrait_descriptor_compact(tmp_path):
@@ -315,13 +315,13 @@ def test_swap_leaves_backup_field_and_twin_untouched(tmp_path):
     by = _catalog_ids()
     path = make_character(tmp_path, backup_value=424242)
     _put_item(path, "0", by["Bronze Dagger"], Durability=40)
-    twin_before = (tmp_path / "Negrito.json.backup").read_text(encoding="utf-8")
+    twin_before = (tmp_path / "Ashvale.json.backup").read_text(encoding="utf-8")
 
     characters.apply_edits(path, EditPlan(item_swaps={"0": by["Iron Dagger"]}),
                            tmp_path / "bk")
     after = json.loads(path.read_text(encoding="utf-8"))
     assert after["Backup"] == 424242
-    assert (tmp_path / "Negrito.json.backup").read_text(encoding="utf-8") == twin_before
+    assert (tmp_path / "Ashvale.json.backup").read_text(encoding="utf-8") == twin_before
 
 
 def test_item_count_clamped_to_max_stack(tmp_path):
