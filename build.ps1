@@ -18,7 +18,11 @@ Write-Host "Regenerating icon..."
 .\.venv\Scripts\python.exe tools\generate_icon.py
 
 Write-Host "Building DragonwildsSync.exe..."
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm DragonwildsSync.spec
+# PyInstaller writes its progress log to stderr; don't let PowerShell treat that as a failure.
+$ErrorActionPreference = "Continue"
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm DragonwildsSync.spec 2>&1 | Out-Host
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed." }
+$ErrorActionPreference = "Stop"
 
 Write-Host ""
 Write-Host "Done -> dist\DragonwildsSync.exe"
