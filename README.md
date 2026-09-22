@@ -21,6 +21,23 @@ pings, conflict detection in both directions, automatic backups, one-click
 self-updates through the same folder, and a Characters page — all in a
 dark-fantasy launcher that fits the game.
 
+### Isn't this what dedicated servers are for?
+
+Yes, if your group plays together often enough to justify one. A dedicated
+server needs a machine running 24/7 (yours, or ~€5–15/month rented) and
+someone to keep it updated in step with the game. Dragonwilds Sync is for the
+other kind of group: three to five friends who play a couple of evenings a
+week, rarely all at once, and don't want a bill or a box to maintain. Nothing
+runs when nobody's playing; the world is just files in a folder you already
+have. Steam Cloud doesn't cover this either — it syncs *your* saves between
+*your* PCs, not between friends.
+
+Built against the early-access saves; the 1.0 release (Sept 2026) kept the
+same save layout, so nothing needs migrating. If your version moved something,
+[open an issue](https://github.com/AndorManu/dragonwilds-sync/issues) with the
+log from *Settings → Open log folder*. Windows/Steam only — console saves
+can't be reached from the file system.
+
 <p align="center">
   <img src="docs/screenshots/06_main_up_to_date.png" width="30%" alt="Main screen: up to date, Play button, recent sessions">
   <img src="docs/screenshots/08_main_friend_playing.png" width="30%" alt="A friend is playing right now">
