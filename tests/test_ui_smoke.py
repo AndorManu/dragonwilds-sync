@@ -169,7 +169,8 @@ def test_reports_on_by_default_with_a_random_id(qapp, sandbox):
         "active_world": "w_1",
     }))
     c, win = make_window()
-    assert c.cfg["telemetry"] is True and len(c.cfg["install_id"]) == 32
+    from app.core import telemetry
+    assert telemetry.is_on(c.cfg) and len(c.cfg["install_id"]) == 32
     assert not win.report_overlay.isVisible()        # nothing pops up
     win.close()
 

@@ -6,7 +6,8 @@ can see which games work for real groups and fix the ones that don't.
 
 ## Turning reports off
 
-Reports are on by default. Untick **Settings → Send anonymous reports** and
+Reports are on by default in the GitHub download (`WorldSync.exe`) and off by
+default in the Nexus Mods download (`WorldSync-Nexus.exe`). Untick **Settings → Send anonymous reports** and
 nothing more is sent. **Settings → Delete my reports** erases everything your
 PC has sent so far and gives it a fresh random id.
 

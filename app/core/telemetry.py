@@ -62,10 +62,20 @@ def available() -> bool:
     return bool(ENDPOINT and API_KEY)
 
 
+def is_on(cfg: dict | None) -> bool:
+    """The player's choice, or this build's default if they never touched it.
+
+    The GitHub build defaults to on, the Nexus build to off (app/channel.py).
+    """
+    value = (cfg or {}).get("telemetry")
+    if value is None:
+        from .. import channel
+        return channel.REPORTS_ON_BY_DEFAULT
+    return bool(value)
+
+
 def enabled(cfg: dict | None) -> bool:
-    """On unless the player switched it off (None = never touched = on)."""
-    cfg = cfg or {}
-    return available() and cfg.get("telemetry") is not False and bool(cfg.get("install_id"))
+    return available() and is_on(cfg) and bool((cfg or {}).get("install_id"))
 
 
 def ensure_id(cfg: dict) -> bool:

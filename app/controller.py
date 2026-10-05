@@ -85,7 +85,7 @@ class Controller(QObject):
             storage.save_config(self.cfg)
         # first-run reports need an id before a config exists; it moves into the
         # config when setup finishes
-        self._pre_cfg = {"telemetry": True}
+        self._pre_cfg = {"telemetry": None}
         new_install = False
         if self.cfg and telemetry.ensure_id(self.cfg):
             storage.save_config(self.cfg)

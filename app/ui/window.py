@@ -592,7 +592,8 @@ class MainWindow(QWidget):
         c = self.controller
         game_fields = global_fields.pop("_game", None)
         reports = global_fields.pop("_reports", None)
-        if reports is not None and bool(reports) != (c.cfg.get("telemetry") is not False):
+        from ..core import telemetry
+        if reports is not None and bool(reports) != telemetry.is_on(c.cfg):
             c.set_telemetry(bool(reports))
         if game_fields:
             c.update_game(game_fields["id"], game_fields["save_dir"], game_fields["exe_path"])

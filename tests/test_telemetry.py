@@ -126,3 +126,31 @@ def test_new_numbers_and_labels_pass_the_whitelist(backend):
                        cloud="google drive", world_name="Midgard")
     assert p["props"] == {"result": "pushed", "sync_ms": 812, "size_mb": 12.3, "files": 3,
                           "group_size": 4, "duration_min": 95, "cloud": "google drive"}
+
+
+def test_nexus_build_starts_with_reports_off(monkeypatch, backend):
+    from app import channel
+    cfg = {}
+    telemetry.ensure_id(cfg)
+    monkeypatch.setattr(channel, "REPORTS_ON_BY_DEFAULT", False)
+    assert not telemetry.is_on(cfg)
+    assert telemetry.send(cfg, "push", "valheim", "2.1.1") is None
+    cfg["telemetry"] = True                      # the player switched them on
+    assert telemetry.send(cfg, "push", "valheim", "2.1.1") is not None
+    monkeypatch.setattr(channel, "REPORTS_ON_BY_DEFAULT", True)
+    assert telemetry.is_on({})
+
+
+def test_set_channel_script_round_trips(tmp_path, monkeypatch):
+    import importlib.util
+    from pathlib import Path
+    src = Path(__file__).resolve().parent.parent / "tools" / "set_channel.py"
+    spec = importlib.util.spec_from_file_location("set_channel", src)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    fake = tmp_path / "channel.py"
+    fake.write_text('CHANNEL = "github"\n\nREPORTS_ON_BY_DEFAULT = CHANNEL != "nexus"\n')
+    monkeypatch.setattr(mod, "CHANNEL_FILE", fake)
+    monkeypatch.setattr(mod.sys, "argv", ["x", "nexus"])
+    mod.main()
+    assert 'CHANNEL = "nexus"' in fake.read_text()

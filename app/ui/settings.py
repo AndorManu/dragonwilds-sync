@@ -161,7 +161,7 @@ class SettingsPage(QWidget):
         form.addWidget(self.statuspage_check)
         self.chime_check = QCheckBox("A soft chime when the wilds open")
         form.addWidget(self.chime_check)
-        self.reports_check = QCheckBox("Send anonymous reports to help fix games (on by default)")
+        self.reports_check = QCheckBox("Send anonymous reports to help fix games")
         self.reports_check.setToolTip(
             "Which game, whether a share or pull worked, the app version. Never names, "
             "world names, folders or saves.")
@@ -284,7 +284,7 @@ class SettingsPage(QWidget):
         from ..core import telemetry
         self.reports_check.setVisible(telemetry.available())
         self.forget_btn_reports.setVisible(telemetry.available())
-        self.reports_check.setChecked(cfg.get("telemetry") is not False)
+        self.reports_check.setChecked(telemetry.is_on(cfg))
         self.discord_field.edit.setText(cfg.get("discord_app_id") or "")
 
         self._world_id = world["id"] if world else None

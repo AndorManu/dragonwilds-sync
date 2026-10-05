@@ -251,8 +251,11 @@ class OnboardingPage(QWidget):
         btn.clicked.connect(lambda: self._go(STEP_NAME))
         box.addWidget(btn, 0, Qt.AlignHCenter)
 
-        cap = QLabel("Free  ·  No account  ·  Your own cloud drive\n"
-                     "Sends anonymous reports to help fix games - switch off in Settings")
+        from .. import channel
+        reports = ("Sends anonymous reports to help fix games - switch off in Settings"
+                   if channel.REPORTS_ON_BY_DEFAULT else
+                   "Anonymous reports are off - switch them on in Settings to help fix games")
+        cap = QLabel("Free  ·  No account  ·  Your own cloud drive\n" + reports)
         cap.setAlignment(Qt.AlignHCenter)
         cap.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 11px;")
         box.addSpacing(12)

@@ -26,13 +26,21 @@ jobs:
           QT_QPA_PLATFORM: offscreen
       - run: python tools/generate_icon.py
       - run: python -m PyInstaller --noconfirm WorldSync.spec
+      - name: Nexus Mods build (anonymous reports start off)
+        run: |
+          python tools/set_channel.py nexus
+          $env:WORLDSYNC_EXE_NAME = "WorldSync-Nexus"
+          python -m PyInstaller --noconfirm WorldSync.spec
+          python tools/set_channel.py github
       - name: Print SHA-256 (compare against your download)
-        run: (Get-FileHash dist/WorldSync.exe -Algorithm SHA256).Hash
+        run: |
+          (Get-FileHash dist/WorldSync.exe -Algorithm SHA256).Hash
+          (Get-FileHash dist/WorldSync-Nexus.exe -Algorithm SHA256).Hash
       - name: Create the release if the tag is new, then attach the exe
         shell: bash
         run: |
           tag="${{ github.ref_name }}"
           gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "WorldSync ${tag#v}" --generate-notes
-          gh release upload "$tag" dist/WorldSync.exe --clobber
+          gh release upload "$tag" dist/WorldSync.exe dist/WorldSync-Nexus.exe --clobber
         env:
           GH_TOKEN: ${{ github.token }}

@@ -37,7 +37,7 @@ GLOBAL_DEFAULTS = {
     "characters_dir": None,        # None -> derived beside the save folder
     "travel_characters": [],       # character file stems that follow you across PCs
     "play_chime": True,
-    "telemetry": True,      # anonymous reports, on unless switched off in Settings
+    "telemetry": None,      # anonymous reports: None = this build's default (app/channel.py)
     "install_id": None,     # random id for reports, made on first start (core/telemetry.py)
     "feedback_asked": [],   # games we already asked "did it work?" about
     "shares_count": 0,      # successful shares on this PC, for the tip jar timing

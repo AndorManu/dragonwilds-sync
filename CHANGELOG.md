@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1 - 2026-10-05
+
+- A second download, `WorldSync-Nexus.exe`, for Nexus Mods: identical, except
+  anonymous reports start switched off (Nexus doesn't allow tools that send
+  data by default). Switch them on in Settings if you'd like to help.
+
 ## 2.1.0 - 2026-10-05
 
 **Find out what actually works.**

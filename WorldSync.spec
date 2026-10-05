@@ -1,4 +1,7 @@
 # PyInstaller build spec - produces a single dist/WorldSync.exe
+# (WORLDSYNC_EXE_NAME=WorldSync-Nexus after tools/set_channel.py nexus for the Nexus build)
+
+import os
 # Build with:  .\.venv\Scripts\python.exe -m PyInstaller --noconfirm WorldSync.spec
 
 a = Analysis(
@@ -37,7 +40,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="WorldSync",
+    name=os.environ.get("WORLDSYNC_EXE_NAME", "WorldSync"),
     icon="app/assets/icon.ico",
     debug=False,
     strip=False,
