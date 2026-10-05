@@ -18,6 +18,7 @@ CHANGELOG = [
         "A game library as the new home screen, with a picker that puts your "
         "installed Steam games first",
         "Every game has its own look, from Valheim's aurora to V Rising's blood moon",
+        "A step-by-step setup guide for every game (world menu → How to set up)",
         "Finds each game's save folder and lists its worlds by when you last played",
         "Folder-based worlds sync whole, including rotated autosaves",
         "Refuses to copy one game's world into another",

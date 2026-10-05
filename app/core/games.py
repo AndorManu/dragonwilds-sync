@@ -109,7 +109,8 @@ ENSHROUDED = GameProfile(
     name="Enshrouded",
     steam_app_id="1203620",
     process_names=("enshrouded.exe",),
-    save_roots=("{SAVEDGAMES}/Enshrouded",),
+    save_roots=("{SAVEDGAMES}/Enshrouded",
+                "{PROGRAMFILESX86}/Steam/userdata/*/1203620/remote"),
     discover=(Discover("*", r"^(?P<w>[0-9a-f]{8})$"),),
     patterns=("{world}", "{world}-*", "{world}_*"),
     mirror=True,
@@ -117,8 +118,8 @@ ENSHROUDED = GameProfile(
     world_hint="Enshrouded names world files with an 8 character code. "
                "Pick the one you played most recently.",
     caveats=(
-        "If you turned on Steam Cloud saves, Enshrouded keeps worlds under "
-        "Steam\\userdata instead. Point WorldSync there in the next step.",
+        "With Steam Cloud saves on, Enshrouded keeps worlds under Steam\\userdata. "
+        "WorldSync looks there as well; browse to it if nothing shows up.",
     ),
 )
 
@@ -207,7 +208,7 @@ GROUNDED = GameProfile(
     name="Grounded",
     steam_app_id="962130",
     process_names=("Maine-Win64-Shipping.exe", "Grounded.exe"),
-    save_roots=("{SAVEDGAMES}/Grounded/*", "{SAVEDGAMES}/Grounded"),
+    save_roots=("{SAVEDGAMES}/Grounded/[0-9]*", "{SAVEDGAMES}/Grounded"),
     discover=(Discover("*", r"^(?P<w>[^/.]+)$", dirs=True),),
     patterns=("{world}/**/*",),
     mirror=True,
@@ -275,6 +276,7 @@ def _tokens() -> dict[str, str]:
         "LOCALLOW": str(home / "AppData" / "LocalLow"),
         "SAVEDGAMES": str(home / "Saved Games"),
         "DOCUMENTS": str(home / "Documents"),
+        "PROGRAMFILESX86": os.environ.get("ProgramFiles(x86)") or "C:/Program Files (x86)",
     }
 
 
@@ -422,3 +424,124 @@ def is_valid_world_id(world_id: str) -> bool:
         return False
     parts = world_id.replace("\\", "/").split("/")
     return all(p and p not in (".", "..") for p in parts) and ":" not in world_id
+
+
+# -- setup guides ------------------------------------------------------------------
+# Shown in the app's per-game setup guide and in docs/GAMES.md. Written for the
+# person setting it up the first time: what to do in the game before WorldSync
+# can see the world, and what to tell the group.
+
+SETUP_STEPS: dict[str, tuple[str, ...]] = {
+    "dragonwilds": (
+        "Start Dragonwilds, create or load the world you want to share, then quit to desktop.",
+        "In WorldSync, pick that world by its name from the in-game world list.",
+        "Characters are yours: everyone keeps their own character file, only the world travels. "
+        "Turn on Character travel (world menu → Characters) to take yours between your own PCs.",
+    ),
+    "valheim": (
+        "Start Valheim, choose Start Game and select your world.",
+        "If the world is stored in Steam Cloud, use Manage Saves and Move to Local first, "
+        "otherwise WorldSync can't see it.",
+        "Quit to desktop, then pick the world by its name in WorldSync.",
+        "Characters stay on each player's PC, so everyone brings their own Viking.",
+        "Playing with mods? Everyone needs the same mods, the same as joining a normal server.",
+    ),
+    "enshrouded": (
+        "Start Enshrouded, load the world you want to share once, then quit to desktop.",
+        "Enshrouded names worlds with an 8 character code. WorldSync lists them with the most "
+        "recently played first, so the top one is usually the right one.",
+        "With Steam Cloud saves on, the worlds live under Steam\\userdata. WorldSync looks "
+        "there too; if it still finds nothing, browse to Steam\\userdata\\<number>\\1203620\\remote.",
+        "Characters are separate files, so every player keeps their own.",
+    ),
+    "palworld": (
+        "The person who created the co-op world starts Palworld, loads it, then quits to desktop.",
+        "Worlds are folders with a long code name. WorldSync lists them with the most recently "
+        "played first.",
+        "Know the host quirk: Palworld ties the original host's character to their PC. When a "
+        "friend hosts the shared world, the original host's character can look reset. Everyone "
+        "else keeps theirs. PalworldSaveTools can move a host character if you need it.",
+        "This is for the in-game co-op world, not a dedicated server.",
+    ),
+    "core_keeper": (
+        "Start Core Keeper, load the world, then quit to desktop.",
+        "Worlds are numbered by their slot on the world menu (slot 1 is file 0). Pick the slot "
+        "you play in.",
+        "Everyone in the group uses that same slot for this world. If a friend already has a "
+        "different world there, WorldSync backs it up before replacing it, but a free slot is "
+        "cleaner.",
+        "Characters are separate, so everyone keeps their own.",
+    ),
+    "sons_of_the_forest": (
+        "The host starts a Multiplayer game, saves at a shelter or tent, then quits to desktop.",
+        "Multiplayer saves are numbered folders. WorldSync lists them with the most recently "
+        "played first.",
+        "The host's own inventory and stats live inside the save, so whoever hosts the shared "
+        "world plays with that host inventory. Guests keep theirs.",
+    ),
+    "v_rising": (
+        "Start V Rising and host a Private Game, play a moment so it saves, then quit to desktop.",
+        "WorldSync shows the world by the server name you gave it.",
+        "Every vampire is stored per Steam account inside the world, so all friends keep their "
+        "own character whoever hosts. The game settings travel with the world too.",
+    ),
+    "grounded": (
+        "Use the Steam version. Game Pass saves sit in a protected folder WorldSync can't reach.",
+        "Start Grounded, load the world, then quit to desktop.",
+        "Each world is its own folder. WorldSync lists them with the most recently played first.",
+    ),
+    "raft": (
+        "Start Raft, load the world you want to share, then quit to desktop.",
+        "Not sure which folder it is? Load World in Raft has an Open Save Folder button.",
+        "Pick the world by its name in WorldSync.",
+    ),
+    "seven_days_to_die": (
+        "Start 7 Days to Die, continue the save you want to share, then quit to desktop.",
+        "Pick the save by its name. For a random-gen map, the generated map folder travels "
+        "with it automatically.",
+        "The first share can be a few hundred MB. Let your cloud drive finish uploading before "
+        "a friend presses Play.",
+        "Everyone needs the same game version (the same Steam beta branch, if you use one).",
+    ),
+}
+
+# Shown for every game, after the game's own steps.
+COMMON_STEPS: tuple[str, ...] = (
+    "Everyone in the group needs the game, a cloud drive app (Google Drive, Dropbox or "
+    "OneDrive) and WorldSync.",
+    "Always start the game with Play in WorldSync. It pulls the newest world first and shares "
+    "yours back when you close the game.",
+    "One person hosts at a time. Playing together still works the normal way: one person "
+    "hosts in-game and the others join; WorldSync makes sure that host has the latest world.",
+)
+
+_HUMAN_TOKENS = {
+    "{LOCALAPPDATA}": "%LOCALAPPDATA%",
+    "{APPDATA}": "%APPDATA%",
+    "{LOCALLOW}": "%USERPROFILE%\\AppData\\LocalLow",
+    "{SAVEDGAMES}": "%USERPROFILE%\\Saved Games",
+    "{USERPROFILE}": "%USERPROFILE%",
+    "{DOCUMENTS}": "%USERPROFILE%\\Documents",
+    "{PROGRAMFILESX86}": "C:\\Program Files (x86)",
+}
+
+
+def setup_steps(profile: GameProfile) -> tuple[str, ...]:
+    return SETUP_STEPS.get(profile.id, ())
+
+
+def human_save_path(template: str) -> str:
+    """'{LOCALLOW}/Pal/*' -> '%USERPROFILE%\\AppData\\LocalLow\\Pal\\<account>'."""
+    text = template
+    for token, human in _HUMAN_TOKENS.items():
+        text = text.replace(token, human)
+    parts = []
+    for part in text.split("/"):
+        if part in ("*", "[0-9]*"):
+            part = "<account number>"
+        elif part == "v*":          # V Rising's save-format folder
+            part = "v3"
+        elif "*" in part:
+            part = part.replace("*", "<number>")
+        parts.append(part)
+    return "\\".join(parts)

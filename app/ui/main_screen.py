@@ -189,6 +189,7 @@ class MainPage(QWidget):
     update_clicked = Signal()
     characters_clicked = Signal()
     saga_clicked = Signal()
+    guide_clicked = Signal()
     library_clicked = Signal()
 
     def __init__(self, parent=None):
@@ -372,6 +373,9 @@ class MainPage(QWidget):
             chars.triggered.connect(self.characters_clicked.emit)
         saga = menu.addAction(icons.icon("map", theme.TEXT_DIM, 14), "The Saga…")
         saga.triggered.connect(self.saga_clicked.emit)
+        guide = menu.addAction(icons.icon("book-open", theme.TEXT_DIM, 14),
+                               f"How to set up {self._game_name}…")
+        guide.triggered.connect(self.guide_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
         backups.triggered.connect(self.backups_clicked.emit)
         menu.exec(self.header.title_btn.mapToGlobal(

@@ -11,6 +11,7 @@
 - A game library is the new home screen. Adding a game opens a picker with
   the games installed through Steam at the top.
 - Every game has its own palette, typefaces and animated banner.
+- A step-by-step setup guide for every game, in the app and in docs/GAMES.md.
 - Setup finds each game's save folder and lists its worlds by when they were
   last played, with the game's known quirks shown before the first share.
 - Folder-based worlds sync as a whole, including nested files and autosaves

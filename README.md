@@ -37,6 +37,9 @@ running. Free and open source.
 | Raft | Beta | |
 | 7 Days to Die | Beta | A random-gen map travels with the save the first time (a few hundred MB). |
 
+Step-by-step setup for each game, and where its saves live: **[docs/GAMES.md](docs/GAMES.md)**
+(the same guide is in the app, under the world menu).
+
 **Beta** means the save layout comes from community guides and WorldSync's
 own tests, but hasn't had a full season of real groups yet. Every overwrite
 is backed up first, so a surprise costs you a restore, not a world. If a

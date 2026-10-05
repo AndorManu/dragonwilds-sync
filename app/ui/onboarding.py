@@ -61,6 +61,7 @@ class OnboardingPage(QWidget):
     finished = Signal(dict)
     cancelled = Signal()      # Back out of a game's flow
     name_chosen = Signal(str)  # first run: the name step is done, pick a game
+    guide_requested = Signal(str)  # game id: open that game's setup guide
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -127,6 +128,7 @@ class OnboardingPage(QWidget):
                                   f"You have the {word} on this PC (or will start it) - "
                                   f"set up the shared folder and invite the others.")
         self.world_title.setText(f"Where does your {word} live?")
+        self.choice_guide_btn.setText(f"How to set up {profile.short}")
         self.save_dir_field.label.setText(f"{name} save folder")
         self.save_dir_field.edit.setText(save_dir)
         found = games.default_save_dir(profile)
@@ -298,6 +300,12 @@ class OnboardingPage(QWidget):
             "A friend sent you a code from their app - paste it and you're in.")
         join.set_on_click(lambda: self._go(STEP_JOIN_CODE))
         content.addWidget(join)
+
+        self.choice_guide_btn = widgets.make_button("How to set up this game", "subtle",
+                                                    "book-open", height=30)
+        self.choice_guide_btn.clicked.connect(
+            lambda: self.guide_requested.emit(self.profile.id))
+        content.addWidget(self.choice_guide_btn, 0, Qt.AlignLeft)
         return page
 
     def _back_from_choice(self):
@@ -327,6 +335,11 @@ class OnboardingPage(QWidget):
             "font-size: 11.5px;")
         self.caveat_box.setVisible(False)
         content.addWidget(self.caveat_box)
+
+        guide_btn = widgets.make_button("Step-by-step setup guide", "subtle", "book-open",
+                                        height=30)
+        guide_btn.clicked.connect(lambda: self.guide_requested.emit(self.profile.id))
+        content.addWidget(guide_btn, 0, Qt.AlignLeft)
         self._continue_row(box, "Continue", self._submit_world)
         return page
 

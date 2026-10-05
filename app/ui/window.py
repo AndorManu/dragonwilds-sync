@@ -17,6 +17,7 @@ from .addgame_page import AddGamePage
 from .backups_page import BackupsPage
 from .characters_page import CharactersPage
 from .grimoire_page import GrimoirePage
+from .guide_page import GuidePage
 from .invite_page import InvitePage
 from .library_page import LibraryPage
 from .main_screen import MainPage
@@ -88,10 +89,13 @@ class MainWindow(QWidget):
         self.saga_page = SagaPage()
         self.library_page = LibraryPage()
         self.addgame_page = AddGamePage()
+        self.guide_page = GuidePage()
+        self._guide_return = None
         for p in (self.main_page, self.settings_page, self.onboarding_page,
                   self.invite_page, self.backups_page, self.about_page,
                   self.preflight_page, self.characters_page, self.grimoire_page,
-                  self.saga_page, self.library_page, self.addgame_page):
+                  self.saga_page, self.library_page, self.addgame_page,
+                  self.guide_page):
             self.pages.addWidget(p)
         self._backup_ctx = None
 
@@ -133,6 +137,11 @@ class MainWindow(QWidget):
         self.main_page.characters_clicked.connect(self._open_characters)
         self.main_page.saga_clicked.connect(self._open_saga)
         self.main_page.library_clicked.connect(self._go_library)
+        self.main_page.guide_clicked.connect(
+            lambda: self._open_guide(self.controller.active_game().id))
+        self.onboarding_page.guide_requested.connect(self._open_guide)
+        self.guide_page.back_requested.connect(
+            lambda: self._show_page(self._guide_return or self.main_page))
 
         # library & game picker
         self.library_page.game_opened.connect(self._open_game)
@@ -259,6 +268,12 @@ class MainWindow(QWidget):
         self._sync_world_header()
         self._show_page(self.main_page)
         c.refresh_status()
+
+    def _open_guide(self, game_id: str):
+        self._guide_return = self.pages.currentWidget()
+        save_dir = config.game_save_dir(self.controller.cfg or {}, game_id)
+        self.guide_page.load(games.get(game_id), save_dir)
+        self._show_page(self.guide_page)
 
     def _open_add_game(self, first_run=False):
         self._apply_theme("library")
