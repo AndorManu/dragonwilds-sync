@@ -188,7 +188,7 @@ def test_every_game_has_a_setup_guide():
     for g in games.ALL:
         steps = games.setup_steps(g)
         assert len(steps) >= 3, f"{g.id} needs a real setup guide"
-        assert all("—" not in s for s in steps)     # no em dashes in user-facing text
+        assert all(chr(0x2014) not in s for s in steps)     # no em dashes
     assert len(games.COMMON_STEPS) >= 3
 
 

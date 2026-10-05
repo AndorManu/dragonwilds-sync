@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0 - unreleased
+
+**Find out what actually works.**
+
+- Optional anonymous reports (asked once, off unless you say yes) and a
+  "did it work?" after each game's first share, so beta games can be fixed
+  and marked tested. Never names, world names, folders or saves.
+- One gentle tip-jar ask after your fifth share, with "Maybe later" and
+  "Don't ask again".
+- Reports go to a small database that only accepts new rows; nothing can be
+  read back with the key inside the app.
+
 ## 2.0.0 - 2026-10-05
 
 **Dragonwilds Sync is now WorldSync.**
@@ -12,11 +24,6 @@
   the games installed through Steam at the top.
 - Every game has its own palette, typefaces and animated banner.
 - A step-by-step setup guide for every game, in the app and in docs/GAMES.md.
-- Optional anonymous reports (asked once, off unless you say yes) and a
-  "did it work?" after each game's first share, so beta games can be fixed
-  and marked tested. Never names, world names, folders or saves.
-- A tip jar: a link in the library and About, and a single gentle ask after
-  your fifth share (with "Don't ask again").
 - Setup finds each game's save folder and lists its worlds by when they were
   last played, with the game's known quirks shown before the first share.
 - Folder-based worlds sync as a whole, including nested files and autosaves

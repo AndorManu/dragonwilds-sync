@@ -11,6 +11,11 @@ from . import icons, theme, widgets
 from .library_page import TIP_URL
 
 CHANGELOG = [
+    ("2.1.0", [
+        "Optional anonymous reports so new games can be fixed and marked tested",
+        "\"Did it work?\" after each game's first share",
+        "One gentle tip-jar ask after your fifth share",
+    ]),
     ("2.0.0", [
         "Dragonwilds Sync is now WorldSync: one app for every co-op world",
         "Ten games to start: Dragonwilds, Valheim, Enshrouded, Palworld, Core Keeper, "
@@ -19,7 +24,6 @@ CHANGELOG = [
         "installed Steam games first",
         "Every game has its own look, from Valheim's aurora to V Rising's blood moon",
         "A step-by-step setup guide for every game (world menu → How to set up)",
-        "Optional anonymous reports so new games can be fixed and marked tested",
         "Finds each game's save folder and lists its worlds by when you last played",
         "Folder-based worlds sync whole, including rotated autosaves",
         "Refuses to copy one game's world into another",
