@@ -11,12 +11,14 @@ from PySide6.QtWidgets import (QFrame, QGraphicsDropShadowEffect,
 
 from ..controller import Controller
 from ..core import backups as backups_core
-from ..core import config, preflight
+from ..core import config, games, preflight
 from .about_page import AboutPage
+from .addgame_page import AddGamePage
 from .backups_page import BackupsPage
 from .characters_page import CharactersPage
 from .grimoire_page import GrimoirePage
 from .invite_page import InvitePage
+from .library_page import LibraryPage
 from .main_screen import MainPage
 from .note_overlay import NoteOverlay
 from .onboarding import OnboardingPage
@@ -46,7 +48,11 @@ class MainWindow(QWidget):
                             | Qt.WindowMinimizeButtonHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFixedSize(WINDOW_W, WINDOW_H)
-        self.setWindowTitle("Dragonwilds Sync")
+        self.setWindowTitle("WorldSync")
+        self._onboarding_return = None
+        self._pending_name = ""
+        self._first_run = not controller.has_config
+        theme.apply_game(self._start_theme())
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(*([SHADOW_MARGIN] * 4))
@@ -80,10 +86,12 @@ class MainWindow(QWidget):
         self.characters_page = CharactersPage()
         self.grimoire_page = GrimoirePage()
         self.saga_page = SagaPage()
+        self.library_page = LibraryPage()
+        self.addgame_page = AddGamePage()
         for p in (self.main_page, self.settings_page, self.onboarding_page,
                   self.invite_page, self.backups_page, self.about_page,
                   self.preflight_page, self.characters_page, self.grimoire_page,
-                  self.saga_page):
+                  self.saga_page, self.library_page, self.addgame_page):
             self.pages.addWidget(p)
         self._backup_ctx = None
 
@@ -96,9 +104,11 @@ class MainWindow(QWidget):
         self._wire()
 
         if controller.has_config:
-            self._sync_world_header()
-            self._show_page(self.main_page)
-            controller.refresh_status()
+            view = (controller.cfg or {}).get("last_view")
+            if view in games.BY_ID and config.worlds_for_game(controller.cfg, view):
+                self._open_game(view)
+            else:
+                self._go_library()
         else:
             self.titlebar.settings_btn.hide()
             self.onboarding_page.start_fresh()
@@ -122,6 +132,15 @@ class MainWindow(QWidget):
         self.main_page.update_clicked.connect(self._apply_update)
         self.main_page.characters_clicked.connect(self._open_characters)
         self.main_page.saga_clicked.connect(self._open_saga)
+        self.main_page.library_clicked.connect(self._go_library)
+
+        # library & game picker
+        self.library_page.game_opened.connect(self._open_game)
+        self.library_page.add_game_clicked.connect(lambda: self._open_add_game())
+        self.library_page.join_clicked.connect(self._join_from_library)
+        self.addgame_page.game_chosen.connect(self._on_game_chosen)
+        self.addgame_page.back_requested.connect(self._addgame_back)
+        c.library_summary.connect(self.library_page.set_summary)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
         # (the grimoire deliberately has no menu entry - see _awaken_secret)
@@ -166,9 +185,10 @@ class MainWindow(QWidget):
 
         # onboarding / settings / sub-pages
         self.onboarding_page.finished.connect(self._finish_onboarding)
-        self.onboarding_page.cancelled.connect(lambda: self._show_page(self.main_page))
+        self.onboarding_page.cancelled.connect(self._onboarding_back)
+        self.onboarding_page.name_chosen.connect(self._on_name_chosen)
         self.settings_page.saved.connect(self._save_settings)
-        self.settings_page.cancelled.connect(lambda: self._show_page(self.main_page))
+        self.settings_page.cancelled.connect(self._settings_back)
         self.settings_page.remove_world_requested.connect(self._remove_world)
         self.settings_page.about_requested.connect(
             lambda: self._show_page(self.about_page))
@@ -192,8 +212,100 @@ class MainWindow(QWidget):
     # -- controller-driven bits ----------------------------------------------------
     def _sync_world_header(self):
         cfg = self.controller.cfg or {}
+        world = self.controller.active_world()
+        profile = config.world_game(world)
         self.main_page.set_player_name(cfg.get("player_name", ""))
-        self.main_page.set_worlds(config.worlds(cfg), cfg.get("active_world"))
+        self.main_page.set_game(profile.short, "characters" in profile.extras)
+        self.main_page.set_worlds(config.worlds_for_game(cfg, profile.id),
+                                  cfg.get("active_world"))
+
+    # -- library, games and themes -------------------------------------------------
+    def _start_theme(self) -> str:
+        cfg = self.controller.cfg or {}
+        view = cfg.get("last_view")
+        if self.controller.has_config and view in games.BY_ID \
+                and config.worlds_for_game(cfg, view):
+            return view
+        return "library"
+
+    def _apply_theme(self, theme_id: str):
+        if theme_id == theme.THEME_ID:
+            return
+        theme.apply_game(theme_id)
+        self.main_page.retheme()
+        self.library_page.retheme()
+        self.titlebar.retheme()
+
+    def _go_library(self):
+        c = self.controller
+        cfg = c.cfg or {}
+        self._apply_theme("library")
+        lib = config.library(cfg)
+        counts = {g.id: len(config.worlds_for_game(cfg, g.id)) for g in lib}
+        self.library_page.set_player(c.player_name, len(lib))
+        self.library_page.set_games(lib, counts)
+        c.set_last_view("library")
+        c.request_library_summary()
+        self._show_page(self.library_page)
+
+    def _open_game(self, game_id: str):
+        c = self.controller
+        if not config.worlds_for_game(c.cfg, game_id):
+            # in the library but no worlds (all forgotten): straight to its setup
+            self._start_game_flow(game_id, back_to=self.library_page)
+            return
+        c.open_game(game_id)
+        self._apply_theme(game_id)
+        self._sync_world_header()
+        self._show_page(self.main_page)
+        c.refresh_status()
+
+    def _open_add_game(self, first_run=False):
+        self._apply_theme("library")
+        self.addgame_page.open((self.controller.cfg or {}).get("library", []),
+                               first_run=first_run)
+        self._show_page(self.addgame_page)
+
+    def _addgame_back(self):
+        if self._first_run and not self.controller.has_config:
+            self.onboarding_page.start_fresh()
+            self.onboarding_page._go(1)          # back to the name step
+            self._show_page(self.onboarding_page)
+        else:
+            self._go_library()
+
+    def _on_name_chosen(self, name):
+        self._pending_name = name
+        self._open_add_game(first_run=True)
+
+    def _player_for_flow(self) -> str:
+        return self.controller.player_name or self._pending_name
+
+    def _start_game_flow(self, game_id, back_to=None):
+        profile = games.get(game_id)
+        self._onboarding_return = back_to or self.addgame_page
+        self._apply_theme(game_id)
+        save_dir = config.game_save_dir(self.controller.cfg or {}, game_id)
+        self.onboarding_page.start_game(profile, self._player_for_flow(), save_dir)
+        self._show_page(self.onboarding_page)
+
+    def _on_game_chosen(self, game_id):
+        self._start_game_flow(game_id, back_to=self.addgame_page)
+
+    def _join_from_library(self):
+        self._onboarding_return = self.library_page
+        self.onboarding_page.start_join(self._player_for_flow())
+        self._show_page(self.onboarding_page)
+
+    def _onboarding_back(self):
+        target = self._onboarding_return or self.main_page
+        if target is self.library_page:
+            self._go_library()
+        elif target is self.addgame_page:
+            self._open_add_game(first_run=self._first_run and not self.controller.has_config)
+        else:
+            self._apply_theme(self.controller.active_game().id)
+            self._show_page(target)
 
     def _on_confirm_request(self, request):
         answer = self.confirm.ask(request["title"], request["body"],
@@ -330,61 +442,82 @@ class MainWindow(QWidget):
     # -- onboarding & worlds -----------------------------------------------------------
     def _finish_onboarding(self, payload):
         c = self.controller
+        game_id = payload.get("game") or games.DEFAULT_GAME
         world = config.make_world(payload["world_name"], payload["sync_dir"],
-                                  share_link=payload.get("share_link"))
+                                  share_link=payload.get("share_link"), game=game_id,
+                                  label=payload.get("world_label"))
+        shown = config.world_label(world)
         if c.has_config:
-            c.add_world(world)
+            c.add_world(world, save_dir=payload.get("local_save_dir"))
         else:
-            c.setup_first_config(payload["player_name"], payload["local_save_dir"], world)
+            c.setup_first_config(payload["player_name"] or self._pending_name,
+                                 payload.get("local_save_dir"), world)
+        self._first_run = False
         self.titlebar.settings_btn.show()
-        self._sync_world_header()
-        self._show_page(self.main_page)
+        self._open_game(game_id)
         if payload["kind"] == "join":
             self.toasts.show_toast("success",
-                                   f"Welcome to {payload['world_name']}. Hit Play - "
+                                   f"Welcome to {shown}. Hit Play - "
                                    f"the latest save comes to you.")
         else:
             self.toasts.show_toast("success",
-                                   f"{payload['world_name']} is ready. Invite your "
+                                   f"{shown} is ready. Invite your "
                                    f"friends from the button up top.")
 
     def _open_add_world(self):
-        self.onboarding_page.start_add_world(self.controller.player_name)
-        self._show_page(self.onboarding_page)
+        game_id = self.controller.active_game().id
+        self._start_game_flow(game_id, back_to=self.main_page)
 
     def _remove_world(self, world_id):
         world = config.world_by_id(self.controller.cfg, world_id)
-        name = world["world_name"] if world else "this world"
+        name = config.world_label(world) if world else "this world"
         if self.confirm.ask(
                 f"Forget {name}?",
                 "This only removes it from the app on this PC. The shared folder, "
                 "the saves, and your friends' setups are untouched - you can "
                 "rejoin with an invite code any time.",
                 danger_label="Forget world", safe_label="Keep it"):
+            game_id = config.world_game(world).id
             self.controller.remove_world(world_id)
-            self._sync_world_header()
-            self._show_page(self.main_page)
             if not self.controller.has_config:
-                self.titlebar.settings_btn.hide()
-                self.onboarding_page.start_fresh()
-                self._show_page(self.onboarding_page)
+                self.controller.remove_game(game_id)
+                self._go_library()
+            elif config.worlds_for_game(self.controller.cfg, game_id):
+                self._open_game(game_id)
+            else:
+                self.controller.remove_game(game_id)
+                self._go_library()
 
     # -- settings ------------------------------------------------------------------------
     def _open_settings(self):
         if self.pages.currentWidget() is self.onboarding_page \
                 and not self.controller.has_config:
             return
+        here = self.pages.currentWidget()
+        if here in (self.library_page, self.addgame_page):
+            self._settings_return = self.library_page
+        elif here is not self.settings_page:
+            self._settings_return = self.main_page
         self.settings_page.load(self.controller.cfg, self.controller.active_world())
         self._show_page(self.settings_page)
 
+    def _settings_back(self):
+        if getattr(self, "_settings_return", None) is self.library_page:
+            self._go_library()
+        else:
+            self._show_page(self.main_page)
+
     def _save_settings(self, global_fields, world_fields):
         c = self.controller
+        game_fields = global_fields.pop("_game", None)
+        if game_fields:
+            c.update_game(game_fields["id"], game_fields["save_dir"], game_fields["exe_path"])
         c.update_globals(global_fields)
         if world_fields:
             wid = world_fields.pop("id")
             c.update_world(wid, world_fields)
         self._sync_world_header()
-        self._show_page(self.main_page)
+        self._settings_back()
         self.toasts.show_toast("success", "Settings saved.")
         c.refresh_status()
 
@@ -411,7 +544,9 @@ class MainWindow(QWidget):
     def _awaken_secret(self):
         """The eye is the only door. No menu entry, no trace - five quick
         clicks on the titlebar mark, every time."""
-        if not self.controller.has_config:
+        if not self.controller.has_config or not self.controller.is_dragonwilds():
+            return
+        if self.pages.currentWidget() is not self.main_page:
             return
         self._open_grimoire()
 
@@ -576,10 +711,13 @@ class MainWindow(QWidget):
         world = self.controller.active_world()
         if not world:
             return
+        flat = config.effective_cfg(self.controller.cfg, world)
         self._backup_ctx = {
             "kind": "world",
-            "title": world["world_name"],
-            "save_dir": self.controller.cfg["local_save_dir"],
+            "title": config.world_label(world),
+            "save_dir": flat["local_save_dir"],
+            "patterns": flat["patterns"],
+            "mirror": flat["mirror"],
             "match": world["world_name"],
             "root": config.backup_root_for(world["id"]),
             "back_page": self.main_page,
@@ -622,7 +760,8 @@ class MainWindow(QWidget):
         def worker():
             try:
                 count = backups_core.restore_backup(
-                    info.path, ctx["save_dir"], ctx["match"], ctx["root"])
+                    info.path, ctx["save_dir"], ctx["match"], ctx["root"],
+                    patterns=ctx.get("patterns"), mirror=ctx.get("mirror", False))
                 if count:
                     self.controller.toast.emit(
                         "success", "Backup restored to this PC."
@@ -714,7 +853,7 @@ class MainWindow(QWidget):
         if self.controller.phase in ("waiting", "ingame", "pushing"):
             stay = not self.confirm.ask(
                 "The game is still running",
-                "If you quit Dragonwilds Sync now, your progress won't be shared "
+                "If you quit WorldSync now, your progress won't be shared "
                 "automatically when you finish playing.\n\n"
                 "You can always share it later with “Save my progress now”.",
                 danger_label="Quit anyway", safe_label="Stay open")

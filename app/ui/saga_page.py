@@ -74,7 +74,7 @@ class SagaPage(QWidget):
         root.addWidget(card, 1)
 
     def load(self, world, manifest, stats, all_time, me=""):
-        name = world["world_name"] if world else "-"
+        name = (world.get("label") or world["world_name"]) if world else "-"
         self.title.setText(f"The Saga of {name}")
         history = (manifest or {}).get("history", [])
         scope = "all time" if all_time else f"the last {len(history)} sessions"

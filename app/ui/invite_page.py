@@ -119,7 +119,7 @@ class InvitePage(QWidget):
 
     def load(self, world: dict):
         self._world = world
-        self.title.setText(f"Invite friends - {world['world_name']}")
+        self.title.setText(f"Invite friends - {world.get('label') or world['world_name']}")
         self.link_field.edit.setText(world.get("share_link") or "")
         self.link_field.clear_error()
         self.code_box.setVisible(False)
@@ -140,7 +140,9 @@ class InvitePage(QWidget):
             self.share_link_saved.emit(self._world["id"], link)
             self._world["share_link"] = link
         folder_name = Path(self._world["sync_dir"]).name
-        code = invite.encode(self._world["world_name"], folder_name, link or None)
+        code = invite.encode(self._world["world_name"], folder_name, link or None,
+                             game=self._world.get("game", "dragonwilds"),
+                             label=self._world.get("label"))
         self.code_box.setPlainText(code)
         self.code_box.setVisible(True)
         self.copy_btn.setVisible(True)

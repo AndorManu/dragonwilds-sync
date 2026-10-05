@@ -22,10 +22,10 @@ class TrayManager(QObject):
             return
 
         self.tray = QSystemTrayIcon(icon, self)
-        self.tray.setToolTip("Dragonwilds Sync")
+        self.tray.setToolTip("WorldSync")
 
         menu = QMenu()
-        open_action = menu.addAction("Open Dragonwilds Sync")
+        open_action = menu.addAction("Open WorldSync")
         open_action.triggered.connect(self.open_requested.emit)
         menu.addSeparator()
         quit_action = menu.addAction("Quit")
@@ -58,7 +58,7 @@ class TrayManager(QObject):
         if self.available:
             self.tray.showMessage(
                 "Update available",
-                f"Version {version} is ready. Open Dragonwilds Sync to update.",
+                f"Version {version} is ready. Open WorldSync to update.",
                 QSystemTrayIcon.Information, 7000)
 
     def show_minimized_tip(self):
@@ -66,6 +66,6 @@ class TrayManager(QObject):
             self._tip_shown = True
             self.tray.showMessage(
                 "Still keeping watch",
-                "Dragonwilds Sync lives in the tray now - you'll get a ping "
+                "WorldSync lives in the tray now - you'll get a ping "
                 "when a friend shares a save. Right-click the icon to quit.",
                 QSystemTrayIcon.Information, 6000)

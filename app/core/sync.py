@@ -102,6 +102,8 @@ def world_files(folder: Path, world_name: str, patterns=None) -> list[Path]:
         return []
     if patterns is None:
         return sorted(p for p in folder.glob(f"{world_name}*") if p.is_file())
+    if not world_name:
+        return []           # an empty id would turn "{world}/**/*" into the whole drive
     safe = _glob.escape(world_name)
     first = _glob.escape(world_name.split("/", 1)[0])
     found = {}
@@ -111,7 +113,7 @@ def world_files(folder: Path, world_name: str, patterns=None) -> list[Path]:
             for p in matches:
                 if p.is_file():
                     found[p.relative_to(folder).as_posix()] = p
-        except (OSError, ValueError):
+        except (OSError, ValueError, NotImplementedError):
             continue
     return [found[k] for k in sorted(found)]
 

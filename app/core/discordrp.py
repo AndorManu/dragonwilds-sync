@@ -76,13 +76,13 @@ class RichPresence:
         _op, length = struct.unpack("<II", header)
         return self._pipe.read(length)
 
-    def set_playing(self, world_name: str, character: str = ""):
+    def set_playing(self, world_name: str, character: str = "", game: str = ""):
         import time
         try:
             if not self._connect():
                 return
-            details = f"In the wilds of {world_name}"
-            state = f"as {character}" if character else "Shared world"
+            details = f"{game}: {world_name}" if game else f"In the wilds of {world_name}"
+            state = f"as {character}" if character else "Shared world via WorldSync"
             self._pipe.write(encode_frame(
                 OP_FRAME, activity_payload(os.getpid(), details, state,
                                            int(time.time()))))

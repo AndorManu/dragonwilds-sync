@@ -1,15 +1,17 @@
-"""Onboarding: welcome → name → create-or-join fork → done in under a minute.
+"""Onboarding: welcome → name, then per game: create-or-join → done.
 
-Also reused as the "Add a world" flow for already-configured users (the name
-step is skipped and Back from the fork returns to the main screen).
+The first run asks for a name and hands over to the game picker
+(`name_chosen`). Every game then goes through the same fork, worded for that
+game: create a world (find the save folder and the world in it, pick a
+shared folder) or join with an invite code. Joining straight from the
+library works too - the code says which game it's for.
 
 `finished` emits a payload:
-  {"kind": "create"|"join", "player_name", "local_save_dir",
+  {"kind": "create"|"join", "game", "player_name", "local_save_dir",
    "world_name", "sync_dir", "share_link"}
 """
 
 import getpass
-import os
 import webbrowser
 from pathlib import Path
 
@@ -17,7 +19,9 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPushButton, QStackedWidget,
                                QVBoxLayout, QWidget)
 
-from ..core import clouds, invite, paths
+import re
+
+from ..core import clouds, games, invite
 from . import icons, theme, widgets
 
 STEP_WELCOME, STEP_NAME, STEP_CHOICE = 0, 1, 2
@@ -49,15 +53,23 @@ class StepDots(QWidget):
             d.setStyleSheet(f"background: {color}; border-radius: 3px;")
 
 
+def _folder_safe(text: str) -> str:
+    return re.sub(r'[<>:"/\\|?*]', "-", text).strip(" .") or "World"
+
+
 class OnboardingPage(QWidget):
     finished = Signal(dict)
-    cancelled = Signal()      # only from "Add a world" mode
+    cancelled = Signal()      # Back out of a game's flow
+    name_chosen = Signal(str)  # first run: the name step is done, pick a game
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.add_mode = False
         self._existing_name = ""
         self._join_info = None
+        self.profile = games.DRAGONWILDS
+        self._default_save_dir = ""
+        self._join_only = False
         self._watch_timer = QTimer(self)
         self._watch_timer.setInterval(WATCH_INTERVAL_MS)
         self._watch_timer.timeout.connect(self._watch_tick)
@@ -81,12 +93,59 @@ class OnboardingPage(QWidget):
         self._watch_timer.stop()
         self._go(STEP_WELCOME)
 
-    def start_add_world(self, player_name: str):
-        """Skip straight to the fork; Back there cancels to the main screen."""
+    def start_game(self, profile, player_name: str, save_dir: str):
+        """The create-or-join fork for one game; Back there cancels."""
         self.add_mode = True
+        self._join_only = False
         self._existing_name = player_name
         self._watch_timer.stop()
+        self._set_profile(profile, save_dir)
         self._go(STEP_CHOICE)
+
+    def start_add_world(self, player_name: str, profile=None, save_dir: str = ""):
+        self.start_game(profile or self.profile, player_name, save_dir)
+
+    def start_join(self, player_name: str):
+        """Paste a code from the library; the code picks the game."""
+        self.add_mode = True
+        self._join_only = True
+        self._existing_name = player_name
+        self._watch_timer.stop()
+        self.code_field.edit.clear()
+        self.code_field.clear_error()
+        self._go(STEP_JOIN_CODE)
+
+    def _set_profile(self, profile, save_dir: str):
+        self.profile = profile
+        self._default_save_dir = save_dir
+        name = profile.name
+        word = profile.world_word
+        self.choice_title.setText(f"Your {name} {word}")
+        self.choice_sub.setText(f"Create a shared {word} for your group, or join one "
+                                f"a friend already shares.")
+        self.create_card.set_text(f"Share a {word}",
+                                  f"You have the {word} on this PC (or will start it) - "
+                                  f"set up the shared folder and invite the others.")
+        self.world_title.setText(f"Where does your {word} live?")
+        self.save_dir_field.label.setText(f"{name} save folder")
+        self.save_dir_field.edit.setText(save_dir)
+        found = games.default_save_dir(profile)
+        self.save_dir_field.note.setText(
+            "Found it automatically." if found and str(found) == save_dir else
+            "Not found yet - start the game once and make a world, or browse to it.")
+        self.save_dir_field.note.setVisible(True)
+        self.world_field.label.setText(f"{word.capitalize()} to sync")
+        self.world_field._hint = profile.world_hint
+        caveats = list(profile.caveats)
+        if not profile.verified:
+            caveats.insert(0, f"{name} support is new. It follows the save layout the "
+                              f"community documents - if something looks off, the "
+                              f"backups have you covered and an issue on GitHub helps "
+                              f"everyone.")
+        self.caveat_box.setText("\n\n".join(caveats))
+        self.caveat_box.setVisible(bool(caveats))
+        self.world_field.combo.setCurrentText("")
+        self._rescan_worlds()
 
     # -- shared scaffolding ---------------------------------------------------------
     def _step_scaffold(self, dot_index, title, subtitle, back_to=None):
@@ -119,6 +178,7 @@ class OnboardingPage(QWidget):
         box.addSpacing(6)
         box.addWidget(s)
         box.addSpacing(20)
+        page.title_label, page.sub_label = t, s
 
         content = QVBoxLayout()
         content.setSpacing(14)
@@ -153,19 +213,19 @@ class OnboardingPage(QWidget):
         box.addStretch(5)
 
         mark = QLabel()
-        mark.setPixmap(icons.mark_pixmap(60))
+        mark.setPixmap(icons.worldsync_mark(64))
         mark.setAlignment(Qt.AlignHCenter)
         box.addWidget(mark)
         box.addSpacing(18)
 
-        title = QLabel("Dragonwilds Sync")
+        title = QLabel("WorldSync")
         title.setAlignment(Qt.AlignHCenter)
         title.setStyleSheet(
             f"font-family: '{theme.deco_family()}'; font-size: 32px; font-weight: 700;"
             f"color: {theme.GOLD_TEXT}; letter-spacing: 1px;")
         box.addWidget(title)
 
-        tag = QLabel("One world, shared between friends.")
+        tag = QLabel("One world, every friend can host.")
         tag.setAlignment(Qt.AlignHCenter)
         tag.setStyleSheet(
             f"font-family: '{theme.display_family()}'; color: {theme.ACCENT};"
@@ -173,8 +233,9 @@ class OnboardingPage(QWidget):
         box.addSpacing(6)
         box.addWidget(tag)
 
-        body = QLabel("Take turns in the same Dragonwilds world without renting a server. "
-                      "Whoever plays next always picks up the newest save - automatically.")
+        body = QLabel("Take turns in the same co-op world without renting a server. "
+                      "Whoever plays next always picks up the newest save - "
+                      "Valheim, Palworld, V Rising, Dragonwilds and more.")
         body.setAlignment(Qt.AlignHCenter)
         body.setWordWrap(True)
         body.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
@@ -187,7 +248,7 @@ class OnboardingPage(QWidget):
         btn.clicked.connect(lambda: self._go(STEP_NAME))
         box.addWidget(btn, 0, Qt.AlignHCenter)
 
-        cap = QLabel("Takes under a minute  ·  No account needed")
+        cap = QLabel("Free  ·  No account  ·  Your own cloud drive")
         cap.setAlignment(Qt.AlignHCenter)
         cap.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 11px;")
         box.addSpacing(12)
@@ -214,7 +275,7 @@ class OnboardingPage(QWidget):
             self.name_field.set_error("Everyone needs a name - even a dragon.")
             return
         self.name_field.clear_error()
-        self._go(STEP_CHOICE)
+        self.name_chosen.emit(self.name_field.value())
 
     # -- step 2: create or join --------------------------------------------------------
     def _choice_step(self):
@@ -222,12 +283,14 @@ class OnboardingPage(QWidget):
             1, "How are you starting out?",
             "Create a world for your group, or join one a friend already shares.",
             back_to=self._back_from_choice)
+        self.choice_title, self.choice_sub = page.title_label, page.sub_label
 
         create = widgets.OptionCard(
             "sparkle", "Create a new world",
             "You have (or will make) the world save - set up the shared folder "
             "and invite the others.")
         create.set_on_click(lambda: self._go(STEP_CREATE_WORLD))
+        self.create_card = create
         content.addWidget(create)
 
         join = widgets.OptionCard(
@@ -238,40 +301,48 @@ class OnboardingPage(QWidget):
         return page
 
     def _back_from_choice(self):
-        if self.add_mode:
-            self.cancelled.emit()
-        else:
-            self._go(STEP_NAME)
+        self.cancelled.emit()
 
     # -- step 3: create - world --------------------------------------------------------
     def _world_step(self):
         page, box, content = self._step_scaffold(
             2, "Where does your world live?",
-            "This is the game's save folder on this PC. We've already found "
-            "the usual spot - just pick the world you all share.",
+            "This is the game's save folder on this PC. We look in the usual "
+            "spot first - just pick the one you all share.",
             back_to=lambda: self._go(STEP_CHOICE))
+        self.world_title = page.title_label
         self.save_dir_field = widgets.FormField(
-            "Dragonwilds save folder", str(paths.DEFAULT_SAVE_DIR), browse="dir")
+            "Save folder", "", browse="dir")
         self.save_dir_field.edit.editingFinished.connect(self._rescan_worlds)
         content.addWidget(self.save_dir_field)
 
         self.world_field = widgets.WorldField("World to sync", hint="")
         content.addWidget(self.world_field)
-        self._rescan_worlds()
+
+        self.caveat_box = QLabel("")
+        self.caveat_box.setWordWrap(True)
+        self.caveat_box.setStyleSheet(
+            "background: rgba(242,180,65,0.08); border: 1px solid rgba(242,180,65,0.28);"
+            f"border-radius: 10px; padding: 10px 12px; color: {theme.TEXT_DIM};"
+            "font-size: 11.5px;")
+        self.caveat_box.setVisible(False)
+        content.addWidget(self.caveat_box)
         self._continue_row(box, "Continue", self._submit_world)
         return page
 
     def _rescan_worlds(self):
-        names = self.world_field.refresh(self.save_dir_field.value())
+        word = self.profile.world_word
+        names = self.world_field.refresh(self.save_dir_field.value(), profile=self.profile)
         if names:
             self.world_field.note.setText(
-                f"Found {len(names)} world{'s' if len(names) != 1 else ''} in this folder.")
+                f"Found {len(names)} {word}{'s' if len(names) != 1 else ''}, most recently "
+                f"played first. {self.profile.world_hint}")
             self.world_field.note.setProperty("role", "hint")
             self.world_field.note.setVisible(True)
         else:
             self.world_field.note.setText(
-                "No saves found here yet - fine if the world lives on a friend's PC. "
-                "Type its name exactly as they see it.")
+                f"No {word}s found here yet - fine if it lives on a friend's PC. "
+                f"{self.profile.world_hint}")
             self.world_field.note.setVisible(True)
 
     def _submit_world(self):
@@ -280,10 +351,14 @@ class OnboardingPage(QWidget):
             self.save_dir_field.set_error("Point me at the game's save folder.")
             ok = False
         if not self.world_field.value():
-            self.world_field.set_error("Which world are you sharing?")
+            self.world_field.set_error(f"Which {self.profile.world_word} are you sharing?")
+            ok = False
+        elif not games.is_valid_world_id(self.world_field.value()):
+            self.world_field.set_error("That name has characters a folder can't hold.")
             ok = False
         if ok:
             self.world_field.clear_error()
+            self._suggest_shared_names()
             self._go(STEP_CREATE_SHARED)
 
     # -- step 4: create - shared folder ---------------------------------------------------
@@ -296,6 +371,7 @@ class OnboardingPage(QWidget):
             back_to=lambda: self._go(STEP_CREATE_WORLD))
 
         cloud_roots = clouds.detect_cloud_roots()
+        self._cloud_chips = []
         if cloud_roots:
             chip_row = QHBoxLayout()
             chip_row.setSpacing(8)
@@ -310,10 +386,9 @@ class OnboardingPage(QWidget):
                 chip = QPushButton(label)
                 chip.setProperty("variant", "chip")
                 chip.setCursor(Qt.PointingHandCursor)
-                suggested = root / "Dragonwilds Sync"
-                chip.setToolTip(str(suggested))
                 chip.clicked.connect(
-                    lambda _=False, s=suggested: self.shared_field.edit.setText(str(s)))
+                    lambda _=False, c=chip: self.shared_field.edit.setText(c.toolTip()))
+                self._cloud_chips.append((chip, root))
                 chip_row.addWidget(chip)
             chip_row.addStretch(1)
             content.addLayout(chip_row)
@@ -331,10 +406,17 @@ class OnboardingPage(QWidget):
         self.shared_field = widgets.FormField(
             "Shared folder", "", browse="dir",
             hint="We'll create it if it doesn't exist yet.",
-            placeholder=r"e.g. C:\Users\you\OneDrive\Dragonwilds Sync")
+            placeholder=r"e.g. C:\Users\you\OneDrive\WorldSync\Valheim - Midgard")
         content.addWidget(self.shared_field)
-        self._continue_row(box, "Enter the wilds", self._submit_create)
+        self._continue_row(box, "Start syncing", self._submit_create)
         return page
+
+    def _suggest_shared_names(self):
+        """Each world gets its own folder: WorldSync/<Game> - <world>."""
+        label = self.world_field.combo.currentText().split("  ·  ")[0]
+        name = _folder_safe(f"{self.profile.name.replace('RuneScape: ', '')} - {label}")
+        for chip, root in self._cloud_chips:
+            chip.setToolTip(str(root / "WorldSync" / name))
 
     def _submit_create(self):
         shared = self.shared_field.value()
@@ -347,8 +429,11 @@ class OnboardingPage(QWidget):
             self.shared_field.set_error("Couldn't create that folder - check the path.")
             return
         self.shared_field.clear_error()
+        label = self.world_field.combo.currentText().split("  ·  ")[0].strip()
         self.finished.emit({
             "kind": "create",
+            "game": self.profile.id,
+            "world_label": label if label and label != self.world_field.value() else None,
             "player_name": self._player_name(),
             "local_save_dir": self.save_dir_field.value(),
             "world_name": self.world_field.value(),
@@ -362,19 +447,29 @@ class OnboardingPage(QWidget):
             2, "Paste your invite code",
             "Your friend generates it in their app under “Invite friends” and "
             "sends it any way they like.",
-            back_to=lambda: self._go(STEP_CHOICE))
+            back_to=self._back_from_code)
         self.code_field = widgets.FormField(
-            "Invite code", "", placeholder="DWS1.…")
+            "Invite code", "", placeholder="WS1.…")
         content.addWidget(self.code_field)
         self._continue_row(box, "Continue", self._submit_code)
         self.code_field.edit.returnPressed.connect(self._submit_code)
         return page
+
+    def _back_from_code(self):
+        if self._join_only:
+            self.cancelled.emit()
+        else:
+            self._go(STEP_CHOICE)
 
     def _submit_code(self):
         try:
             self._join_info = invite.decode(self.code_field.value())
         except invite.InviteError as e:
             self.code_field.set_error(str(e))
+            return
+        if self._join_info["game"] not in games.BY_ID:
+            self.code_field.set_error("That invite is for a game this version of WorldSync "
+                                      "doesn't know yet - update the app and try again.")
             return
         self.code_field.clear_error()
         self._start_watching()
@@ -452,8 +547,10 @@ class OnboardingPage(QWidget):
         link_note = "" if info.get("share_link") else (
             "\nThis code has no link in it - ask your friend to share the "
             "folder with you in their cloud drive.")
+        game = games.get(info["game"]).name
         self.join_summary.setText(
-            f"World:  {info['world_name']}\nFolder:  {info['folder_name']}{link_note}")
+            f"Game:  {game}\nWorld:  {info.get('label') or info['world_name']}\n"
+            f"Folder:  {info['folder_name']}{link_note}")
         self.open_link_btn.setVisible(bool(info.get("share_link")))
         self.no_cloud_panel.setVisible(not clouds.any_cloud_present())
         self.watch_label.setText("Watching for the folder to appear…")
@@ -491,8 +588,10 @@ class OnboardingPage(QWidget):
         info = self._join_info
         self.finished.emit({
             "kind": "join",
+            "game": info["game"],
+            "world_label": info.get("label"),
             "player_name": self._player_name(),
-            "local_save_dir": str(paths.DEFAULT_SAVE_DIR),
+            "local_save_dir": None,     # the game's detected folder on this PC
             "world_name": info["world_name"],
             "sync_dir": str(folder),
             "share_link": info.get("share_link"),

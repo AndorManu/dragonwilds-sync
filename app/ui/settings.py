@@ -6,7 +6,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame, QHBoxLayout, QLabel,
                                QScrollArea, QVBoxLayout, QWidget)
 
-from ..core import autostart, paths, steam
+from ..core import autostart, config, games, paths, steam
 from . import icons, theme, widgets
 
 EMOJI_CHOICES = ["", "🐉", "⚔️", "🛡️", "🏹", "🔥", "🌿", "🍺", "👑", "🧙", "🪓", "🦴"]
@@ -84,8 +84,9 @@ class SettingsPage(QWidget):
         form.addWidget(flair_hint)
 
         # -- game ----------------------------------------------------------------
-        form.addWidget(self._section("GAME"))
-        self.save_dir_field = widgets.FormField("Dragonwilds save folder", browse="dir")
+        self.game_section = self._section("GAME")
+        form.addWidget(self.game_section)
+        self.save_dir_field = widgets.FormField("Save folder", browse="dir")
         self.save_dir_field.edit.editingFinished.connect(self._rescan)
         form.addWidget(self.save_dir_field)
 
@@ -108,7 +109,7 @@ class SettingsPage(QWidget):
         form.addWidget(self.world_section)
         self.world_field = widgets.WorldField(
             "World to sync",
-            hint="The save filename, without extension - must match on every PC.")
+            hint="Must be the same world on every PC.")
         form.addWidget(self.world_field)
         self.shared_field = widgets.FormField(
             "Shared folder", browse="dir",
@@ -237,6 +238,8 @@ class SettingsPage(QWidget):
         pm.fill(QColor(color_hex))
         return QIcon(pm)
 
+    _profile = games.DRAGONWILDS
+
     def load(self, cfg: dict, world: dict | None):
         cfg = cfg or {}
         self.name_field.edit.setText(cfg.get("player_name", ""))
@@ -246,8 +249,13 @@ class SettingsPage(QWidget):
         color = cfg.get("player_color", "")
         self.color_combo.setCurrentIndex(
             theme.AVATAR_COLORS.index(color) + 1 if color in theme.AVATAR_COLORS else 0)
-        self.save_dir_field.edit.setText(cfg.get("local_save_dir", str(paths.DEFAULT_SAVE_DIR)))
-        self.exe_field.edit.setText(cfg.get("exe_path") or "")
+        self._profile = config.world_game(world)
+        game = self._profile.name
+        self.game_section.setText(theme.caps(game))
+        self.save_dir_field.label.setText(f"{game} save folder")
+        self.save_dir_field.edit.setText(config.game_save_dir(cfg, self._profile.id))
+        self.exe_field.edit.setText(config.game_exe_path(cfg, self._profile.id) or "")
+        self.world_field.label.setText(f"{self._profile.world_word.capitalize()} to sync")
         self.detect_result.setText("")
         self.tray_check.setChecked(bool(cfg.get("close_to_tray", True)))
         self.startup_check.setChecked(autostart.is_enabled())
@@ -258,11 +266,13 @@ class SettingsPage(QWidget):
         self._world_id = world["id"] if world else None
         has_world = world is not None
         for w in (self.world_section, self.world_field, self.shared_field,
-                  self.webhook_field, self.forget_btn, self.accent_row):
+                  self.webhook_field, self.forget_btn):
             w.setVisible(has_world)
+        self.accent_row.setVisible(False)   # banners follow the game's theme since 2.0
         if world:
-            self.world_field.refresh(self.save_dir_field.value(), keep_current=False)
-            self.world_field.combo.setCurrentText(world.get("world_name", ""))
+            self.world_field.refresh(self.save_dir_field.value(), keep_current=False,
+                                     profile=self._profile)
+            self.world_field.set_value(world.get("world_name", ""))
             self.shared_field.edit.setText(world.get("sync_dir", ""))
             self.webhook_field.edit.setText(world.get("webhook_url") or "")
             accent = world.get("accent") or ""
@@ -276,10 +286,10 @@ class SettingsPage(QWidget):
         self.world_field.clear_error()
 
     def _rescan(self):
-        self.world_field.refresh(self.save_dir_field.value())
+        self.world_field.refresh(self.save_dir_field.value(), profile=self._profile)
 
     def _detect_exe(self):
-        found = steam.find_game_exe()
+        found = steam.find_game_exe(self._profile)
         if found:
             self.exe_field.edit.setText(str(found))
             self.detect_result.setText("Found it.")
@@ -327,8 +337,8 @@ class SettingsPage(QWidget):
             "player_name": self.name_field.value(),
             "player_emoji": emoji,
             "player_color": color,
-            "local_save_dir": self.save_dir_field.value(),
-            "exe_path": exe or None,
+            "_game": {"id": self._profile.id, "save_dir": self.save_dir_field.value(),
+                      "exe_path": exe or None},
             "close_to_tray": self.tray_check.isChecked(),
             "launch_on_startup": self.startup_check.isChecked(),
             "publish_status_page": self.statuspage_check.isChecked(),

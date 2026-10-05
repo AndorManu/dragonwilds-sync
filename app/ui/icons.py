@@ -1,6 +1,7 @@
 """Inline SVG icon set, rendered to pixmaps at the right DPI and color.
 
-Outline icons are from Feather (MIT); the dragon-eye mark is our own.
+Outline icons are from Feather (MIT); the dragon-eye and the WorldSync
+orbit mark are our own.
 """
 
 from PySide6.QtCore import QByteArray, QRectF, Qt
@@ -273,6 +274,27 @@ _ICONS = {
         '<path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>'
         '<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>'
     ),
+    "grid": (
+        '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>'
+        '<rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>'
+    ),
+    "search": '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    "heart": (
+        '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 '
+        '7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
+    ),
+    "orbit": (
+        '<circle cx="12" cy="12" r="5.2"/>'
+        '<ellipse cx="12" cy="12" rx="10" ry="3.6" transform="rotate(-22 12 12)"/>'
+        '<circle cx="20.2" cy="8.6" r="1.4" fill="{color}" stroke="none"/>'
+        '<circle cx="3.8" cy="15.4" r="1.4" fill="{color}" stroke="none"/>'
+    ),
+    "gamepad": (
+        '<path d="M6 8h12a4 4 0 0 1 3.9 4.9l-1 4.3a2.5 2.5 0 0 1-4.3 1.1L14.5 16h-5l-2.1 2.3'
+        'a2.5 2.5 0 0 1-4.3-1.1l-1-4.3A4 4 0 0 1 6 8z"/>'
+        '<line x1="7.5" y1="11" x2="7.5" y2="14"/><line x1="6" y1="12.5" x2="9" y2="12.5"/>'
+        '<circle cx="16" cy="11.5" r=".6" fill="{color}"/><circle cx="17.5" cy="13.5" r=".6" fill="{color}"/>'
+    ),
 }
 
 
@@ -297,6 +319,46 @@ MARK_SVG = """
   <circle cx="35" cy="25.5" r="2.2" fill="#EAFBF2" fill-opacity="0.9"/>
 </svg>
 """
+
+
+# WorldSync's own mark: a planet with two friends in orbit.
+WS_MARK_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="planet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9DB4FF"/>
+      <stop offset="100%" stop-color="#4E6FE8"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5CD6C9"/>
+      <stop offset="100%" stop-color="#F2B66B"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="14" fill="url(#planet)"/>
+  <path d="M22 26c4 2 14 2 20-1M21 34c6 3 16 3 22-1" stroke="#0B1030" stroke-opacity="0.35"
+        stroke-width="2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="32" cy="32" rx="27" ry="9.5" transform="rotate(-22 32 32)"
+           fill="none" stroke="url(#ring)" stroke-width="3.2"/>
+  <circle cx="54" cy="22.5" r="4.2" fill="#F2B66B"/>
+  <circle cx="10" cy="41.5" r="4.2" fill="#5CD6C9"/>
+</svg>
+"""
+
+
+def _render_svg(svg: str, size: int, dpr: float) -> QPixmap:
+    renderer = QSvgRenderer(QByteArray(svg.encode()))
+    pm = QPixmap(int(size * dpr), int(size * dpr))
+    pm.fill(Qt.transparent)
+    painter = QPainter(pm)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter, QRectF(0, 0, size * dpr, size * dpr))
+    painter.end()
+    pm.setDevicePixelRatio(dpr)
+    return pm
+
+
+def worldsync_mark(size: int, dpr: float = 2.0) -> QPixmap:
+    return _render_svg(WS_MARK_SVG, size, dpr)
 
 
 def mark_pixmap(size: int, dpr: float = 2.0) -> QPixmap:

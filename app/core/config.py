@@ -48,6 +48,7 @@ GLOBAL_DEFAULTS = {
 WORLD_DEFAULTS = {
     "id": None,
     "game": games.DEFAULT_GAME,
+    "label": None,          # friendly name when the id is a code (V Rising, Palworld)
     "world_name": "",
     "sync_dir": "",
     "share_link": None,
@@ -171,6 +172,13 @@ def active_world(cfg: dict) -> dict | None:
     if w is None and worlds(cfg):
         w = worlds(cfg)[0]
     return w
+
+
+def world_label(world: dict | None) -> str:
+    """What to call a world on screen: its in-game name if we know it."""
+    if not world:
+        return ""
+    return world.get("label") or world.get("world_name", "")
 
 
 def world_game(world: dict | None) -> games.GameProfile:

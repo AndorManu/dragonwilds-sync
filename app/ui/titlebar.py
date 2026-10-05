@@ -1,6 +1,7 @@
 """Custom titlebar for the frameless window: mark, wordmark, window controls.
 
-The dragon-eye mark keeps a secret: five quick clicks wake it.
+The mark follows the game: WorldSync's orbit, or the dragon eye in a
+Dragonwilds world - and the eye keeps a secret: five quick clicks wake it.
 """
 
 from PySide6.QtCore import QElapsedTimer, Qt, Signal
@@ -19,9 +20,13 @@ class SecretMark(QLabel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setPixmap(icons.pixmap("dragon", theme.ACCENT, 18))
+        self.retheme()
         self._clicks = 0
         self._timer = QElapsedTimer()
+
+    def retheme(self):
+        name = "dragon" if theme.THEME_ID == "dragonwilds" else "orbit"
+        self.setPixmap(icons.pixmap(name, theme.ACCENT, 18))
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:
@@ -49,11 +54,11 @@ class TitleBar(QFrame):
         row.setContentsMargins(16, 0, 10, 0)
         row.setSpacing(8)
 
-        mark = SecretMark()
-        mark.awakened.connect(self.secret_awakened.emit)
-        row.addWidget(mark)
+        self.mark = SecretMark()
+        self.mark.awakened.connect(self.secret_awakened.emit)
+        row.addWidget(self.mark)
 
-        title = QLabel("DRAGONWILDS SYNC")
+        title = QLabel("WORLDSYNC")
         title.setObjectName("TitleText")
         row.addWidget(title)
         row.addStretch(1)
@@ -70,6 +75,9 @@ class TitleBar(QFrame):
         close = widgets.icon_button("x", theme.TEXT_DIM, "titlebarClose", 16, "Close")
         close.clicked.connect(lambda: self.window().close())
         row.addWidget(close)
+
+    def retheme(self):
+        self.mark.retheme()
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:

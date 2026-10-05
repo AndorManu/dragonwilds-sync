@@ -74,6 +74,7 @@ class BannerHeader(QWidget):
     world_menu_requested = Signal()
     refresh_requested = Signal()
     invite_requested = Signal()
+    library_requested = Signal()
 
     def __init__(self, height=158, parent=None):
         super().__init__(parent)
@@ -88,6 +89,12 @@ class BannerHeader(QWidget):
 
         top = QHBoxLayout()
         top.setSpacing(6)
+        self.library_btn = QPushButton("")
+        self.library_btn.setObjectName("LibraryCrumb")
+        self.library_btn.setCursor(Qt.PointingHandCursor)
+        self.library_btn.setToolTip("Back to your game library")
+        self.library_btn.clicked.connect(self.library_requested.emit)
+        top.addWidget(self.library_btn)
         top.addStretch(1)
         self.refresh_btn = widgets.icon_button("refresh", theme.GOLD_TEXT,
                                                tooltip="Check again")
@@ -107,10 +114,7 @@ class BannerHeader(QWidget):
         self.title_btn.setStyleSheet(
             "QPushButton#WorldTitle { background: transparent; border: none;"
             "color: #FFFFFF; text-align: left; padding: 0; }")
-        f = QFont(theme.deco_family())
-        f.setPixelSize(29)
-        f.setWeight(QFont.Bold)
-        self.title_btn.setFont(f)
+        self._apply_title_font()
         self.title_btn.clicked.connect(self.world_menu_requested.emit)
         ov.addWidget(self.title_btn)
 
@@ -123,6 +127,30 @@ class BannerHeader(QWidget):
         pill_row.addStretch(1)
         ov.addSpacing(5)
         ov.addLayout(pill_row)
+
+    def _apply_title_font(self):
+        f = QFont(theme.deco_family())
+        f.setPixelSize(29)
+        f.setWeight(QFont.Bold)
+        self.title_btn.setFont(f)
+
+    def set_game(self, game_name: str):
+        """The crumb back to the library, labelled with the current game."""
+        self.library_btn.setText(f"‹  {theme.caps(game_name)}")
+        self.library_btn.setStyleSheet(
+            "QPushButton#LibraryCrumb { background: rgba(0,0,0,0.28);"
+            f"color: {theme.GOLD_TEXT}; border: 1px solid rgba(255,255,255,0.10);"
+            "border-radius: 13px; padding: 4px 12px 4px 10px;"
+            f"font-family: '{theme.display_family()}'; font-size: 11px; font-weight: 600;"
+            f"letter-spacing: {min(theme.TITLE_SPACING, 2)}px; }}"
+            "QPushButton#LibraryCrumb:hover { background: rgba(0,0,0,0.45);"
+            f"border-color: {theme.ACCENT}; }}")
+
+    def retheme(self):
+        self.banner.set_scene(theme.scene())
+        self._apply_title_font()
+        self.refresh_btn.setIcon(icons.icon("refresh", theme.GOLD_TEXT, 16))
+        self.invite_btn.setIcon(icons.icon("user-plus", theme.GOLD_TEXT, 16))
 
     def resizeEvent(self, e):
         self.banner.setGeometry(0, 0, self.width(), self.height())
@@ -161,6 +189,7 @@ class MainPage(QWidget):
     update_clicked = Signal()
     characters_clicked = Signal()
     saga_clicked = Signal()
+    library_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -169,6 +198,8 @@ class MainPage(QWidget):
         self._me = ""
         self._worlds = []
         self._active_id = None
+        self._game_name = "the game"
+        self._has_characters = True
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -179,6 +210,7 @@ class MainPage(QWidget):
         self.header.world_menu_requested.connect(self._open_world_menu)
         self.header.refresh_requested.connect(self.refresh_clicked.emit)
         self.header.invite_requested.connect(self.invite_clicked.emit)
+        self.header.library_requested.connect(self.library_clicked.emit)
         root.addWidget(self.header)
 
         body = QWidget()
@@ -190,20 +222,14 @@ class MainPage(QWidget):
         # -- update bar (hidden until an update is published) ---------------
         self.update_bar = QFrame()
         self.update_bar.setObjectName("UpdateBar")
-        self.update_bar.setStyleSheet(
-            f"#UpdateBar {{ background: rgba(232,162,61,0.12);"
-            f"border: 1px solid rgba(232,162,61,0.40); border-radius: 10px; }}")
         ub = QHBoxLayout(self.update_bar)
         ub.setContentsMargins(12, 8, 8, 8)
         ub.setSpacing(9)
-        ub_icon = QLabel()
-        ub_icon.setPixmap(icons.pixmap("rocket", theme.EMBER, 17))
-        ub_icon.setStyleSheet("background: transparent; border: none;")
-        ub.addWidget(ub_icon, 0, Qt.AlignVCenter)
+        self._ub_icon = QLabel()
+        self._ub_icon.setStyleSheet("background: transparent; border: none;")
+        ub.addWidget(self._ub_icon, 0, Qt.AlignVCenter)
         self.update_label = QLabel("")
         self.update_label.setWordWrap(True)
-        self.update_label.setStyleSheet(
-            f"background: transparent; border: none; color: {theme.GOLD_TEXT}; font-size: 12px;")
         ub.addWidget(self.update_label, 1)
         update_btn = widgets.make_button("Update", "primary", height=30)
         update_btn.clicked.connect(self.update_clicked.emit)
@@ -258,9 +284,9 @@ class MainPage(QWidget):
         body_box.addLayout(claim_row)
 
         # -- feed -----------------------------------------------------------
-        section = QLabel(FEED_TITLE)
-        section.setObjectName("SectionLabel")
-        body_box.addWidget(section)
+        self.feed_title = QLabel(FEED_TITLE)
+        self.feed_title.setObjectName("SectionLabel")
+        body_box.addWidget(self.feed_title)
 
         feed_card = QFrame()
         feed_card.setObjectName("Card")
@@ -293,24 +319,47 @@ class MainPage(QWidget):
         footer.addWidget(version)
         body_box.addLayout(footer)
 
+        self.retheme()
+
         self._clock = QTimer(self)
         self._clock.setInterval(60_000)
         self._clock.timeout.connect(self._rerender)
         self._clock.start()
+
+    # -- theme & game ---------------------------------------------------------
+    def retheme(self):
+        """Pick up the active game's theme for the parts styled in code."""
+        self.header.retheme()
+        e = theme.EMBER.lstrip("#")
+        r, g, b = int(e[0:2], 16), int(e[2:4], 16), int(e[4:6], 16)
+        self.update_bar.setStyleSheet(
+            f"#UpdateBar {{ background: rgba({r},{g},{b},0.12);"
+            f"border: 1px solid rgba({r},{g},{b},0.40); border-radius: 10px; }}")
+        self._ub_icon.setPixmap(icons.pixmap("rocket", theme.EMBER, 17))
+        self.update_label.setStyleSheet(
+            f"background: transparent; border: none; color: {theme.GOLD_TEXT}; font-size: 12px;")
+        self.play_btn.setIcon(icons.icon("play", theme.ON_ACCENT, 20))
+        self.play_btn.retheme()
+        self.feed_title.setText(theme.caps("Recent sessions"))
+
+    def set_game(self, name: str, has_characters: bool):
+        self._game_name = name
+        self._has_characters = has_characters
+        self.header.set_game(name)
 
     # -- world switcher ------------------------------------------------------
     def set_worlds(self, worlds, active_id):
         self._worlds = worlds
         self._active_id = active_id
         active = next((w for w in worlds if w["id"] == active_id), None)
-        name = active["world_name"] if active else "No world"
+        name = (active.get("label") or active["world_name"]) if active else "No world"
         accent = (active or {}).get("accent") or fmt.name_color(name)
         self.header.set_world(name, accent)
 
     def _open_world_menu(self):
         menu = QMenu(self)
         for w in self._worlds:
-            action = menu.addAction(w["world_name"])
+            action = menu.addAction(w.get("label") or w["world_name"])
             if w["id"] == self._active_id:
                 action.setIcon(icons.icon("check", theme.ACCENT, 14))
             action.triggered.connect(
@@ -318,8 +367,9 @@ class MainPage(QWidget):
         menu.addSeparator()
         add = menu.addAction(icons.icon("plus", theme.TEXT_DIM, 14), "Add a world…")
         add.triggered.connect(self.add_world_clicked.emit)
-        chars = menu.addAction(icons.icon("dragon", theme.TEXT_DIM, 14), "Characters…")
-        chars.triggered.connect(self.characters_clicked.emit)
+        if self._has_characters:
+            chars = menu.addAction(icons.icon("dragon", theme.TEXT_DIM, 14), "Characters…")
+            chars.triggered.connect(self.characters_clicked.emit)
         saga = menu.addAction(icons.icon("map", theme.TEXT_DIM, 14), "The Saga…")
         saga.triggered.connect(self.saga_clicked.emit)
         backups = menu.addAction(icons.icon("archive", theme.TEXT_DIM, 14), "Backups…")
@@ -376,7 +426,7 @@ class MainPage(QWidget):
             self.header.set_pill("Syncing", theme.EMBER)
         elif phase == "launching":
             self.hero_icon.show_spinner()
-            self._say("Launching Dragonwilds…", "Handing you over to Steam.")
+            self._say(f"Launching {self._game_name}…", "Handing you over to Steam.")
             self.header.set_pill("Launching", theme.EMBER)
         elif phase == "waiting":
             self.hero_icon.show_spinner()
@@ -385,7 +435,7 @@ class MainPage(QWidget):
             self.header.set_pill("Launching", theme.EMBER)
         elif phase == "ingame":
             self.hero_icon.show_pulse()
-            self._say("You're in the wilds",
+            self._say(f"You're in {self._game_name}",
                       "Your progress is shared automatically when you close the game.")
             self.header.set_pill("Playing", theme.ACCENT)
         elif phase == "pushing":
@@ -409,8 +459,8 @@ class MainPage(QWidget):
         if status.newer_app_needed:
             self.hero_icon.show_icon("alert", theme.AMBER)
             self._say("This world needs a newer app",
-                      "A friend shared a save with a newer version of Dragonwilds "
-                      "Sync. Update your app before playing so nothing gets scrambled.")
+                      "A friend shared a save with a newer version of WorldSync. "
+                      "Update your app before playing so nothing gets scrambled.")
             self.play_btn.setEnabled(False)
             self.save_btn.setEnabled(False)
             self.header.set_pill("Update needed", theme.AMBER)

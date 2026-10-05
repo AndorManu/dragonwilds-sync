@@ -61,6 +61,7 @@ class Controller(QObject):
     update_available = Signal(object, str)     # UpdateInfo, world_name
     nudge_received = Signal(str, str)           # from_player, world_name
     quit_for_update = Signal()
+    library_summary = Signal(object)            # {game_id: {...}} for the library cards
     # Worker threads must never touch widgets. Emitting a callable through
     # this signal marshals it onto the GUI thread (queued connection).
     run_on_ui = Signal(object)
@@ -193,6 +194,41 @@ class Controller(QObject):
         if candidates:
             self.set_active_world(candidates[-1]["id"])
 
+    def update_game(self, game_id, save_dir=None, exe_path=None):
+        if save_dir:
+            config.set_game_save_dir(self.cfg, game_id, save_dir)
+        if game_id == games.DRAGONWILDS.id:
+            self.cfg["exe_path"] = exe_path
+        else:
+            config.game_settings(self.cfg, game_id)["exe_path"] = exe_path
+        self._save_all()
+
+    def request_library_summary(self):
+        """Who's playing / who played last, per game - read off the thread."""
+        cfg = self.cfg or {}
+
+        def worker():
+            out = {}
+            for prof in config.library(cfg):
+                info = {"worlds": 0, "playing": None, "last": None}
+                for w in config.worlds_for_game(cfg, prof.id):
+                    info["worlds"] += 1
+                    try:
+                        who = presence.who_is_playing(w["sync_dir"])
+                        if who and who.get("player") != self.player_name:
+                            info["playing"] = who.get("player")
+                        manifest = sync.get_shared_manifest(w["sync_dir"])
+                        if manifest and manifest.get("timestamp"):
+                            last = (manifest.get("last_editor", "?"), manifest["timestamp"])
+                            if not info["last"] or last[1] > info["last"][1]:
+                                info["last"] = last
+                    except Exception:
+                        continue
+                out[prof.id] = info
+            self.library_summary.emit(out)
+
+        threading.Thread(target=worker, daemon=True, name="library").start()
+
     def set_active_world(self, world_id):
         if self.cfg.get("active_world") == world_id:
             return
@@ -244,7 +280,7 @@ class Controller(QObject):
             log.exception("Presence check failed")
         newer = bool(getattr(snapshot, "manifest_schema", None)
                      and snapshot.manifest_schema > MANIFEST_SCHEMA)
-        return WorldStatus(world_id=world["id"], world_name=world["world_name"],
+        return WorldStatus(world_id=world["id"], world_name=config.world_label(world),
                            snapshot=snapshot, playing=playing,
                            next_claim=next_claim, newer_app_needed=newer)
 
@@ -274,7 +310,7 @@ class Controller(QObject):
                 nudge = presence.read_nudge_for(w["sync_dir"], self.player_name)
                 if nudge:
                     presence.clear_nudge(w["sync_dir"])
-                    self.nudge_received.emit(nudge.get("player", "A friend"), w["world_name"])
+                    self.nudge_received.emit(nudge.get("player", "A friend"), config.world_label(w))
             except Exception:
                 pass
             if not manifest:
@@ -284,7 +320,7 @@ class Controller(QObject):
                 self._seen_versions[w["id"]] = manifest["version"]
                 editor = manifest.get("last_editor", "Someone")
                 if last and editor != self.player_name:
-                    self.friend_pushed.emit(w["world_name"], editor, manifest["version"])
+                    self.friend_pushed.emit(config.world_label(w), editor, manifest["version"])
         self.check_updates()
 
     # -- auto update ---------------------------------------------------------------
@@ -300,7 +336,7 @@ class Controller(QObject):
                     continue
                 if info:
                     self._update_offered = True
-                    self.update_available.emit(info, w["world_name"])
+                    self.update_available.emit(info, config.world_label(w))
                     return
 
         threading.Thread(target=worker, daemon=True, name="update-check").start()
@@ -331,7 +367,7 @@ class Controller(QObject):
                     return
                 update.publish(world["sync_dir"], __version__, update.current_exe(),
                                self.player_name, notes="")
-                self.toast.emit("success", f"Published v{__version__} to {world['world_name']}. "
+                self.toast.emit("success", f"Published v{__version__} to {config.world_label(world)}. "
                                            f"Friends will be offered the update automatically.")
             except Exception:
                 log.exception("publish_update failed")
@@ -398,7 +434,7 @@ class Controller(QObject):
             return
         try:
             manifest = sync.get_shared_manifest(world["sync_dir"])
-            statuspage.write(world["sync_dir"], world["world_name"], manifest,
+            statuspage.write(world["sync_dir"], config.world_label(world), manifest,
                              presence.who_is_playing(world["sync_dir"]),
                              presence.who_has_next(world["sync_dir"]))
         except Exception:
@@ -885,8 +921,9 @@ class Controller(QObject):
 
             self._set_phase("ingame")
             try:
-                self._rp.set_playing(world["world_name"],
-                                     recent.name if recent else "")
+                self._rp.set_playing(config.world_label(world),
+                                     recent.name if recent else "",
+                                     "" if dragonwilds else profile.name)
             except Exception:
                 log.debug("Rich presence failed", exc_info=True)
             game.wait_for_game_exit(proc)
@@ -972,7 +1009,7 @@ class Controller(QObject):
                                              world["world_name"], version,
                                              patterns=self._flat_cfg(world)["patterns"])
                 saga.bump_stats(world["sync_dir"], self.player_name, duration_s)
-                saga.write_saga(world["sync_dir"], world["world_name"],
+                saga.write_saga(world["sync_dir"], config.world_label(world),
                                 sync.get_shared_manifest(world["sync_dir"]))
             except Exception:
                 log.exception("Post-push extras failed")
@@ -983,7 +1020,7 @@ class Controller(QObject):
                 webhook.send_async(
                     world["webhook_url"],
                     f"{self._webhook_mark(world)} {self.player_name} shared v{version} of "
-                    f"{world['world_name']} ({config.world_game(world).name}).",
+                    f"{config.world_label(world)} ({config.world_game(world).name}).",
                     on_error=lambda e: self.toast.emit(
                         "warning", "Save shared fine, but the webhook didn't go "
                                    "through - check the URL in Settings."))
@@ -1069,7 +1106,7 @@ class Controller(QObject):
                     webhook.send_async(
                         world["webhook_url"],
                         f"{self._webhook_mark(world)} {self.player_name} passed the turn to {to_player} "
-                        f"in {world['world_name']}.")
+                        f"in {config.world_label(world)}.")
             except Exception:
                 log.exception("Nudge failed")
 
@@ -1120,7 +1157,7 @@ class Controller(QObject):
         def worker():
             try:
                 manifest = sync.get_shared_manifest(world["sync_dir"])
-                path = saga.write_saga(world["sync_dir"], world["world_name"], manifest)
+                path = saga.write_saga(world["sync_dir"], config.world_label(world), manifest)
                 if path:
                     import os as _os
                     _os.startfile(str(path))  # noqa: S606

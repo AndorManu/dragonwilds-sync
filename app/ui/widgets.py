@@ -260,12 +260,21 @@ class OptionCard(QWidget):
         col.setSpacing(3)
         t = QLabel(title)
         t.setStyleSheet("background: transparent; font-size: 14px; font-weight: 650;")
+        self._title, self._icon, self._icon_name = t, ic, icon_name
         d = QLabel(description)
+        self._desc = d
         d.setWordWrap(True)
         d.setStyleSheet(f"background: transparent; color: {theme.TEXT_DIM}; font-size: 12px;")
         col.addWidget(t)
         col.addWidget(d)
         row.addLayout(col, 1)
+
+    def set_text(self, title, description):
+        self._title.setText(title)
+        self._desc.setText(description)
+
+    def retheme(self):
+        self._icon.setPixmap(icons.pixmap(self._icon_name, theme.ACCENT, 22))
 
     # clicked is wired via mousePressEvent -> callback for simplicity
     def set_on_click(self, callback):
@@ -330,6 +339,7 @@ class PlayButton(QPushButton):
         f.setWeight(QFont.Black)
         f.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
         self.setFont(f)
+        self._fixed_glow = glow_color
         self._glow = QGraphicsDropShadowEffect(self)
         self._glow.setColor(QColor(glow_color or theme.ACCENT))
         self._glow.setOffset(0, 3)
@@ -348,6 +358,10 @@ class PlayButton(QPushButton):
         self._breathe.setDuration(2600)
         self._breathe.setLoopCount(-1)
         self._breathe.start()
+
+    def retheme(self):
+        if not self._fixed_glow:
+            self._glow.setColor(QColor(theme.ACCENT))
 
     def _flare(self, target):
         self._breathe.stop()
@@ -378,21 +392,28 @@ class PlayButton(QPushButton):
             self._breathe.stop()
 
 
-def scan_worlds(save_dir: str) -> list[str]:
-    """World names (= .sav stems) found in a save folder."""
-    folder = Path(save_dir) if save_dir else None
-    names: list[str] = []
-    if folder and folder.exists():
-        seen = set()
-        for p in sorted(folder.glob("*.sav")):
-            if p.stem not in seen:
-                seen.add(p.stem)
-                names.append(p.stem)
-    return names
+def scan_worlds(save_dir: str, profile=None) -> list:
+    """Worlds found in a save folder for `profile` (Dragonwilds by default),
+    most recently played first."""
+    from ..core import games
+    return games.discover_worlds(profile or games.DRAGONWILDS, save_dir) if save_dir else []
+
+
+def _world_display(found) -> str:
+    """'Castle Night  ·  2 h ago'. Long code-like ids are left out of the label."""
+    when = fmt.relative_time(found.modified) if found.modified else ""
+    label = found.label
+    if len(label) > 22 and " " not in label:      # Palworld-style 32-char codes
+        label = f"{label[:8]}…{label[-4:]}"
+    return f"{label}  ·  {when}" if when else label
 
 
 class WorldField(QWidget):
-    """Label + editable combo listing the worlds found in the save folder."""
+    """Label + editable combo listing the worlds found in the save folder.
+
+    Items show a friendly label and when the world was last played; value()
+    returns the world id the profile uses (folder name, file stem, slot).
+    """
 
     def __init__(self, label="World", value="", hint="", parent=None):
         super().__init__(parent)
@@ -400,9 +421,9 @@ class WorldField(QWidget):
         box = QVBoxLayout(self)
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(6)
-        lab = QLabel(label)
-        lab.setProperty("role", "fieldLabel")
-        box.addWidget(lab)
+        self.label = QLabel(label)
+        self.label.setProperty("role", "fieldLabel")
+        box.addWidget(self.label)
         self.combo = QComboBox()
         self.combo.setEditable(True)
         self.combo.setFixedHeight(38)
@@ -415,23 +436,36 @@ class WorldField(QWidget):
         self._hint = hint
         box.addWidget(self.note)
 
-    def refresh(self, save_dir: str, keep_current=True):
-        current = self.combo.currentText().strip()
-        names = scan_worlds(save_dir)
+    def refresh(self, save_dir: str, keep_current=True, profile=None):
+        current = self.value()
+        found = scan_worlds(save_dir, profile)
         self.combo.blockSignals(True)
         self.combo.clear()
-        self.combo.addItems(names)
+        for f in found:
+            self.combo.addItem(_world_display(f), f.id)
+        ids = [f.id for f in found]
         if keep_current and current:
-            self.combo.setCurrentText(current)
-        elif names:
-            self.combo.setCurrentText(names[0])
+            self.set_value(current)
+        elif found:
+            self.combo.setCurrentIndex(0)
         else:
             self.combo.setCurrentText("")
         self.combo.blockSignals(False)
-        return names
+        return ids
+
+    def set_value(self, world_id: str):
+        idx = self.combo.findData(world_id)
+        if idx >= 0:
+            self.combo.setCurrentIndex(idx)
+        else:
+            self.combo.setCurrentText(world_id)
 
     def value(self) -> str:
-        return self.combo.currentText().strip()
+        text = self.combo.currentText().strip()
+        idx = self.combo.findText(text)
+        if idx >= 0 and self.combo.itemData(idx):
+            return self.combo.itemData(idx)
+        return text
 
     def set_error(self, message):
         self.note.setText(message)
@@ -458,9 +492,9 @@ class FormField(QWidget):
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(6)
 
-        lab = QLabel(label)
-        lab.setProperty("role", "fieldLabel")
-        box.addWidget(lab)
+        self.label = QLabel(label)
+        self.label.setProperty("role", "fieldLabel")
+        box.addWidget(self.label)
 
         row = QHBoxLayout()
         row.setSpacing(8)

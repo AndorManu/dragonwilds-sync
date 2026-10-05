@@ -36,6 +36,15 @@ def humanize(ts: str) -> str:
     return f"{local.day} {local.strftime('%b')}"
 
 
+def relative_time(dt: datetime) -> str:
+    """The same wording as humanize(), for a local (naive) datetime."""
+    if dt is None:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.astimezone()
+    return humanize(dt.astimezone(timezone.utc).isoformat())
+
+
 def initials(name: str) -> str:
     parts = [p for p in (name or "?").split() if p]
     if not parts:

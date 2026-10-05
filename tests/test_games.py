@@ -416,3 +416,8 @@ def test_steam_install_detection(tmp_path):
     exe = steam.find_game_exe(games.VALHEIM, libraries=[lib])
     assert exe == apps / "common" / "Valheim" / "valheim.exe"
     assert steam.find_game_exe(games.RAFT, libraries=[lib]) is None
+
+
+def test_empty_world_name_matches_nothing(tmp_path):
+    touch(tmp_path / "W" / "x.dat")
+    assert world_files(tmp_path, "", ["{world}/**/*"]) == []

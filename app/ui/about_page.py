@@ -1,12 +1,28 @@
 """About: version, a short changelog, and one quiet credit."""
 
+import webbrowser
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from .. import __version__
+from ..core import games
 from . import icons, theme, widgets
+from .library_page import TIP_URL
 
 CHANGELOG = [
+    ("2.0.0", [
+        "Dragonwilds Sync is now WorldSync: one app for every co-op world",
+        "Ten games to start: Dragonwilds, Valheim, Enshrouded, Palworld, Core Keeper, "
+        "Sons of the Forest, V Rising, Grounded, Raft and 7 Days to Die",
+        "A game library as the new home screen, with a picker that puts your "
+        "installed Steam games first",
+        "Every game has its own look, from Valheim's aurora to V Rising's blood moon",
+        "Finds each game's save folder and lists its worlds by when you last played",
+        "Folder-based worlds sync whole, including rotated autosaves",
+        "Refuses to copy one game's world into another",
+        "Your Dragonwilds worlds, settings and invite codes carry straight over",
+    ]),
     ("1.3.2", [
         "Small cleanup: wording, version info and screenshots brought up to date",
     ]),
@@ -71,22 +87,28 @@ class AboutPage(QWidget):
         root.addSpacing(18)
 
         mark = QLabel()
-        mark.setPixmap(icons.mark_pixmap(44))
+        mark.setPixmap(icons.worldsync_mark(48))
         mark.setAlignment(Qt.AlignHCenter)
         root.addWidget(mark)
         root.addSpacing(10)
 
-        name = QLabel("Dragonwilds Sync")
+        name = QLabel("WorldSync")
         name.setAlignment(Qt.AlignHCenter)
         name.setStyleSheet(
             f"font-family: '{theme.deco_family()}'; font-size: 24px; font-weight: 700;"
             f"color: {theme.GOLD_TEXT}; letter-spacing: 1px;")
         root.addWidget(name)
 
-        ver = QLabel(f"Version {__version__}")
+        ver = QLabel(f"Version {__version__}  ·  {len(games.ALL)} games  ·  free and open source")
         ver.setAlignment(Qt.AlignHCenter)
         ver.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12px;")
         root.addWidget(ver)
+        if TIP_URL:
+            root.addSpacing(10)
+            tip = widgets.make_button("Buy me a coffee", "ghost", "heart", height=32)
+            tip.setToolTip("WorldSync stays free. Tips keep new games coming.")
+            tip.clicked.connect(lambda: webbrowser.open(TIP_URL))
+            root.addWidget(tip, 0, Qt.AlignHCenter)
         root.addSpacing(16)
 
         scroll = QScrollArea()

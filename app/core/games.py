@@ -56,10 +56,15 @@ class GameProfile:
     label_fmt: str = ""                   # e.g. "Slot {slot}" for numbered worlds
     label_json: tuple[str, str] | None = None  # (file inside the world, key) for a nicer name
     extras: tuple[str, ...] = field(default=())  # optional feature flags, e.g. "characters"
+    short_name: str = ""                  # for tight spots; defaults to name
 
     @property
     def verified(self) -> bool:
         return self.status == VERIFIED
+
+    @property
+    def short(self) -> str:
+        return self.short_name or self.name
 
 
 # -- the library ----------------------------------------------------------------
@@ -76,6 +81,7 @@ DRAGONWILDS = GameProfile(
     tagline="Dark fantasy survival in Ashenfall",
     world_hint="The world name as it appears in the game's world list.",
     extras=("characters", "secret", "rich_presence"),
+    short_name="Dragonwilds",
 )
 
 VALHEIM = GameProfile(

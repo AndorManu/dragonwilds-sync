@@ -25,12 +25,14 @@ class InviteError(ValueError):
 
 
 def encode(world_name: str, folder_name: str, share_link: str | None,
-           game: str = LEGACY_GAME) -> str:
+           game: str = LEGACY_GAME, label: str | None = None) -> str:
     payload = {"v": 1, "w": world_name, "f": folder_name, "l": share_link or ""}
     prefix = LEGACY_PREFIX
     if game != LEGACY_GAME:
         payload["g"] = game
         prefix = PREFIX
+        if label and label != world_name:
+            payload["n"] = label
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     packed = base64.urlsafe_b64encode(zlib.compress(raw, 9)).decode("ascii").rstrip("=")
     return prefix + packed
@@ -63,4 +65,5 @@ def decode(code: str) -> dict:
         "folder_name": str(payload["f"]),
         "share_link": str(payload.get("l") or "") or None,
         "game": str(payload.get("g") or LEGACY_GAME),
+        "label": str(payload.get("n") or "") or None,
     }
