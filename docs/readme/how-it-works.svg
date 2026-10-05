@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="400" viewBox="0 0 900 400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0" stop-color="#18204A"/><stop offset="1" stop-color="#0A0C16"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#E8FFF4"/><stop offset="0.4" stop-color="#55D6B4"/><stop offset="1" stop-color="#1E6B5A"/>
+    </radialGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="900" height="400" rx="24" fill="url(#bg)"/>
+  <line x1="450" y1="180" x2="120" y2="70" stroke="#7A9BFF" stroke-opacity="0.35" stroke-width="2.5" stroke-dasharray="8 10"><animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.2s" repeatCount="indefinite"/></line><line x1="450" y1="180" x2="780" y2="70" stroke="#7A9BFF" stroke-opacity="0.35" stroke-width="2.5" stroke-dasharray="8 10"><animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.2s" repeatCount="indefinite"/></line><line x1="450" y1="180" x2="780" y2="290" stroke="#7A9BFF" stroke-opacity="0.35" stroke-width="2.5" stroke-dasharray="8 10"><animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.2s" repeatCount="indefinite"/></line><line x1="450" y1="180" x2="120" y2="290" stroke="#7A9BFF" stroke-opacity="0.35" stroke-width="2.5" stroke-dasharray="8 10"><animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.2s" repeatCount="indefinite"/></line>
+  <g transform="translate(380 120)">
+    <svg width="140" height="100" viewBox="0 0 24 24" fill="rgba(122,155,255,0.22)" stroke="#CFE0FF" stroke-width="1.1">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    </svg>
+  </g>
+  <text x="450" y="246" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#AFC0D6">your shared cloud folder</text>
+  
+  <g>
+    <circle cx="120" cy="70" r="44" fill="#7A9BFF" fill-opacity="0.12" stroke="#7A9BFF" stroke-width="3">
+      <animate attributeName="fill-opacity" values="0.35;0.35;0.08;0.08;0.35" keyTimes="0;0.230;0.250;0.98;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="120" cy="70" r="58" fill="none" stroke="#7A9BFF" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.230;0.250;0.98;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="120" y="78" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">You</text>
+    <text x="120" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#7A9BFF">Mon: hosts
+      <animate attributeName="opacity" values="1;1;0.2;0.2;1" keyTimes="0;0.230;0.250;0.98;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+  <g>
+    <circle cx="780" cy="70" r="44" fill="#F2B66B" fill-opacity="0.12" stroke="#F2B66B" stroke-width="3">
+      <animate attributeName="fill-opacity" values="0.08;0.08;0.35;0.35;0.08;0.08" keyTimes="0;0.250;0.270;0.480;0.500;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="780" cy="70" r="58" fill="none" stroke="#F2B66B" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.250;0.270;0.480;0.500;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="780" y="78" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">Bram</text>
+    <text x="780" y="152" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#F2B66B">Tue: hosts
+      <animate attributeName="opacity" values="0.2;0.2;1;1;0.2;0.2" keyTimes="0;0.250;0.270;0.480;0.500;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+  <g>
+    <circle cx="780" cy="290" r="44" fill="#B78AF7" fill-opacity="0.12" stroke="#B78AF7" stroke-width="3">
+      <animate attributeName="fill-opacity" values="0.08;0.08;0.35;0.35;0.08;0.08" keyTimes="0;0.500;0.520;0.730;0.750;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="780" cy="290" r="58" fill="none" stroke="#B78AF7" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.500;0.520;0.730;0.750;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="780" y="298" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">Kim</text>
+    <text x="780" y="372" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#B78AF7">Thu: hosts
+      <animate attributeName="opacity" values="0.2;0.2;1;1;0.2;0.2" keyTimes="0;0.500;0.520;0.730;0.750;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+  <g>
+    <circle cx="120" cy="290" r="44" fill="#5CD6C9" fill-opacity="0.12" stroke="#5CD6C9" stroke-width="3">
+      <animate attributeName="fill-opacity" values="0.08;0.08;0.35;0.35;0.08;0.08" keyTimes="0;0.750;0.770;0.980;1.000;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="120" cy="290" r="58" fill="none" stroke="#5CD6C9" stroke-width="2" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.750;0.770;0.980;1.000;1" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="120" y="298" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">Elise</text>
+    <text x="120" y="372" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#5CD6C9">Sat: hosts
+      <animate attributeName="opacity" values="0.2;0.2;1;1;0.2;0.2" keyTimes="0;0.750;0.770;0.980;1.000;1" dur="8s" repeatCount="indefinite"/>
+    </text>
+  </g>
+  <circle r="17" fill="url(#orb)" filter="url(#glow)">
+    <animateMotion dur="8s" repeatCount="indefinite" path="M 120 70 L 450 180 L 780 70 L 450 180 L 780 290 L 450 180 L 120 290 L 450 180 L 120 70" keyPoints="0;1" keyTimes="0;1" calcMode="linear"/>
+  </circle>
+  <text x="450" y="40" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF">One world. Whoever's online hosts.</text>
+</svg>
