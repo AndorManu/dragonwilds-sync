@@ -100,7 +100,7 @@ def test_discover_seven_days_map_and_save(tmp_path):
     touch(tmp_path / "Saves" / "Pregen06k1" / "Beta" / "main.ttw")
     found = {w.id: w for w in games.discover_worlds(games.SEVEN_DAYS, tmp_path)}
     assert set(found) == {"Navezgane/Alpha", "Pregen06k1/Beta"}
-    assert found["Navezgane/Alpha"].label == "Navezgane / Alpha"
+    assert found["Navezgane/Alpha"].label == "Alpha"
 
 
 def test_discover_core_keeper_slots(tmp_path):

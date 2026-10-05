@@ -1,11 +1,13 @@
-"""Render every app state to PNG for design review - no window flashing.
+"""Render the app's key screens to PNG for the README - no window flashing.
 
 Run:  .venv\\Scripts\\python.exe tools\\screenshots.py
-Writes docs/screenshots/*.png using a throwaway config in a temp folder
-(the real per-user config is never touched).
+Writes docs/screenshots/*.png from a throwaway home folder and config in a
+temp directory (the real per-user data is never touched). Every name and
+world here is made up.
 """
 
 import json
+import os
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -14,8 +16,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-# Redirect all app storage into a scratch folder BEFORE anything reads it.
-scratch = Path(tempfile.mkdtemp(prefix="dwsync_shots_"))
+# Redirect storage and the "home" folder BEFORE anything reads them.
+scratch = Path(tempfile.mkdtemp(prefix="worldsync_shots_"))
+home = scratch / "home"
+os.environ["USERPROFILE"] = str(home)
+os.environ["LOCALAPPDATA"] = str(home / "AppData" / "Local")
+os.environ["APPDATA"] = str(home / "AppData" / "Roaming")
+
 from app.core import paths  # noqa: E402
 
 paths.APP_DIR = scratch / "appdata"
@@ -25,13 +32,14 @@ paths.LOG_DIR = paths.APP_DIR / "logs"
 paths.BACKUP_DIR = paths.APP_DIR / "backups"
 paths.LEGACY_CONFIG_PATH = scratch / "nolegacy" / "config.json"
 paths.LEGACY_STATE_PATH = scratch / "nolegacy" / "state.json"
+paths.LEGACY_APP_DIR = scratch / "nolegacy"
 
 from PySide6.QtCore import Qt  # noqa: E402
-from PySide6.QtGui import QIcon  # noqa: E402
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
-from app.core import config, presence, storage, sync  # noqa: E402
+from app.core import config, games, presence, steam, storage  # noqa: E402
 from app.core.logs import setup_logging  # noqa: E402
 from app.core.sync import _backup_files  # noqa: E402
 from app.controller import Controller  # noqa: E402
@@ -39,61 +47,25 @@ from app.ui import theme  # noqa: E402
 from app.ui.window import MainWindow  # noqa: E402
 
 theme.UI_CACHE = paths.APP_DIR / "ui"
-
 OUT = ROOT / "docs" / "screenshots"
 OUT.mkdir(parents=True, exist_ok=True)
-
-WORLD = "Minhalla"
+SHOTS: dict[str, QPixmap] = {}
 
 
 def ts(hours_ago: float) -> str:
     return (datetime.now(timezone.utc) - timedelta(hours=hours_ago)).isoformat(timespec="seconds")
 
 
-def seed_world():
-    save_dir = scratch / "saves"
-    shared = scratch / "shared"
-    save_dir.mkdir(exist_ok=True)
-    shared.mkdir(exist_ok=True)
-    (save_dir / f"{WORLD}.sav").write_bytes(b"save-data")
-    (save_dir / f"{WORLD}.sav.backup").write_bytes(b"save-data-backup")
-    (shared / f"{WORLD}.sav").write_bytes(b"shared-save")
-    (shared / f"{WORLD}.sav.backup").write_bytes(b"shared-save-backup")
-    history = [
-        {"version": 11, "editor": "Reinier", "timestamp": ts(76),
-         "duration_s": 5400, "emoji": "🪓"},
-        {"version": 12, "editor": "Bram", "timestamp": ts(29),
-         "note": "Tamed the salamander. It has opinions.", "duration_s": 8100,
-         "character": "Grimjaw",
-         "portrait": "male_A_01|SkinTone3|Preset2|Color2|M_B_Preset2|Color1"},
-        {"version": 13, "editor": "Andor", "timestamp": ts(7),
-         "note": "Built the gatehouse, found the swamp cave", "duration_s": 4520,
-         "character": "Ashvale",
-         "portrait": "male_A_01|SkinTone1|Preset7|Color8|M_D_Preset4|Color2"},
-        {"version": 14, "editor": "Elise", "timestamp": ts(1.8), "duration_s": 6300,
-         "character": "Sylwen", "color": "#5EA2EF",
-         "portrait": "female_A_01|SkinTone6|Preset11|Color5|F_PresetNone|Color3"},
-    ]
-    storage.write_json(shared / paths.MANIFEST_NAME, {
-        "version": 14, "last_editor": "Elise", "timestamp": ts(1.8),
-        "world_name": WORLD, "history": history, "app_schema": 1,
-    })
-    world = config.make_world(WORLD, str(shared),
-                              share_link="https://drive.google.com/drive/folders/x")
-    world2 = config.make_world("Frostspire", str(scratch / "shared2"))
-    cfg, _ = config.migrate_config({})
-    cfg.update({
-        "player_name": "Andor", "player_emoji": "🐉",
-        "local_save_dir": str(save_dir),
-        "active_world": world["id"],
-        "worlds": [world, world2],
-    })
-    return cfg, world, shared, save_dir
+def write(path: Path, data: bytes = b"x" * 4096):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(data)
 
 
 def shoot(window, name):
-    QTest.qWait(300)
-    window.grab().save(str(OUT / f"{name}.png"))
+    QTest.qWait(350)
+    pm = window.grab()
+    pm.save(str(OUT / f"{name}.png"))
+    SHOTS[name] = pm
     print("  wrote", name + ".png")
 
 
@@ -107,218 +79,214 @@ def clear_toasts(window):
     QTest.qWait(50)
 
 
+# -- a believable group across four games ------------------------------------------
+
+PEOPLE = [("Reinier", "🪓", None), ("Bram", "🛡️", None), ("Elise", "🏹", "#5EA2EF"),
+          ("Kim", "🌙", "#B78AF7"), ("Andor", "🐉", None)]
+
+NOTES = {
+    "valheim": ["Found a crypt full of surtling cores", "Moved the portal hub to the plains",
+                "Elder down. Swamp next week?", "Built the longhouse roof, finally"],
+    "v_rising": ["Castle walls up, servants are hunting", "Took down Grayson the Armourer",
+                 "Night run to the Silverlight hills", "Coffins for everyone"],
+    "dragonwilds": ["Built the gatehouse, found the swamp cave", "Tamed the salamander. It has opinions.",
+                    "Runecrafting at 30!", "Cleared the old mine"],
+    "palworld": ["Base moved next to the ore field", "Caught a shiny Lamball", "Automated the berry farm",
+                 "Breeding farm is running"],
+    "seven_days_to_die": ["Survived horde night 14", "Spike trench around the base",
+                          "Looted the shotgun messiah factory", "Forge and workbench upgraded"],
+    "core_keeper": ["Opened the Azeos wilderness", "Automated the copper drills",
+                    "Ghorm the Devourer is down", "Fishing pond and a kitchen"],
+}
+
+
+def history_for(game_id: str):
+    out = []
+    for i, (name, emoji, color) in enumerate(PEOPLE[1:]):
+        entry = {"version": 10 + i, "editor": name, "timestamp": ts(70 - i * 22 + 2),
+                 "duration_s": 3600 + i * 1700, "emoji": emoji,
+                 "note": NOTES[game_id][i % len(NOTES[game_id])]}
+        if color:
+            entry["color"] = color
+        out.append(entry)
+    return out
+
+
+def seed():
+    drive = home / "Google Drive" / "WorldSync"
+    worlds = []
+    cfg, _ = config.migrate_config({})
+    cfg.update({"player_name": "Andor", "player_emoji": "🐉"})
+
+    def add(game_id, world_id, label, save_root, files):
+        profile = games.get(game_id)
+        for rel in files:
+            write(save_root / rel)
+        shared = drive / f"{profile.short} - {label or world_id}"
+        shared.mkdir(parents=True, exist_ok=True)
+        for rel in files:
+            write(shared / rel)
+        hist = history_for(game_id)
+        storage.write_json(shared / paths.MANIFEST_NAME, {
+            "version": hist[-1]["version"], "last_editor": hist[-1]["editor"],
+            "timestamp": hist[-1]["timestamp"], "world_name": world_id,
+            "history": hist, "app_schema": 1, "game": game_id})
+        world = config.make_world(world_id, str(shared), game=game_id, label=label,
+                                  share_link="https://drive.google.com/drive/folders/x")
+        worlds.append(world)
+        config.add_to_library(cfg, game_id)
+        if game_id != "dragonwilds":
+            config.set_game_save_dir(cfg, game_id, str(save_root))
+        return world, shared
+
+    lowlow = home / "AppData" / "LocalLow"
+    v, v_shared = add("valheim", "Midgard", None, lowlow / "IronGate" / "Valheim" / "worlds_local",
+                      ["Midgard.fwl", "Midgard.db"])
+    r, r_shared = add("v_rising", "4b5e8f9c-1d2e", "Dunley Nights",
+                      lowlow / "Stunlock Studios" / "VRising" / "Saves" / "v3",
+                      ["4b5e8f9c-1d2e/AutoSave_31.save.gz"])
+    dw_root = home / "AppData" / "Local" / "RSDragonwilds" / "Saved" / "SaveGames"
+    d, d_shared = add("dragonwilds", "Ashenreach", None, dw_root,
+                      ["Ashenreach.sav", "Ashenreach.sav.backup"])
+    cfg["local_save_dir"] = str(dw_root)
+    p, p_shared = add("palworld", "9F3A6C0D2B7E4A1C8D5F0E6B3A9C7D21", "Palpagos Crew",
+                      home / "AppData" / "Local" / "Pal" / "Saved" / "SaveGames" / "765611",
+                      ["9F3A6C0D2B7E4A1C8D5F0E6B3A9C7D21/Level.sav"])
+    s, s_shared = add("seven_days_to_die", "Pregen06k1/Horde Night", "Horde Night",
+                      home / "AppData" / "Roaming" / "7DaysToDie",
+                      ["Saves/Pregen06k1/Horde Night/main.ttw"])
+    k, k_shared = add("core_keeper", "1", "Slot 2",
+                      lowlow / "Pugstorm" / "Core Keeper" / "Steam" / "765611",
+                      ["worlds/1.world.gzip"])
+    cfg["worlds"] = worlds
+    cfg["active_world"] = v["id"]
+    cfg["last_view"] = "library"
+    state = {"schema": 3, "worlds": {}}
+    for w in worlds:
+        manifest = storage.read_json(Path(w["sync_dir"]) / paths.MANIFEST_NAME)
+        state["worlds"][w["id"]] = {"last_applied_version": manifest["version"], "last_hash": "x"}
+    storage.save_config(cfg)
+    storage.save_state(state)
+    return {"valheim": (v, v_shared), "v_rising": (r, r_shared), "dragonwilds": (d, d_shared),
+            "palworld": (p, p_shared), "seven_days_to_die": (s, s_shared),
+            "core_keeper": (k, k_shared)}
+
+
+def collage(names, out_name, cols=3, scale=0.62):
+    pms = [SHOTS[n] for n in names]
+    w, h = int(pms[0].width() * scale), int(pms[0].height() * scale)
+    rows = (len(pms) + cols - 1) // cols
+    gap = 18
+    sheet = QPixmap(cols * w + (cols + 1) * gap, rows * h + (rows + 1) * gap)
+    sheet.fill(QColor("#07090E"))
+    p = QPainter(sheet)
+    p.setRenderHint(QPainter.SmoothPixmapTransform)
+    for i, pm in enumerate(pms):
+        x = gap + (i % cols) * (w + gap)
+        y = gap + (i // cols) * (h + gap)
+        p.drawPixmap(x, y, pm.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+    p.end()
+    sheet.save(str(OUT / f"{out_name}.png"))
+    print("  wrote", out_name + ".png")
+
+
 def main():
     setup_logging()
     app = QApplication(sys.argv)
     theme.apply(app)
+    steam.installed_app_ids = lambda libraries=None: {"892970", "1604030", "1623730", "1374490"}
 
-    # ---- onboarding states (no config yet) --------------------------------------
-    controller = Controller()
-    window = MainWindow(controller, QIcon())
-    window.setAttribute(Qt.WA_DontShowOnScreen, True)  # render fully, never flash
-    window.show()
-    shoot(window, "01_onboarding_welcome")
-    window.onboarding_page._go(1)
-    shoot(window, "02_onboarding_name")
-    window.onboarding_page._go(2)
-    shoot(window, "03_onboarding_choice")
-    window.onboarding_page._go(4)
-    shoot(window, "04_onboarding_shared")
-    window.onboarding_page.code_field.edit.setText("DWS1.demo")
-    window.onboarding_page._join_info = {
-        # deliberately non-existent folder so the watcher keeps spinning
-        "world_name": "Emberfall", "folder_name": "Emberfall Sync",
-        "share_link": "https://drive.google.com/drive/folders/x"}
-    window.onboarding_page._start_watching()
-    window.onboarding_page._go(6)
-    shoot(window, "05_onboarding_join_watch")
-    window.onboarding_page._watch_timer.stop()
-    window.close()
-
-    # ---- configured states -----------------------------------------------------------
-    cfg, world, shared, save_dir = seed_world()
-    storage.save_config(cfg)
-    storage.save_state({"schema": 2, "worlds": {
-        world["id"]: {"last_applied_version": 14, "last_hash": "x"}}})
-
-    controller2 = Controller()
-    window2 = MainWindow(controller2, QIcon())
-    window2.setAttribute(Qt.WA_DontShowOnScreen, True)
-    window2.show()
-
-    window2.main_page.set_status(controller2._world_status(world))
-    shoot(window2, "06_main_up_to_date")
-
-    config.world_state(controller2.state, world["id"])["last_applied_version"] = 13
-    window2.main_page.set_status(controller2._world_status(world))
-    shoot(window2, "07_main_new_save")
-
-    presence.start_playing(shared, "Bram", "🪓")
-    window2.main_page.set_status(controller2._world_status(world))
-    shoot(window2, "08_main_friend_playing")
-    presence.stop_playing(shared, "Bram")
-
-    presence.claim_next(shared, "Elise", "🏹")
-    config.world_state(controller2.state, world["id"])["last_applied_version"] = 14
-    window2.main_page.set_status(controller2._world_status(world))
-    shoot(window2, "09_main_turn_claimed")
-    presence.clear_next(shared)
-
-    window2.main_page.set_status(controller2._world_status(world))
-    window2.main_page.set_phase("ingame")
-    shoot(window2, "10_main_in_game")
-    window2.main_page.set_phase("idle")
-
-    window2.toasts.show_toast("success",
-                              "Shared your progress as v15 - your friends are up to date.")
+    # ---- first run -------------------------------------------------------------------
+    write(home / "AppData" / "LocalLow" / "IronGate" / "Valheim" / "worlds_local" / "Midgard.fwl")
+    write(home / "AppData" / "LocalLow" / "IronGate" / "Valheim" / "worlds_local" / "Midgard.db",
+          b"x" * 60000)
+    c0 = Controller()
+    w0 = MainWindow(c0, QIcon())
+    w0.setAttribute(Qt.WA_DontShowOnScreen, True)
+    w0.show()
+    shoot(w0, "01_welcome")
+    w0.onboarding_page.name_field.edit.setText("Andor")
+    w0.onboarding_page._submit_name()
     QTest.qWait(400)
-    shoot(window2, "11_main_toast")
-    clear_toasts(window2)
+    shoot(w0, "02_pick_a_game")
+    w0.addgame_page.game_chosen.emit("valheim")
+    w0.onboarding_page._go(3)
+    shoot(w0, "03_find_the_world")
+    w0._really_quit = True
+    w0.close()
 
-    # invite page
-    window2.invite_page.load(world)
-    window2._show_page(window2.invite_page)
-    window2.invite_page._generate()
-    shoot(window2, "12_invite")
+    # ---- a full library -------------------------------------------------------------------
+    seeded = seed()
+    presence.start_playing(seeded["v_rising"][1], "Kim", "🌙")
+    c = Controller()
+    c._poll.stop()
+    win = MainWindow(c, QIcon())
+    win.setAttribute(Qt.WA_DontShowOnScreen, True)
+    win.show()
+    QTest.qWait(900)       # library summary thread
+    shoot(win, "04_library")
 
-    # backups page
-    files = sorted(save_dir.glob(f"{WORLD}*"))
-    root = config.backup_root_for(world["id"])
-    _backup_files(files, "local_v13", root)
-    _backup_files(files, "shared_v14", root)
-    window2._open_backups()
-    shoot(window2, "13_backups")
+    order = ["valheim", "v_rising", "dragonwilds", "palworld", "seven_days_to_die", "core_keeper"]
+    for gid in order:
+        world, shared = seeded[gid]
+        win._open_game(gid)
+        QTest.qWait(200)
+        win.main_page.set_status(c._world_status(world))
+        clear_toasts(win)
+        shoot(win, f"game_{gid}")
+    collage([f"game_{g}" for g in order], "05_every_game_its_own_look")
 
-    # settings + about
-    window2.settings_page.load(cfg, world)
-    window2._show_page(window2.settings_page)
-    shoot(window2, "14_settings")
-    window2._show_page(window2.about_page)
-    shoot(window2, "15_about")
-    window2._show_page(window2.main_page)
+    # live states
+    win._open_game("v_rising")
+    win.main_page.set_status(c._world_status(seeded["v_rising"][0]))
+    shoot(win, "06_friend_playing")
+    presence.stop_playing(seeded["v_rising"][1], "Kim")
 
-    # note overlay
-    window2.note_overlay.open(world["id"], 15)
-    shoot(window2, "16_note_prompt")
-    window2.note_overlay._skip()
+    win._open_game("valheim")
+    world, shared = seeded["valheim"]
+    win.main_page.set_status(c._world_status(world))
+    win.main_page.set_phase("ingame")
+    shoot(win, "07_in_game")
+    win.main_page.set_phase("idle")
 
-    # preflight page
-    from app.core import preflight
-    window2._show_page(window2.preflight_page)
-    window2.preflight_page.show_results(preflight.run(cfg, world))
-    shoot(window2, "18_preflight")
+    win._open_invite()
+    win.invite_page._generate()
+    shoot(win, "08_invite")
+    win._show_page(win.main_page)
 
-    # backups with a checkpoint
-    from app.core.sync import _backup_files as _bk
-    root = config.backup_root_for(world["id"])
-    from app.core import backups as bkmod
-    bkmod.create_checkpoint(save_dir, WORLD, "Before the dragon", root)
-    window2._reload_backups()
-    window2._show_page(window2.backups_page)
-    shoot(window2, "19_backups_checkpoints")
-
-    # update bar on the main screen
-    window2._show_page(window2.main_page)
-    window2.main_page.set_status(controller2._world_status(world))
-    window2.main_page.show_update_bar("1.3.0", "Bram")
-    QTest.qWait(150)
-    shoot(window2, "20_update_bar")
-    window2.main_page.hide_update_bar()
-
-    # characters page (synthetic characters in the scratch dir)
-    import sys as _sys
-    _sys.path.insert(0, str(ROOT / "tests"))
-    from test_characters import make_character
-    chars_dir = scratch / "SaveCharacters"
-    make_character(chars_dir, "Ashvale")
-    make_character(chars_dir, "Wrenholt")
-    controller2.cfg["characters_dir"] = str(chars_dir)
-
-    # give Ashvale a believable real-item bag so the demo reads naturally
-    from app.core import items as _items
-    _sample = _items.search(min_rank=0)
-    _picks = {}
-    for _r in _sample:                       # a spread across rarities
-        _picks.setdefault(_r["rank"], _r)
-    _ash = chars_dir / "Ashvale.json"
-    _data = json.loads(_ash.read_text(encoding="utf-8"))
-    _inv = {"MaxSlotIndex": 30}
-    for _i, _row in enumerate(list(_picks.values()) * 3):
-        _slot = {"GUID": f"g{_i}", "ItemData": _row["id"]}
-        if _row["max"] > 1:
-            _slot["Count"] = min(_row["max"], (_i + 1) * 7)
-        else:
-            _slot["Durability"] = 300 + _i * 90
-        _inv[str(_i)] = _slot
-    _data["GameProgress"]["Inventory"] = _inv
-    _ash.write_text(json.dumps(_data, indent="\t"), encoding="utf-8")
-    window2._open_characters()
-    shoot(window2, "21_characters")
-
-    # the grimoire (opened the way anyone opens it: through the eye)
-    window2._open_grimoire()
-    shoot(window2, "22_grimoire")
-    window2.grimoire_page.char_combo.setCurrentText("Ashvale")
-    QTest.qWait(60)
-    window2.grimoire_page._switch_tab(1)
-    shoot(window2, "22b_grimoire_bag")
-    window2.grimoire_page._switch_tab(2)   # mirror
-    shoot(window2, "22e_grimoire_mirror")
-    window2.grimoire_page._switch_tab(3)   # scrolls
-    shoot(window2, "22c_grimoire_scrolls")
-    window2.grimoire_page._switch_tab(0)
-
-    # the conjuring catalogue
-    from app.ui.item_picker import ItemPicker
-    picker = ItemPicker(window2)
-    picker.setAttribute(Qt.WA_DontShowOnScreen, True)
-    picker.show()
-    picker.search.setText("dragon")
-    QTest.qWait(120)
-    if picker.list.count():
-        picker.list.setCurrentRow(0)
-    QTest.qWait(120)
-    picker.grab().save(str(OUT / "22d_conjure.png"))
-    print("  wrote 22d_conjure.png")
-    picker.close()
-
-    # the Learn picker (recipes, with output-item icons)
-    from app.ui.learn_picker import LearnPicker
-    lp = LearnPicker({"recipes": set(), "spells": set(), "buildings": set()}, window2)
-    lp.setAttribute(Qt.WA_DontShowOnScreen, True)
-    lp.show()
-    lp.search.setText("bronze")
-    QTest.qWait(120)
-    lp.grab().save(str(OUT / "22f_learn.png"))
-    print("  wrote 22f_learn.png")
-    lp.close()
-
-    # the saga
-    from app.core import saga as saga_mod
-    saga_mod.bump_stats(shared, "Andor", 4520)
-    saga_mod.bump_stats(shared, "Elise", 6300)
-    saga_mod.bump_stats(shared, "Bram", 8100)
-    saga_mod.bump_stats(shared, "Bram", 5400)
-    window2._open_saga()
-    shoot(window2, "23_saga")
-
-    # conflict overlay
-    ov = window2.confirm
+    ov = win.confirm
     ov.title_label.setText("Overwrite your local progress?")
     ov.body_label.setText(
         "Your local save has changed since your last sync, but a newer save "
-        "(v14, from Elise) is waiting in the shared folder.\n\n"
+        "(v13, from Kim) is waiting in the shared folder.\n\n"
         "Continuing will replace your local, un-shared progress.")
     ov.danger_btn.setText("Overwrite")
     ov.safe_btn.setText("Keep my progress")
-    ov.setGeometry(window2.chrome.rect())
+    ov.setGeometry(win.chrome.rect())
     ov.show()
     ov.raise_()
-    shoot(window2, "17_conflict")
+    shoot(win, "09_conflict")
     ov.hide()
 
-    window2._really_quit = True
-    window2.close()
+    flat = config.effective_cfg(c.cfg, world)
+    root = config.backup_root_for(world["id"])
+    files = sorted(Path(flat["local_save_dir"]).glob("Midgard*"))
+    _backup_files(files, "local_v12", root)
+    _backup_files(files, "shared_v13", root)
+    from app.core import backups as bk
+    bk.create_checkpoint(flat["local_save_dir"], "Midgard", "Before Moder", root,
+                         patterns=flat["patterns"])
+    win._open_backups()
+    shoot(win, "10_backups")
+
+    win._show_page(win.about_page)
+    shoot(win, "11_about")
+
+    # drop the per-game singles; the collage carries them
+    for gid in order:
+        (OUT / f"game_{gid}.png").unlink(missing_ok=True)
+    win._really_quit = True
+    win.close()
     print("done ->", OUT)
 
 

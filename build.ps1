@@ -1,4 +1,4 @@
-# One-command build: produces dist\DragonwildsSync.exe
+# One-command build: produces dist\WorldSync.exe
 # Usage:  .\build.ps1
 
 $ErrorActionPreference = "Stop"
@@ -17,13 +17,13 @@ if ($LASTEXITCODE -ne 0) { throw "Tests failed - not building." }
 Write-Host "Regenerating icon..."
 .\.venv\Scripts\python.exe tools\generate_icon.py
 
-Write-Host "Building DragonwildsSync.exe..."
+Write-Host "Building WorldSync.exe..."
 # PyInstaller writes its progress log to stderr; don't let PowerShell treat that as a failure.
 $ErrorActionPreference = "Continue"
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm DragonwildsSync.spec 2>&1 | Out-Host
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm WorldSync.spec 2>&1 | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed." }
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
-Write-Host "Done -> dist\DragonwildsSync.exe"
+Write-Host "Done -> dist\WorldSync.exe"
 Write-Host "(Optional: compile installer.iss with Inno Setup for a setup wizard.)"

@@ -243,7 +243,8 @@ SEVEN_DAYS = GameProfile(
     mirror=True,
     tagline="Survive the blood moon horde",
     world_word="save",
-    world_hint="Shown as map / save name, the same as on Continue Game.",
+    world_hint="Your save names from Continue Game; the map travels along with it.",
+    label_fmt="{save}",
     caveats=(
         "A random-gen map travels with the save the first time, so the "
         "first share can be a few hundred MB. After that only changes move.",
@@ -370,7 +371,9 @@ def _label(profile: GameProfile, world_id: str, root: Path) -> str:
             pass
     if profile.label_fmt:
         slot = int(world_id) + 1 if world_id.isdigit() else world_id
-        return profile.label_fmt.format(world=world_id, slot=slot)
+        first, _, last = world_id.partition("/")
+        return profile.label_fmt.format(world=world_id, slot=slot, map=first,
+                                        save=last or first)
     return world_id.replace("/", " / ")
 
 

@@ -1,35 +1,43 @@
 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
   <defs>
-    <radialGradient id="glow" cx="50%" cy="42%" r="62%">
-      <stop offset="0%" stop-color="#3ECF8E" stop-opacity="0.30"/>
-      <stop offset="55%" stop-color="#3ECF8E" stop-opacity="0.10"/>
-      <stop offset="100%" stop-color="#3ECF8E" stop-opacity="0"/>
+    <radialGradient id="glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#7A9BFF" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#7A9BFF" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7A9BFF" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="fire" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4ADD9B"/>
-      <stop offset="100%" stop-color="#1FA89B"/>
+    <linearGradient id="planet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A9BEFF"/>
+      <stop offset="100%" stop-color="#4562E0"/>
     </linearGradient>
-    <linearGradient id="slit" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#5BE7AC"/>
-      <stop offset="100%" stop-color="#1FA89B"/>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5CD6C9"/>
+      <stop offset="100%" stop-color="#F2B66B"/>
     </linearGradient>
+    <clipPath id="front">
+      <rect x="0" y="128" width="256" height="128"/>
+    </clipPath>
   </defs>
 
-  <rect x="6" y="6" width="244" height="244" rx="58" fill="#0C1116"/>
+  <rect x="6" y="6" width="244" height="244" rx="58" fill="#0B0F1E"/>
   <rect x="6" y="6" width="244" height="244" rx="58" fill="url(#glow)"/>
   <rect x="8" y="8" width="240" height="240" rx="56" fill="none"
-        stroke="#26333F" stroke-width="3"/>
+        stroke="#232B48" stroke-width="3"/>
 
-  <!-- almond eye -->
-  <path d="M 38 128 C 72 74, 184 74, 218 128 C 184 182, 72 182, 38 128 Z"
-        fill="#3ECF8E" fill-opacity="0.07"
-        stroke="url(#fire)" stroke-width="11" stroke-linejoin="round"/>
-
-  <!-- slit pupil -->
-  <path d="M 128 86 C 142 103, 142 153, 128 170 C 114 153, 114 103, 128 86 Z"
-        fill="url(#slit)"/>
-
-  <!-- glint -->
-  <circle cx="139" cy="105" r="8" fill="#EAFBF2" fill-opacity="0.9"/>
+  <!-- back half of the orbit, behind the planet -->
+  <ellipse cx="128" cy="128" rx="98" ry="34" transform="rotate(-22 128 128)"
+           fill="none" stroke="url(#ring)" stroke-width="12" stroke-opacity="0.55"/>
+  <!-- planet -->
+  <circle cx="128" cy="128" r="54" fill="url(#planet)"/>
+  <path d="M 86 108 C 104 118, 150 118, 172 104 M 80 140 C 106 154, 152 154, 176 138"
+        fill="none" stroke="#0B0F1E" stroke-opacity="0.28" stroke-width="7"
+        stroke-linecap="round"/>
+  <!-- front half of the orbit, over the planet -->
+  <g clip-path="url(#front)" transform="rotate(-22 128 128)">
+    <ellipse cx="128" cy="128" rx="98" ry="34" fill="none"
+             stroke="url(#ring)" stroke-width="12"/>
+  </g>
+  <!-- two friends in orbit -->
+  <circle cx="214" cy="90" r="16" fill="#F2B66B"/>
+  <circle cx="42" cy="166" r="16" fill="#5CD6C9"/>
 </svg>

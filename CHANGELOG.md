@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.0.0 - unreleased
+
+**Dragonwilds Sync is now WorldSync.**
+
+- Ten games: RuneScape: Dragonwilds, Valheim, Enshrouded, Palworld, Core
+  Keeper, Sons of the Forest, V Rising, Grounded, Raft and 7 Days to Die.
+  Dragonwilds is tested; the others are marked beta until real groups have
+  played them for a while.
+- A game library is the new home screen. Adding a game opens a picker with
+  the games installed through Steam at the top.
+- Every game has its own palette, typefaces and animated banner.
+- Setup finds each game's save folder and lists its worlds by when they were
+  last played, with the game's known quirks shown before the first share.
+- Folder-based worlds sync as a whole, including nested files and autosaves
+  the game rotates out; their change detection covers every file.
+- The shared folder now records which game it belongs to, and WorldSync
+  refuses to pull or push a world into a different game.
+- Invite codes carry the game. Dragonwilds codes keep the old `DWS1.` format
+  so friends on 1.x can still join.
+- Upgrading: settings, worlds and backups are copied from
+  `%APPDATA%\DragonwildsSync` on first start (the old folder is left alone),
+  and the config moves to schema 3 with a `config.v2.bak` kept.
+- Fixed: a missing import in the controller.
+- Sync protocol unchanged for Dragonwilds worlds; manifests gain an optional
+  `game` field that older versions ignore.
+
 ## 1.3.2 - 2026-10-05
 
 Housekeeping only. In-app changelog caught up, README and UI wording

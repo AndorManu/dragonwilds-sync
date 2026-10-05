@@ -266,15 +266,16 @@ class LibraryPage(QWidget):
     # -- public -----------------------------------------------------------------
     def retheme(self):
         self.banner.set_scene(theme.scene())
-        f = QFont(theme.display_family())
-        f.setPixelSize(30)
-        f.setWeight(QFont.Bold)
-        f.setLetterSpacing(QFont.AbsoluteSpacing, 0.5)
-        self.wordmark.setFont(f)
+        # set through the stylesheet: the global QSS font-size would win over setFont
+        self.wordmark.setStyleSheet(
+            "background: transparent; color: #FFFFFF;"
+            f"font-family: '{theme.display_family()}'; font-size: 30px; font-weight: 700;"
+            "letter-spacing: 0.5px;")
         self.section.setText(theme.caps("Your library"))
         self.tip_btn.setIcon(icons.icon("heart", theme.EMBER, 14))
 
     def set_player(self, name: str, game_count: int):
+        self._me = name
         hello = f"Hi {name}" if name else "Welcome"
         if game_count:
             self.greeting.setText(f"{hello}  ·  {game_count} game"
@@ -311,6 +312,7 @@ class LibraryPage(QWidget):
                 card.set_line(f"{info['playing']} is playing", live=True)
             elif info.get("last"):
                 editor, ts = info["last"]
+                editor = "you" if editor == getattr(self, "_me", None) else editor
                 card.set_line(f"{worlds}  ·  {editor}, {fmt.humanize(ts)}")
             else:
                 card.set_line(worlds if n else "No worlds yet")

@@ -78,7 +78,7 @@ class BackupsPage(QWidget):
     def _new_checkpoint(self):
         name, ok = QInputDialog.getText(
             self, "New checkpoint", "Name this snapshot of your current save:",
-            QLineEdit.Normal, "Before the dragon")
+            QLineEdit.Normal, "Before the boss")
         if ok and name.strip():
             self.checkpoint_requested.emit(name.strip())
 

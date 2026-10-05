@@ -1,7 +1,34 @@
 # Design rationale
 
-*(v1.2 redesign notes at the very bottom; v1.1 additions below that; the v1.0
-rationale still holds underneath.)*
+*(2.0 WorldSync notes first; v1.2 redesign notes at the very bottom; v1.1
+additions below that; the v1.0 rationale still holds underneath.)*
+
+## 2.0: from one game to a library
+
+- **Games are data, not code paths.** `app/core/games.py` describes each game:
+  save-folder templates (with `*` for Steam-ID folders, newest wins), how to
+  list existing worlds, and the file patterns that make up one world.
+  `config.effective_cfg` flattens that into the same dict the sync core has
+  always taken, plus three optional keys (`patterns`, `mirror`, `game`). The
+  core never imports the game table.
+- **Dragonwilds stays byte-for-byte 1.x.** Its profile has `patterns=None`,
+  which keeps the original "files starting with the world name" rule, the
+  first-file hash and flat backups. Existing groups and 1.x friends see no
+  difference; the manifest just gains a `game` field old apps ignore.
+- **Folder worlds need two new ideas.** A fingerprint over every file (a new
+  autosave is a change, not just an edit to the first file), and mirroring:
+  files the other side no longer has are removed after the backup, otherwise
+  rotated autosaves pile up in everyone's cloud drive.
+- **Wrong-game guard.** Pull and push refuse when the shared folder's
+  manifest names a different game. Pointing Raft at a Valheim folder copies
+  nothing.
+- **Themes are tokens, swapped at runtime.** `theme.use()` rewrites the
+  module-level colour tokens and fonts, the stylesheet is rebuilt, and pages
+  with code-styled bits implement `retheme()`. Text greys, amber and red are
+  shared by every theme so legibility never depends on the game.
+- **Scenes instead of art.** Each game's banner is procedural QPainter work
+  seeded by the world name. No game assets ship, so there's nothing to
+  license and the exe stays small.
 
 ## Stack: Python + PySide6 (Qt), PyInstaller
 

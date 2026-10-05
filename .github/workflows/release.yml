@@ -1,6 +1,6 @@
 name: release
 
-# Tag a commit `vX.Y.Z` and this builds DragonwildsSync.exe on a clean
+# Tag a commit `vX.Y.Z` and this builds WorldSync.exe on a clean
 # Windows runner and attaches it to the GitHub release, so the download
 # is reproducible from source and never depends on anyone's laptop.
 
@@ -25,14 +25,14 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
       - run: python tools/generate_icon.py
-      - run: python -m PyInstaller --noconfirm DragonwildsSync.spec
+      - run: python -m PyInstaller --noconfirm WorldSync.spec
       - name: Print SHA-256 (compare against your download)
-        run: (Get-FileHash dist/DragonwildsSync.exe -Algorithm SHA256).Hash
+        run: (Get-FileHash dist/WorldSync.exe -Algorithm SHA256).Hash
       - name: Create the release if the tag is new, then attach the exe
         shell: bash
         run: |
           tag="${{ github.ref_name }}"
-          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "Dragonwilds Sync ${tag#v}" --generate-notes
-          gh release upload "$tag" dist/DragonwildsSync.exe --clobber
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "WorldSync ${tag#v}" --generate-notes
+          gh release upload "$tag" dist/WorldSync.exe --clobber
         env:
           GH_TOKEN: ${{ github.token }}

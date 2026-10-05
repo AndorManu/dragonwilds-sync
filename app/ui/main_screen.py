@@ -479,7 +479,7 @@ class MainPage(QWidget):
                 since = f"{minutes // 60} h ago"
             self.hero_icon.show_pulse(amber=True)
             as_char = f" as {who['character']}" if who.get("character") else ""
-            self._say(f"{who['player']} is in the wilds right now",
+            self._say(f"{who['player']} is playing right now",
                       f"Playing{as_char} - started {since}. Best wait for their "
                       f"save; you'll see it land here.")
             self.header.set_pill(f"{who['player']} playing", theme.AMBER)

@@ -1,5 +1,5 @@
-# PyInstaller build spec - produces a single dist/DragonwildsSync.exe
-# Build with:  .\.venv\Scripts\python.exe -m PyInstaller --noconfirm DragonwildsSync.spec
+# PyInstaller build spec - produces a single dist/WorldSync.exe
+# Build with:  .\.venv\Scripts\python.exe -m PyInstaller --noconfirm WorldSync.spec
 
 a = Analysis(
     ["run.py"],
@@ -37,7 +37,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name="DragonwildsSync",
+    name="WorldSync",
     icon="app/assets/icon.ico",
     debug=False,
     strip=False,
