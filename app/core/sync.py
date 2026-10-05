@@ -30,6 +30,7 @@ All functions are UI-agnostic: they take ``log(message)`` and
 the exact same code runs under pytest and behind the GUI.
 """
 
+import glob as _glob
 import hashlib
 import logging
 import shutil
@@ -65,6 +66,7 @@ class SyncResult(Enum):
     PUSHED = auto()
     NOTHING_TO_PUSH = auto()    # no local files matching the world name
     STALE_CANCELLED = auto()    # user chose not to overwrite a newer shared save
+    WRONG_GAME = auto()         # the shared folder holds a different game's world
 
 
 @dataclass
@@ -87,12 +89,74 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def world_files(folder: Path, world_name: str) -> list[Path]:
-    """Every file in `folder` that belongs to this world (save + backup)."""
+def world_files(folder: Path, world_name: str, patterns=None) -> list[Path]:
+    """Every file in `folder` that belongs to this world.
+
+    ``patterns=None`` is the original rule (top-level files whose name starts
+    with the world name), kept exactly for Dragonwilds groups. Otherwise each
+    pattern is a glob relative to `folder` with ``{world}`` / ``{map}``
+    placeholders, and matches may sit in subfolders.
+    """
     folder = Path(folder)
     if not folder.exists():
         return []
-    return sorted(p for p in folder.glob(f"{world_name}*") if p.is_file())
+    if patterns is None:
+        return sorted(p for p in folder.glob(f"{world_name}*") if p.is_file())
+    safe = _glob.escape(world_name)
+    first = _glob.escape(world_name.split("/", 1)[0])
+    found = {}
+    for pattern in patterns:
+        try:
+            matches = folder.glob(pattern.format(world=safe, map=first))
+            for p in matches:
+                if p.is_file():
+                    found[p.relative_to(folder).as_posix()] = p
+        except (OSError, ValueError):
+            continue
+    return [found[k] for k in sorted(found)]
+
+
+def _rel(path: Path, root: Path) -> Path:
+    try:
+        return Path(path).relative_to(root)
+    except ValueError:
+        return Path(Path(path).name)
+
+
+def world_fingerprint(files: list[Path], root: Path, patterns=None) -> str | None:
+    """What "this save changed" is measured against.
+
+    Legacy worlds hash the first file (the protocol v1 always used). Folder
+    worlds hash every file plus its relative path, so a new autosave or a
+    deleted one counts as a change too.
+    """
+    if not files:
+        return None
+    if patterns is None:
+        return sha256_file(files[0])
+    h = hashlib.sha256()
+    for f in files:
+        h.update(_rel(f, root).as_posix().encode("utf-8"))
+        h.update(b"\0")
+        h.update(sha256_file(f).encode("ascii"))
+    return h.hexdigest()
+
+
+def _copy_world(files: list[Path], src_root: Path, dst_root: Path):
+    for f in files:
+        dest = Path(dst_root) / _rel(f, src_root)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(f, dest)
+
+
+def _remove_stale(dst_root: Path, world_name: str, patterns, keep: set[str]):
+    """Mirror mode: drop world files the source side no longer has."""
+    for f in world_files(dst_root, world_name, patterns):
+        if _rel(f, dst_root).as_posix() not in keep:
+            try:
+                f.unlink()
+            except OSError:
+                logger.warning("Could not remove stale file %s", f)
 
 
 def get_shared_manifest(sync_dir: Path):
@@ -119,8 +183,12 @@ def get_status(cfg, state) -> StatusSnapshot:
     )
 
 
-def _backup_files(files: list[Path], label: str, backup_root: Path):
-    """Copy `files` into a timestamped backup folder; prune old backups."""
+def _backup_files(files: list[Path], label: str, backup_root: Path, root: Path | None = None):
+    """Copy `files` into a timestamped backup folder; prune old backups.
+
+    With `root`, files keep their path relative to it (folder worlds);
+    without, they're stored flat by name as before.
+    """
     if not files:
         return None
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -130,10 +198,12 @@ def _backup_files(files: list[Path], label: str, backup_root: Path):
         n += 1
     dest.mkdir(parents=True)
     for f in files:
-        shutil.copy2(f, dest / f.name)
+        target = dest / (_rel(f, root) if root is not None else Path(f).name)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(f, target)
     # Keep only the newest few backup folders.
     folders = sorted(
-        (p for p in Path(backup_root).iterdir() if p.is_dir()),
+        (p for p in Path(backup_root).iterdir() if p.is_dir() and p.name != "checkpoints"),
         key=lambda p: p.name,
         reverse=True,
     )
@@ -143,19 +213,42 @@ def _backup_files(files: list[Path], label: str, backup_root: Path):
     return dest
 
 
+def _world_spec(cfg):
+    """(save_dir, world_name, patterns, mirror, game) from a flat cfg."""
+    patterns = cfg.get("patterns")
+    return (Path(cfg["local_save_dir"]), cfg["world_name"],
+            list(patterns) if patterns is not None else None,
+            bool(cfg.get("mirror")), cfg.get("game"))
+
+
+def _wrong_game(manifest, game) -> bool:
+    """True if the shared folder was made for a different game.
+
+    Manifests from before WorldSync carry no game and are Dragonwilds; a
+    flat cfg without a game (tests, characters) skips the check.
+    """
+    if not manifest or not game:
+        return False
+    return manifest.get("game", "dragonwilds") != game
+
+
 def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
     """Bring the local save up to the shared version.
 
     Returns (SyncResult, state). `state` is updated in place on success.
     """
     sync_dir = Path(cfg["sync_dir"])
-    save_dir = Path(cfg["local_save_dir"])
-    world_name = cfg["world_name"]
+    save_dir, world_name, patterns, mirror, game = _world_spec(cfg)
     manifest = get_shared_manifest(sync_dir)
 
     if not manifest:
         log("No shared save yet - you'll be the first to share one after this session.")
         return SyncResult.NO_SHARED, state
+
+    if _wrong_game(manifest, game):
+        log(f"The shared folder holds a {manifest.get('game', 'dragonwilds')} world, "
+            f"not {game}. Nothing was copied.")
+        return SyncResult.WRONG_GAME, state
 
     shared_version = manifest["version"]
     if shared_version <= state.get("last_applied_version", 0):
@@ -164,9 +257,9 @@ def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
 
     # Conflict check: the local save changed since our last known sync point
     # but was never pushed (e.g. played without the app / offline).
-    local_files = world_files(save_dir, world_name)
+    local_files = world_files(save_dir, world_name, patterns)
     if local_files and state.get("last_hash"):
-        current_hash = sha256_file(local_files[0])
+        current_hash = world_fingerprint(local_files, save_dir, patterns)
         if current_hash != state["last_hash"]:
             proceed = confirm(
                 "Overwrite your local progress?",
@@ -179,7 +272,7 @@ def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
                 log("Kept your local progress. Use “Save my progress now” first if you want to share it.")
                 return SyncResult.CONFLICT_CANCELLED, state
 
-    shared_files = world_files(sync_dir, world_name)
+    shared_files = world_files(sync_dir, world_name, patterns)
     if not shared_files:
         log("A newer save is listed, but its files haven't appeared in the shared folder yet. "
             "Give your cloud folder a moment to finish syncing, then try again.")
@@ -187,14 +280,18 @@ def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
 
     # Safety net: keep a local copy of whatever we're about to overwrite.
     if local_files:
-        _backup_files(local_files, f"local_v{state.get('last_applied_version', 0)}", backup_root)
+        _backup_files(local_files, f"local_v{state.get('last_applied_version', 0)}", backup_root,
+                      root=save_dir if patterns is not None else None)
 
     save_dir.mkdir(parents=True, exist_ok=True)
-    for f in shared_files:
-        shutil.copy2(f, save_dir / f.name)
+    _copy_world(shared_files, sync_dir, save_dir)
+    if mirror:
+        _remove_stale(save_dir, world_name, patterns,
+                      {_rel(f, sync_dir).as_posix() for f in shared_files})
 
     state["last_applied_version"] = shared_version
-    state["last_hash"] = sha256_file(save_dir / shared_files[0].name)
+    state["last_hash"] = world_fingerprint(
+        world_files(save_dir, world_name, patterns), save_dir, patterns)
     log(f"Got the latest world - v{shared_version}, last played by {manifest.get('last_editor', 'a friend')}.")
     return SyncResult.PULLED, state
 
@@ -205,15 +302,18 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
     Returns (SyncResult, state). `state` is updated in place on success.
     """
     sync_dir = Path(cfg["sync_dir"])
-    save_dir = Path(cfg["local_save_dir"])
-    world_name = cfg["world_name"]
+    save_dir, world_name, patterns, mirror, game = _world_spec(cfg)
 
-    local_files = world_files(save_dir, world_name)
+    local_files = world_files(save_dir, world_name, patterns)
     if not local_files:
         log(f"No save files found for “{world_name}” - nothing to share yet.")
         return SyncResult.NOTHING_TO_PUSH, state
 
     manifest = get_shared_manifest(sync_dir)
+    if _wrong_game(manifest, game):
+        log(f"The shared folder holds a {manifest.get('game', 'dragonwilds')} world, "
+            f"not {game}. Nothing was shared.")
+        return SyncResult.WRONG_GAME, state
 
     # Mirror of the pull-side conflict check: someone pushed while we played.
     last_applied = state.get("last_applied_version", 0)
@@ -228,8 +328,9 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
             log("Didn't share. Your progress is still on this machine - hit Play to sync up first.")
             return SyncResult.STALE_CANCELLED, state
         _backup_files(
-            world_files(sync_dir, world_name),
+            world_files(sync_dir, world_name, patterns),
             f"shared_v{manifest['version']}", backup_root,
+            root=sync_dir if patterns is not None else None,
         )
 
     # Version base survives a corrupted/deleted manifest: never go backwards.
@@ -237,8 +338,10 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
     new_version = max(base, last_applied) + 1
 
     sync_dir.mkdir(parents=True, exist_ok=True)
-    for f in local_files:
-        shutil.copy2(f, sync_dir / f.name)
+    _copy_world(local_files, save_dir, sync_dir)
+    if mirror:
+        _remove_stale(sync_dir, world_name, patterns,
+                      {_rel(f, save_dir).as_posix() for f in local_files})
 
     entry = {
         "version": new_version,
@@ -248,17 +351,20 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
     history = (manifest.get("history", []) if manifest else [])
     history = (history + [entry])[-HISTORY_LIMIT:]
 
-    write_json(Path(sync_dir) / paths.MANIFEST_NAME, {
+    new_manifest = {
         "version": new_version,
         "last_editor": cfg["player_name"],
         "timestamp": entry["timestamp"],
         "world_name": world_name,
         "history": history,
         "app_schema": MANIFEST_SCHEMA,
-    })
+    }
+    if game:
+        new_manifest["game"] = game
+    write_json(Path(sync_dir) / paths.MANIFEST_NAME, new_manifest)
 
     state["last_applied_version"] = new_version
-    state["last_hash"] = sha256_file(local_files[0])
+    state["last_hash"] = world_fingerprint(local_files, save_dir, patterns)
     log(f"Shared your progress as v{new_version}. Friends will get it next time they hit Play.")
     return SyncResult.PUSHED, state
 

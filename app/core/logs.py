@@ -6,7 +6,7 @@ from logging.handlers import RotatingFileHandler
 
 from . import paths
 
-LOG_FILE = paths.LOG_DIR / "dragonwilds-sync.log"
+LOG_FILE = paths.LOG_DIR / "worldsync.log"
 
 
 def setup_logging():

@@ -18,7 +18,7 @@ STATUS_NAME = "status.html"
 _TEMPLATE = """<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{world} · Dragonwilds Sync</title>
+<title>{world} · WorldSync</title>
 <style>
  :root{{color-scheme:dark}}
  body{{margin:0;background:#0A0D12;color:#ECEFF3;
@@ -39,7 +39,7 @@ _TEMPLATE = """<!DOCTYPE html>
  .foot{{color:#5E6B7A;font-size:11px;text-align:center;margin-top:18px}}
 </style></head><body><div class="wrap">
  <h1>{world}</h1>
- <div class="sub">Dragonwilds Sync · shared world status</div>
+ <div class="sub">WorldSync · shared world status</div>
  <div class="card">
    <div class="status"><span class="dot" style="background:{dot}"></span>{headline}</div>
    <div class="muted">{detail}</div>

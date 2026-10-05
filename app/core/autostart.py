@@ -10,7 +10,8 @@ import sys
 log = logging.getLogger("dwsync.autostart")
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-VALUE_NAME = "DragonwildsSync"
+VALUE_NAME = "WorldSync"
+LEGACY_VALUE_NAMES = ("DragonwildsSync",)
 
 try:
     import winreg
@@ -39,6 +40,11 @@ def set_enabled(enable: bool) -> bool:
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0,
                             winreg.KEY_SET_VALUE) as k:
+            for old in LEGACY_VALUE_NAMES:   # the pre-2.0 entry points at the old exe
+                try:
+                    winreg.DeleteValue(k, old)
+                except FileNotFoundError:
+                    pass
             if enable:
                 winreg.SetValueEx(k, VALUE_NAME, 0, winreg.REG_SZ,
                                   f'"{sys.executable}" --tray')

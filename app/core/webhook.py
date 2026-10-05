@@ -28,7 +28,7 @@ def build_request(url: str, text: str) -> urllib.request.Request:
         content_type = "text/plain; charset=utf-8"
     return urllib.request.Request(
         url, data=data, method="POST",
-        headers={"Content-Type": content_type, "User-Agent": "DragonwildsSync"},
+        headers={"Content-Type": content_type, "User-Agent": "WorldSync"},
     )
 
 

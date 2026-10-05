@@ -11,7 +11,6 @@ two failure modes the raw protocol can't see:
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import paths
 from .sync import world_files
 
 # A real Dragonwilds .sav is comfortably larger than this; below it, assume
@@ -30,12 +29,26 @@ class SaveHealth:
     primary_size: int = 0
 
 
-def check_local_save(save_dir, world_name: str) -> SaveHealth:
+def _primary(files: list[Path], patterns) -> Path:
+    """The file that best represents the save: the .sav for Dragonwilds,
+    otherwise the biggest file (the world data, not an index or thumbnail)."""
+    if patterns is None:
+        return next((f for f in files if f.suffix.lower() == ".sav"), files[0])
+    sized = []
+    for f in files:
+        try:
+            sized.append((f.stat().st_size, f))
+        except OSError:
+            continue
+    return max(sized, key=lambda t: t[0])[1] if sized else files[0]
+
+
+def check_local_save(save_dir, world_name: str, patterns=None) -> SaveHealth:
     """Is there a plausibly-complete local save worth sharing?"""
-    files = world_files(Path(save_dir), world_name)
+    files = world_files(Path(save_dir), world_name, patterns)
     if not files:
         return SaveHealth(False, "no save files found")
-    primary = next((f for f in files if f.suffix.lower() == ".sav"), files[0])
+    primary = _primary(files, patterns)
     try:
         size = primary.stat().st_size
     except OSError:
@@ -45,7 +58,7 @@ def check_local_save(save_dir, world_name: str) -> SaveHealth:
     return SaveHealth(True, "", size)
 
 
-def shared_still_syncing(sync_dir, world_name: str) -> bool:
+def shared_still_syncing(sync_dir, world_name: str, patterns=None) -> bool:
     """True if the shared folder shows signs of an in-progress cloud download."""
     folder = Path(sync_dir)
     if not folder.exists():
@@ -57,8 +70,19 @@ def shared_still_syncing(sync_dir, world_name: str) -> bool:
                 return True
         except OSError:
             continue
+    files = world_files(folder, world_name, patterns)
+    if patterns is not None:
+        # folder worlds: a partial download can sit deep inside the world
+        if any(f.name.lower().endswith(PARTIAL_SUFFIXES) for f in files):
+            return True
+        if files:
+            try:
+                return _primary(files, patterns).stat().st_size == 0
+            except OSError:
+                return False
+        return False
     # A world file that exists but is zero bytes is a classic half-synced state.
-    for f in world_files(folder, world_name):
+    for f in files:
         try:
             if f.suffix.lower() == ".sav" and f.stat().st_size == 0:
                 return True

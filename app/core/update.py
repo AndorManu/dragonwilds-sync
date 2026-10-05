@@ -55,7 +55,7 @@ def publish(sync_dir, version: str, exe_source, published_by: str, notes: str = 
 
     update_dir = Path(sync_dir) / UPDATE_DIR_NAME
     update_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"DragonwildsSync-{version}.exe"
+    filename = f"WorldSync-{version}.exe"
     shutil.copy2(exe_source, update_dir / filename)
     write_json(update_dir / UPDATE_MANIFEST, {
         "version": version,
@@ -98,7 +98,7 @@ def build_swap_script(staged_exe: Path, target_exe: Path, script_path: Path) -> 
     """Write the batch script that swaps the exe after this process exits."""
     script = f"""@echo off
 setlocal
-echo Updating Dragonwilds Sync...
+echo Updating WorldSync...
 :waitloop
 timeout /t 1 /nobreak >nul
 copy /y "{staged_exe}" "{target_exe}" >nul 2>&1

@@ -4,7 +4,7 @@ import logging
 import re
 from pathlib import Path
 
-from . import paths
+from . import games
 
 log = logging.getLogger("dwsync.steam")
 
@@ -48,19 +48,52 @@ def _library_folders(steam_root: Path) -> list[Path]:
     return libraries
 
 
-def find_game_exe() -> Path | None:
-    """Full path to RSDragonwilds.exe, or None if not found."""
+def _libraries() -> list[Path]:
     root = _steam_root()
-    if not root:
-        return None
-    for lib in _library_folders(root):
-        common = lib / "steamapps" / "common"
+    return _library_folders(root) if root else []
+
+
+def installed_app_ids(libraries: list[Path] | None = None) -> set[str]:
+    """Steam app ids with an install manifest in any library on this PC."""
+    ids = set()
+    for lib in (libraries if libraries is not None else _libraries()):
         try:
-            candidates = list(common.glob("*Dragonwilds*/" + paths.GAME_PROCESS_NAME))
+            for acf in (lib / "steamapps").glob("appmanifest_*.acf"):
+                m = re.fullmatch(r"appmanifest_(\d+)\.acf", acf.name)
+                if m:
+                    ids.add(m.group(1))
         except OSError:
             continue
-        for c in candidates:
-            if c.is_file():
-                log.info("Found game install: %s", c)
-                return c
+    return ids
+
+
+def _install_dir(lib: Path, app_id: str) -> Path | None:
+    acf = lib / "steamapps" / f"appmanifest_{app_id}.acf"
+    try:
+        text = acf.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    m = re.search(r'"installdir"\s+"([^"]+)"', text)
+    if not m:
+        return None
+    folder = lib / "steamapps" / "common" / m.group(1)
+    return folder if folder.is_dir() else None
+
+
+def find_game_exe(profile=None, libraries: list[Path] | None = None) -> Path | None:
+    """Full path to the game's exe, or None if it isn't installed via Steam."""
+    profile = profile or games.DRAGONWILDS
+    for lib in (libraries if libraries is not None else _libraries()):
+        folder = _install_dir(lib, profile.steam_app_id)
+        if not folder:
+            continue
+        for name in profile.process_names:
+            try:
+                hits = [p for p in folder.rglob(name) if p.is_file()]
+            except OSError:
+                continue
+            if hits:
+                hits.sort(key=lambda p: len(p.parts))   # the top-level exe, not a helper
+                log.info("Found %s install: %s", profile.name, hits[0])
+                return hits[0]
     return None

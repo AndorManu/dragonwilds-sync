@@ -1,4 +1,4 @@
-"""Launching RuneScape: Dragonwilds and watching for its process."""
+"""Launching a game through Steam and watching for its process."""
 
 import logging
 import os
@@ -25,12 +25,14 @@ def process_watch_available() -> bool:
     return psutil is not None
 
 
-def find_game_process():
+def find_game_process(names=None):
+    """The running game process, matched on any of `names` (exe file names)."""
     if not psutil:
         return None
+    wanted = {n.lower() for n in (names or (paths.GAME_PROCESS_NAME,))}
     for p in psutil.process_iter(["name"]):
         try:
-            if p.info["name"] and p.info["name"].lower() == paths.GAME_PROCESS_NAME.lower():
+            if p.info["name"] and p.info["name"].lower() in wanted:
                 return p
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
@@ -58,11 +60,11 @@ def launch_game(cfg) -> str:
     return "steam"
 
 
-def wait_for_game_start(timeout_s: float = START_TIMEOUT_S):
+def wait_for_game_start(names=None, timeout_s: float = START_TIMEOUT_S):
     """Poll until the game process appears; returns it, or None on timeout."""
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        proc = find_game_process()
+        proc = find_game_process(names)
         if proc:
             return proc
         time.sleep(START_POLL_S)

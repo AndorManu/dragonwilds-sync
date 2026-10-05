@@ -139,7 +139,7 @@ def test_preflight_all_ok(tmp_path, monkeypatch):
     world = {"world_name": WORLD, "sync_dir": str(shared)}
     checks = preflight.run(cfg, world)
     labels = {c.label: c for c in checks}
-    assert labels["Game save folder"].status == preflight.OK
+    assert labels["RuneScape: Dragonwilds save folder"].status == preflight.OK
     assert labels["Shared folder"].status == preflight.OK
     assert labels["Cloud drive"].status == preflight.OK
     assert preflight.worst(checks) in (preflight.OK, preflight.WARN)

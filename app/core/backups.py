@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from .sync import _backup_files
+from .sync import _backup_files, _copy_world, _rel, _remove_stale, world_files
 
 log = logging.getLogger("dwsync.backups")
 
@@ -47,7 +47,7 @@ def list_backups(backup_root) -> list[BackupInfo]:
                 label = name
         if folder.name == CHECKPOINTS_DIRNAME:
             continue
-        files = [f for f in folder.iterdir() if f.is_file()]
+        files = _files_in(folder)
         infos.append(BackupInfo(path=folder, stamp=stamp, label=label,
                                 file_count=len(files)))
     return infos
@@ -74,19 +74,25 @@ def list_checkpoints(backup_root) -> list[BackupInfo]:
     for folder in sorted((p for p in root.iterdir() if p.is_dir()),
                          key=lambda p: p.name, reverse=True):
         name, stamp = _read_checkpoint_meta(folder)
-        files = [f for f in folder.iterdir() if f.is_file() and f.name != "checkpoint.json"]
+        files = _files_in(folder)
         infos.append(BackupInfo(path=folder, stamp=stamp, label="checkpoint",
                                 file_count=len(files), name=name, is_checkpoint=True))
     return infos
 
 
-def create_checkpoint(save_dir, world_name: str, name: str, backup_root) -> BackupInfo | None:
+def _files_in(folder: Path) -> list[Path]:
+    """Every file in a backup folder (nested for folder worlds), minus metadata."""
+    return sorted(f for f in folder.rglob("*")
+                  if f.is_file() and not (f.parent == folder and f.name == "checkpoint.json"))
+
+
+def create_checkpoint(save_dir, world_name: str, name: str, backup_root,
+                      patterns=None) -> BackupInfo | None:
     """Pin the current local save under a friendly name. Not auto-pruned."""
     import json
 
     save_dir = Path(save_dir)
-    files = sorted(p for p in save_dir.glob(f"{world_name}*") if p.is_file()) \
-        if save_dir.exists() else []
+    files = world_files(save_dir, world_name, patterns)
     if not files:
         return None
     root = Path(backup_root) / CHECKPOINTS_DIRNAME
@@ -98,8 +104,11 @@ def create_checkpoint(save_dir, world_name: str, name: str, backup_root) -> Back
         dest = root / f"{base}-{n}"
         n += 1
     dest.mkdir(parents=True)
-    for f in files:
-        shutil.copy2(f, dest / f.name)
+    if patterns is None:
+        for f in files:
+            shutil.copy2(f, dest / f.name)
+    else:
+        _copy_world(files, save_dir, dest)
     (dest / "checkpoint.json").write_text(
         json.dumps({"name": name.strip() or "Checkpoint",
                     "created": stamp.isoformat(timespec="seconds")}),
@@ -118,27 +127,31 @@ def delete_backup(backup_path) -> bool:
         return False
 
 
-def restore_backup(backup_path, save_dir, world_name: str, backup_root) -> int:
+def restore_backup(backup_path, save_dir, world_name: str, backup_root,
+                   patterns=None, mirror: bool = False) -> int:
     """Copy a backup's files into the local save folder.
 
     The save files being replaced are themselves backed up first
-    (label ``pre_restore``), so a restore is always reversible.
+    (label ``pre_restore``), so a restore is always reversible. With
+    `mirror`, world files the backup doesn't contain are removed, so a
+    folder world comes back exactly as it was.
     Returns the number of files restored.
     """
     backup_path = Path(backup_path)
     save_dir = Path(save_dir)
-    files = [f for f in backup_path.iterdir()
-             if f.is_file() and f.name != "checkpoint.json"]
+    files = _files_in(backup_path)
     if not files:
         return 0
 
-    current = sorted(p for p in save_dir.glob(f"{world_name}*") if p.is_file()) \
-        if save_dir.exists() else []
+    current = world_files(save_dir, world_name, patterns)
     if current:
-        _backup_files(current, "pre_restore", backup_root)
+        _backup_files(current, "pre_restore", backup_root,
+                      root=save_dir if patterns is not None else None)
 
     save_dir.mkdir(parents=True, exist_ok=True)
-    for f in files:
-        shutil.copy2(f, save_dir / f.name)
+    _copy_world(files, backup_path, save_dir)
+    if mirror and patterns is not None:
+        _remove_stale(save_dir, world_name, patterns,
+                      {_rel(f, backup_path).as_posix() for f in files})
     log.info("Restored %d file(s) from %s", len(files), backup_path.name)
     return len(files)

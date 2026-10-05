@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox
 
 from . import APP_NAME
 from .controller import Controller
-from .core import paths
+from .core import paths, storage
 from .core.logs import setup_logging
 from .ui import theme
 from .ui.window import MainWindow
@@ -23,12 +23,15 @@ def resource_path(relative: str) -> Path:
 
 
 def main():
+    migrated = storage.migrate_legacy_app_dir()
     log = setup_logging()
     log.info("---- %s starting ----", APP_NAME)
+    if migrated:
+        log.info("Carried settings over from Dragonwilds Sync")
 
     if sys.platform == "win32":
         # Give the process its own taskbar identity (icon grouping, pinning).
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("DragonwildsSync.App")
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("WorldSync.App")
 
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
@@ -42,7 +45,7 @@ def main():
     lock.setStaleLockTime(0)
     if not lock.tryLock(1):
         QMessageBox.information(None, APP_NAME,
-                                "Dragonwilds Sync is already running - check your taskbar.")
+                                f"{APP_NAME} is already running - check your taskbar.")
         return 0
 
     theme.apply(app)

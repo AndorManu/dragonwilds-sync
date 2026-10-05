@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from .sync import world_files
+from .sync import _copy_world, world_files
 
 log = logging.getLogger("dwsync.worldhistory")
 
@@ -36,16 +36,19 @@ def _history_root(sync_dir) -> Path:
 
 
 def archive_version(sync_dir, world_name: str, version: int,
-                    keep: int = VERSIONS_TO_KEEP) -> bool:
+                    keep: int = VERSIONS_TO_KEEP, patterns=None) -> bool:
     """Copy the just-pushed world files into _history/v{version}; prune."""
     try:
-        files = world_files(Path(sync_dir), world_name)
+        files = world_files(Path(sync_dir), world_name, patterns)
         if not files:
             return False
         dest = _history_root(sync_dir) / f"v{version}"
         dest.mkdir(parents=True, exist_ok=True)
-        for f in files:
-            shutil.copy2(f, dest / f.name)
+        if patterns is None:
+            for f in files:
+                shutil.copy2(f, dest / f.name)
+        else:
+            _copy_world(files, Path(sync_dir), dest)
         _prune(sync_dir, keep)
         log.info("Archived v%d to group history", version)
         return True
@@ -78,7 +81,7 @@ def list_versions(sync_dir) -> list[ArchivedVersion]:
         m = re.fullmatch(r"v(\d+)", p.name)
         if not (p.is_dir() and m):
             continue
-        files = [f for f in p.iterdir() if f.is_file()]
+        files = [f for f in p.rglob("*") if f.is_file()]
         try:
             modified = datetime.fromtimestamp(max(f.stat().st_mtime for f in files)) \
                 if files else None

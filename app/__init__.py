@@ -1,4 +1,4 @@
-"""Dragonwilds Sync - turn-based world-save relay for RuneScape: Dragonwilds."""
+"""WorldSync - take turns hosting one co-op world through a shared cloud folder."""
 
-__version__ = "1.3.2"
-APP_NAME = "Dragonwilds Sync"
+__version__ = "2.0.0"
+APP_NAME = "WorldSync"

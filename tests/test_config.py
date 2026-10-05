@@ -1,4 +1,4 @@
-"""Config schema v2 migration and accessors."""
+"""Config schema migration (v1 -> v3) and accessors."""
 
 from app.core import config
 
@@ -15,7 +15,9 @@ V1_CFG = {
 
 def test_v1_config_migrates_to_one_world():
     v2, wid = config.migrate_config(dict(V1_CFG))
-    assert v2["schema"] == 2
+    assert v2["schema"] == 3
+    assert v2["library"] == ["dragonwilds"]
+    assert v2["worlds"][0]["game"] == "dragonwilds"
     assert v2["player_name"] == "Andor"
     assert v2["local_save_dir"] == r"C:\saves"
     assert len(v2["worlds"]) == 1
@@ -46,7 +48,12 @@ def test_v1_state_migrates_under_world_id():
 def test_effective_cfg_matches_v1_shape():
     v2, wid = config.migrate_config(dict(V1_CFG))
     flat = config.effective_cfg(v2, config.active_world(v2))
-    assert flat == V1_CFG
+    # every v1 key comes through unchanged...
+    assert {k: flat[k] for k in V1_CFG} == V1_CFG
+    # ...and the WorldSync additions keep the core on its v1 behaviour
+    assert flat["patterns"] is None
+    assert flat["mirror"] is False
+    assert flat["game"] == "dragonwilds"
 
 
 def test_world_state_slice_is_mutable_and_persistent():

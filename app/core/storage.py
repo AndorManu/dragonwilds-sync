@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import shutil
 from pathlib import Path
 
 from . import paths
@@ -53,3 +54,29 @@ def load_state():
 
 def save_state(state):
     write_json(paths.STATE_PATH, state)
+
+
+def migrate_legacy_app_dir() -> bool:
+    """First run of 2.0: copy the Dragonwilds Sync data folder across.
+
+    Only when the new folder has no config yet, and the old folder is left
+    untouched so going back to 1.x still works. Logs and UI caches aren't
+    worth carrying over.
+    """
+    old, new = paths.LEGACY_APP_DIR, paths.APP_DIR
+    try:
+        if (new / "config.json").exists() or not (old / "config.json").exists():
+            return False
+        new.mkdir(parents=True, exist_ok=True)
+        for item in old.iterdir():
+            if item.name in ("logs", "ui", "app.lock", "update"):
+                continue
+            target = new / item.name
+            if item.is_dir():
+                shutil.copytree(item, target, dirs_exist_ok=True)
+            else:
+                shutil.copy2(item, target)
+        return True
+    except OSError:
+        log.warning("Could not carry over the Dragonwilds Sync folder", exc_info=True)
+        return False

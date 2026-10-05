@@ -107,7 +107,7 @@ _SAGA_TEMPLATE = """<!DOCTYPE html>
  <div class="stats">{stats}</div>
  <h2>The chronicle</h2>
  {entries}
- <div class="foot">Written by Dragonwilds Sync · {updated}</div>
+ <div class="foot">Written by WorldSync · {updated}</div>
 </div></body></html>
 """
 

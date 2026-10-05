@@ -5,6 +5,7 @@ affect save integrity - health gating, sync-state checks, richer conflict
 detail - happens here, *around* the frozen sync core, never inside it.
 """
 
+import json
 import logging
 import threading
 import time
@@ -17,9 +18,9 @@ from PySide6.QtCore import QObject, QTimer, Signal
 import re
 
 from . import __version__
-from .core import (backups, characters, chime, config, discordrp, game, health,
-                   paths, presence, saga, statuspage, storage, sync, update,
-                   webhook, worldhistory)
+from .core import (backups, characters, chime, config, discordrp, game, games,
+                   health, paths, presence, saga, statuspage, storage, sync,
+                   update, webhook, worldhistory)
 from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
 
 
@@ -110,9 +111,14 @@ class Controller(QObject):
     def setup_first_config(self, player_name, local_save_dir, world):
         self.cfg = self.cfg or {}
         base, _ = config.migrate_config(self.cfg if config.worlds(self.cfg) else {})
-        base.update({"player_name": player_name, "local_save_dir": local_save_dir})
+        base["player_name"] = player_name
+        game_id = world.get("game", games.DEFAULT_GAME)
+        if local_save_dir:
+            config.set_game_save_dir(base, game_id, local_save_dir)
+        config.add_to_library(base, game_id)
         base["worlds"] = config.worlds(base) + [world]
         base["active_world"] = world["id"]
+        base["last_view"] = game_id
         self.cfg = base
         self._save_all()
         self._prime_seen_versions()
@@ -120,10 +126,15 @@ class Controller(QObject):
         self.worlds_changed.emit()
         self.refresh_status()
 
-    def add_world(self, world, activate=True):
+    def add_world(self, world, activate=True, save_dir=None):
+        game_id = world.get("game", games.DEFAULT_GAME)
+        config.add_to_library(self.cfg, game_id)
+        if save_dir:
+            config.set_game_save_dir(self.cfg, game_id, save_dir)
         self.cfg["worlds"] = config.worlds(self.cfg) + [world]
         if activate:
             self.cfg["active_world"] = world["id"]
+            self.cfg["last_view"] = game_id
         self._save_all()
         self.worlds_changed.emit()
         self.refresh_status()
@@ -138,6 +149,49 @@ class Controller(QObject):
         self._save_all()
         self.worlds_changed.emit()
         self.refresh_status()
+
+    # -- library ------------------------------------------------------------------
+    def active_game(self) -> games.GameProfile:
+        return config.world_game(self.active_world())
+
+    def is_dragonwilds(self, world=None) -> bool:
+        return config.world_game(world or self.active_world()).id == games.DRAGONWILDS.id
+
+    def add_game(self, game_id, save_dir=None):
+        config.add_to_library(self.cfg, game_id)
+        if save_dir:
+            config.set_game_save_dir(self.cfg, game_id, save_dir)
+        self._save_all()
+        self.worlds_changed.emit()
+
+    def remove_game(self, game_id) -> bool:
+        try:
+            config.remove_from_library(self.cfg, game_id)
+        except ValueError:
+            return False
+        self._save_all()
+        self.worlds_changed.emit()
+        return True
+
+    def set_game_save_dir(self, game_id, folder):
+        config.set_game_save_dir(self.cfg, game_id, folder)
+        self._save_all()
+
+    def set_last_view(self, view):
+        if self.cfg is not None and self.cfg.get("last_view") != view:
+            self.cfg["last_view"] = view
+            self._save_all()
+
+    def open_game(self, game_id):
+        """Make the most recent world of `game_id` active (for its game page)."""
+        self.set_last_view(game_id)
+        current = self.active_world()
+        if current and current.get("game", games.DEFAULT_GAME) == game_id:
+            self.refresh_status()
+            return
+        candidates = config.worlds_for_game(self.cfg, game_id)
+        if candidates:
+            self.set_active_world(candidates[-1]["id"])
 
     def set_active_world(self, world_id):
         if self.cfg.get("active_world") == world_id:
@@ -305,17 +359,26 @@ class Controller(QObject):
         """Sizes + times of the two saves, so a conflict choice is informed."""
         try:
             world = self.active_world()
-            wn = world["world_name"]
-            local = world_files(Path(self.cfg["local_save_dir"]), wn)
-            shared = world_files(Path(world["sync_dir"]), wn)
+            flat = self._flat_cfg(world)
+            wn, pats = world["world_name"], flat["patterns"]
+            local = world_files(Path(flat["local_save_dir"]), wn, pats)
+            shared = world_files(Path(world["sync_dir"]), wn, pats)
 
             def describe(files):
-                prim = next((f for f in files if f.suffix.lower() == ".sav"), None)
-                if not prim:
+                if not files:
                     return None
-                st = prim.stat()
-                when = datetime.fromtimestamp(st.st_mtime).strftime("%d %b %H:%M")
-                return f"{st.st_size // 1024} KB · saved {when}"
+                if pats is None:
+                    prim = next((f for f in files if f.suffix.lower() == ".sav"), None)
+                    if not prim:
+                        return None
+                    st = prim.stat()
+                    size, mtime = st.st_size, st.st_mtime
+                else:
+                    stats = [f.stat() for f in files]
+                    size = sum(st.st_size for st in stats)
+                    mtime = max(st.st_mtime for st in stats)
+                when = datetime.fromtimestamp(mtime).strftime("%d %b %H:%M")
+                return f"{size // 1024} KB · saved {when}"
 
             li, si = describe(local), describe(shared)
             lines = []
@@ -739,6 +802,9 @@ class Controller(QObject):
         wstate = self._wstate(world)
         sync_dir = world["sync_dir"]
         world_name = world["world_name"]
+        profile = config.world_game(world)
+        dragonwilds = profile.id == games.DRAGONWILDS.id
+        procs = flat["process_names"]
         started_at = None
         try:
             playing = presence.who_is_playing(sync_dir)
@@ -757,7 +823,7 @@ class Controller(QObject):
                     return
 
             self._set_phase("checking")
-            if health.shared_still_syncing(sync_dir, world_name):
+            if health.shared_still_syncing(sync_dir, world_name, flat["patterns"]):
                 self.toast.emit("warning", "The shared folder is still downloading the "
                                            "latest save - launching your current copy for now.")
             else:
@@ -773,22 +839,28 @@ class Controller(QObject):
                 elif result == SyncResult.MISSING_FILES:
                     self.toast.emit("warning", "The newest save hasn't finished syncing to "
                                                "this PC - you're playing your current local copy.")
+                elif result == SyncResult.WRONG_GAME:
+                    self.toast.emit("error", "That shared folder belongs to a different "
+                                             "game. Nothing was copied - check the folder "
+                                             "in Settings.")
+                    return
 
-            self._travel_pull(world)
+            if dragonwilds:
+                self._travel_pull(world)
 
-            recent = self._recent_character()
+            recent = self._recent_character() if dragonwilds else None
             presence.start_playing(
                 sync_dir, self.player_name, self.cfg.get("player_emoji", ""),
                 character=recent.name if recent else "",
                 portrait=characters.portrait_descriptor(recent) if recent else "")
             presence.clear_next(sync_dir, self.player_name)
             self._write_status(world)
-            char_mtimes_before = self._char_mtimes()
+            char_mtimes_before = self._char_mtimes() if dragonwilds else {}
             started_at = time.monotonic()
 
-            if game.find_game_process():
-                self.toast.emit("info", "Dragonwilds is already running - I'll share "
-                                        "your progress when you close it.")
+            if game.find_game_process(procs):
+                self.toast.emit("info", f"{profile.name} is already running - I'll share "
+                                        f"your progress when you close it.")
             else:
                 self._set_phase("launching")
                 if self.cfg.get("play_chime", True):
@@ -802,7 +874,7 @@ class Controller(QObject):
                 return
 
             self._set_phase("waiting")
-            proc = game.find_game_process() or game.wait_for_game_start()
+            proc = game.find_game_process(procs) or game.wait_for_game_start(procs)
             if proc is None:
                 presence.stop_playing(sync_dir, self.player_name)
                 self._write_status(world)
@@ -822,11 +894,13 @@ class Controller(QObject):
 
             self._set_phase("pushing")
             duration = int(time.monotonic() - started_at) if started_at else None
-            played = self._changed_characters(char_mtimes_before)
-            self._vault_characters(played)
-            self._travel_push(world)
-            self._do_push_guarded(world, flat, wstate, duration,
-                                  played[0] if played else self._recent_character())
+            played_char = None
+            if dragonwilds:
+                played = self._changed_characters(char_mtimes_before)
+                self._vault_characters(played)
+                self._travel_push(world)
+                played_char = played[0] if played else self._recent_character()
+            self._do_push_guarded(world, flat, wstate, duration, played_char)
         except Exception:
             log.exception("Play flow failed")
             self.toast.emit("error", "Something went wrong during the session. Your save "
@@ -865,8 +939,8 @@ class Controller(QObject):
         """Health-gate the push so a corrupt save can't poison the group."""
         save_dir = Path(flat["local_save_dir"])
         world_name = flat["world_name"]
-        if world_files(save_dir, world_name):
-            hp = health.check_local_save(save_dir, world_name)
+        if world_files(save_dir, world_name, flat["patterns"]):
+            hp = health.check_local_save(save_dir, world_name, flat["patterns"])
             if not hp.ok:
                 self.toast.emit("warning", f"Your save looks {hp.reason}, so I didn't share "
                                            f"it - that protects everyone from a bad file. "
@@ -881,7 +955,8 @@ class Controller(QObject):
         if result == SyncResult.PUSHED:
             version = self._wstate(world).get("last_applied_version")
             self._seen_versions[world["id"]] = version
-            played_char = played_char or self._recent_character()
+            if self.is_dragonwilds(world):
+                played_char = played_char or self._recent_character()
             try:
                 sync.amend_history_entry(
                     world["sync_dir"], version, duration_s=duration_s,
@@ -894,7 +969,8 @@ class Controller(QObject):
                 log.exception("Could not annotate history entry")
             try:
                 worldhistory.archive_version(world["sync_dir"],
-                                             world["world_name"], version)
+                                             world["world_name"], version,
+                                             patterns=self._flat_cfg(world)["patterns"])
                 saga.bump_stats(world["sync_dir"], self.player_name, duration_s)
                 saga.write_saga(world["sync_dir"], world["world_name"],
                                 sync.get_shared_manifest(world["sync_dir"]))
@@ -906,8 +982,8 @@ class Controller(QObject):
             if world.get("webhook_url"):
                 webhook.send_async(
                     world["webhook_url"],
-                    f"🐉 {self.player_name} shared v{version} of "
-                    f"{world['world_name']} - the wilds await.",
+                    f"{self._webhook_mark(world)} {self.player_name} shared v{version} of "
+                    f"{world['world_name']} ({config.world_game(world).name}).",
                     on_error=lambda e: self.toast.emit(
                         "warning", "Save shared fine, but the webhook didn't go "
                                    "through - check the URL in Settings."))
@@ -917,6 +993,13 @@ class Controller(QObject):
                                        "there was nothing to share.")
         elif result == SyncResult.STALE_CANCELLED:
             self.toast.emit("info", "Didn't share. Hit Play to pick up the newer save first.")
+        elif result == SyncResult.WRONG_GAME:
+            self.toast.emit("error", "That shared folder belongs to a different game, "
+                                     "so nothing was shared. Check the folder in Settings.")
+
+    @staticmethod
+    def _webhook_mark(world) -> str:
+        return "🐉" if config.world_game(world).id == games.DRAGONWILDS.id else "🎮"
 
     # -- session notes ---------------------------------------------------------------
     def save_session_note(self, world_id, version, note):
@@ -985,7 +1068,7 @@ class Controller(QObject):
                 if world.get("webhook_url"):
                     webhook.send_async(
                         world["webhook_url"],
-                        f"🐉 {self.player_name} passed the turn to {to_player} "
+                        f"{self._webhook_mark(world)} {self.player_name} passed the turn to {to_player} "
                         f"in {world['world_name']}.")
             except Exception:
                 log.exception("Nudge failed")
@@ -999,9 +1082,10 @@ class Controller(QObject):
         def worker():
             info = None
             try:
+                flat = self._flat_cfg(world)
                 info = backups.create_checkpoint(
-                    self.cfg["local_save_dir"], world["world_name"], name,
-                    self._backup_root(world))
+                    flat["local_save_dir"], world["world_name"], name,
+                    self._backup_root(world), patterns=flat["patterns"])
             except Exception:
                 log.exception("Checkpoint failed")
             if info:

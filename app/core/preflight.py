@@ -5,12 +5,10 @@ confirm the shared folder is writable. Returns a list of results the UI can
 render as a checklist.
 """
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import clouds, game, health, paths
-from .sync import get_shared_manifest, world_files
+from . import clouds, config, game, health
 
 OK, WARN, FAIL = "ok", "warn", "fail"
 
@@ -33,21 +31,24 @@ def _writable(folder: Path) -> bool:
 
 
 def run(cfg: dict, world: dict) -> list[Check]:
-    """cfg is the v2 global config; world is the active world dict."""
+    """cfg is the global config; world is the active world dict."""
     checks: list[Check] = []
-    save_dir = Path(cfg.get("local_save_dir", ""))
+    flat = config.effective_cfg(cfg, world)
+    profile = config.world_game(world)
+    save_dir = Path(flat["local_save_dir"])
+    patterns = flat["patterns"]
     world_name = world.get("world_name", "")
     sync_dir = Path(world.get("sync_dir", ""))
 
     # 1. Save folder
     if save_dir.exists():
-        checks.append(Check("Game save folder", OK, str(save_dir)))
+        checks.append(Check(f"{profile.name} save folder", OK, str(save_dir)))
     else:
-        checks.append(Check("Game save folder", FAIL,
-                            "Not found - set it in Settings."))
+        checks.append(Check(f"{profile.name} save folder", FAIL,
+                            "Not found - start the game once, or set it in Settings."))
 
     # 2. The world save itself
-    hp = health.check_local_save(save_dir, world_name)
+    hp = health.check_local_save(save_dir, world_name, patterns)
     if hp.ok:
         checks.append(Check(f"World save “{world_name}”", OK,
                             f"{hp.primary_size // 1024} KB"))
@@ -88,20 +89,20 @@ def run(cfg: dict, world: dict) -> list[Check]:
                             "None detected - saves won't reach friends without one."))
 
     # 5. Still-syncing check
-    if sync_dir.exists() and health.shared_still_syncing(sync_dir, world_name):
+    if sync_dir.exists() and health.shared_still_syncing(sync_dir, world_name, patterns):
         checks.append(Check("Sync state", WARN,
                             "The cloud folder looks like it's still downloading. "
                             "Give it a minute."))
 
     # 6. Game launch path
-    exe = cfg.get("exe_path")
+    exe = flat.get("exe_path")
     if exe and Path(exe).is_file():
         checks.append(Check("Game launch", OK, "Direct exe configured."))
-    elif game.find_game_process():
+    elif game.find_game_process(flat["process_names"]):
         checks.append(Check("Game launch", OK, "Game is running right now."))
     else:
         from . import steam
-        found = steam.find_game_exe()
+        found = steam.find_game_exe(profile)
         if found:
             checks.append(Check("Game launch", OK, "Found your Steam install."))
         else:

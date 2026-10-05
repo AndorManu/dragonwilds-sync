@@ -1,7 +1,9 @@
-"""Config/state schema v2: multiple worlds, global player + machine settings.
+"""Config/state schema v3: a library of games, each with its worlds.
 
-v1 (single world, flat) is migrated automatically and non-destructively:
-the old files are kept as ``config.v1.bak`` / ``state.v1.bak``.
+v1 (single world, flat) and v2 (multiple Dragonwilds worlds) migrate
+automatically and non-destructively: the old files are kept as
+``config.v1.bak`` / ``config.v2.bak``. In v3 every world names its game;
+anything from before 2.0 is a Dragonwilds world.
 
 The sync core keeps its v1-shaped flat dict interface; ``effective_cfg``
 builds that flat dict for one world. That boundary is what lets every new
@@ -12,14 +14,14 @@ import logging
 import shutil
 import uuid
 
-from . import paths
+from . import games, paths
 from .storage import load_config as _load_raw_config
 from .storage import load_state as _load_raw_state
 from .storage import save_config, save_state
 
 log = logging.getLogger("dwsync.config")
 
-CONFIG_SCHEMA = 2
+CONFIG_SCHEMA = 3
 
 GLOBAL_DEFAULTS = {
     "schema": CONFIG_SCHEMA,
@@ -38,10 +40,14 @@ GLOBAL_DEFAULTS = {
     "discord_app_id": "",
     "active_world": None,
     "worlds": [],
+    "library": [],          # game ids in the order the player added them
+    "games": {},            # per-game machine settings: {id: {save_dir, exe_path}}
+    "last_view": None,      # "library" or a game id - where the app reopens
 }
 
 WORLD_DEFAULTS = {
     "id": None,
+    "game": games.DEFAULT_GAME,
     "world_name": "",
     "sync_dir": "",
     "share_link": None,
@@ -73,12 +79,28 @@ def _backup_file(path, suffix=".v1.bak"):
         log.warning("Could not write migration backup for %s", path)
 
 
+def _to_v3(cfg: dict) -> dict:
+    """Fill v3 fields: every world gets a game, the library lists them."""
+    for w in cfg.get("worlds", []):
+        w.setdefault("game", games.DEFAULT_GAME)
+    library = list(cfg.get("library") or [])
+    for w in cfg.get("worlds", []):
+        if w["game"] not in library:
+            library.append(w["game"])
+    cfg["library"] = library
+    cfg["games"] = dict(cfg.get("games") or {})
+    if cfg.get("last_view") is None and library:
+        cfg["last_view"] = library[0]
+    cfg["schema"] = CONFIG_SCHEMA
+    return cfg
+
+
 def migrate_config(cfg: dict) -> tuple[dict, str | None]:
-    """v1 flat config -> v2. Returns (v2_config, migrated_world_id | None)."""
+    """Any older config -> v3. Returns (v3_config, migrated_world_id | None)."""
     if not _is_v1(cfg):
         merged = dict(GLOBAL_DEFAULTS)
         merged.update(cfg)
-        return merged, None
+        return _to_v3(merged), None
     world = make_world(cfg.get("world_name", ""), cfg.get("sync_dir", ""))
     v2 = dict(GLOBAL_DEFAULTS)
     v2.update({
@@ -89,7 +111,7 @@ def migrate_config(cfg: dict) -> tuple[dict, str | None]:
         "active_world": world["id"],
         "worlds": [world],
     })
-    return v2, world["id"]
+    return _to_v3(v2), world["id"]
 
 
 def migrate_state(state: dict, migrated_world_id: str | None) -> dict:
@@ -120,8 +142,14 @@ def load() -> tuple[dict | None, dict]:
         save_config(cfg)
         save_state(state)
     else:
-        cfg, _ = migrate_config(cfg)  # fill any missing v2 defaults
+        older = cfg.get("schema", 2) < CONFIG_SCHEMA
+        if older:
+            log.info("Migrating config to v%d (game library)", CONFIG_SCHEMA)
+            _backup_file(paths.CONFIG_PATH, suffix=f".v{cfg.get('schema', 2)}.bak")
+        cfg, _ = migrate_config(cfg)  # fill any missing defaults
         state = migrate_state(state, None)
+        if older:
+            save_config(cfg)
     return cfg, state
 
 
@@ -145,15 +173,91 @@ def active_world(cfg: dict) -> dict | None:
     return w
 
 
+def world_game(world: dict | None) -> games.GameProfile:
+    return games.get((world or {}).get("game"))
+
+
+def worlds_for_game(cfg: dict, game_id: str) -> list[dict]:
+    return [w for w in worlds(cfg) if w.get("game", games.DEFAULT_GAME) == game_id]
+
+
+def library(cfg: dict) -> list[games.GameProfile]:
+    return [games.get(g) for g in (cfg or {}).get("library", []) if g in games.BY_ID]
+
+
+def add_to_library(cfg: dict, game_id: str):
+    lib = cfg.setdefault("library", [])
+    if game_id not in lib:
+        lib.append(game_id)
+
+
+def remove_from_library(cfg: dict, game_id: str):
+    """Only allowed once the game has no worlds left."""
+    if worlds_for_game(cfg, game_id):
+        raise ValueError("game still has worlds")
+    cfg["library"] = [g for g in cfg.get("library", []) if g != game_id]
+    cfg.get("games", {}).pop(game_id, None)
+    if cfg.get("last_view") == game_id:
+        cfg["last_view"] = "library"
+
+
+def game_settings(cfg: dict, game_id: str) -> dict:
+    return cfg.setdefault("games", {}).setdefault(game_id, {})
+
+
+def game_save_dir(cfg: dict, game_id: str) -> str:
+    """The save folder for a game on this PC: the player's choice, else the
+    detected default, else where it normally lives (for display).
+
+    Dragonwilds keeps using the v1 ``local_save_dir`` key so the
+    Dragonwilds-only extras (characters) keep finding it.
+    """
+    if game_id == games.DRAGONWILDS.id:
+        return cfg.get("local_save_dir") or str(paths.DEFAULT_SAVE_DIR)
+    chosen = ((cfg.get("games") or {}).get(game_id) or {}).get("save_dir")
+    if chosen:
+        return chosen
+    profile = games.get(game_id)
+    found = games.default_save_dir(profile)
+    return str(found or games.fallback_save_dir(profile))
+
+
+def set_game_save_dir(cfg: dict, game_id: str, folder: str):
+    if game_id == games.DRAGONWILDS.id:
+        cfg["local_save_dir"] = folder
+    else:
+        game_settings(cfg, game_id)["save_dir"] = folder
+
+
+def game_exe_path(cfg: dict, game_id: str) -> str | None:
+    if game_id == games.DRAGONWILDS.id:
+        return cfg.get("exe_path")
+    return ((cfg.get("games") or {}).get(game_id) or {}).get("exe_path")
+
+
 def effective_cfg(cfg: dict, world: dict) -> dict:
-    """The flat, v1-shaped dict the sync core was validated against."""
+    """The flat, v1-shaped dict the sync core was validated against.
+
+    WorldSync adds a few keys the core reads with .get(): the world's file
+    patterns, whether to mirror deletions, and the game id (stamped on the
+    manifest and checked on pull). Dragonwilds worlds carry patterns=None,
+    which is the exact v1 behaviour.
+    """
+    profile = world_game(world)
+    app_id = profile.steam_app_id
+    if profile.id == games.DRAGONWILDS.id:
+        app_id = cfg.get("steam_app_id") or app_id
     return {
         "player_name": cfg.get("player_name", ""),
-        "local_save_dir": cfg.get("local_save_dir", ""),
+        "local_save_dir": game_save_dir(cfg, profile.id),
         "world_name": world.get("world_name", ""),
         "sync_dir": world.get("sync_dir", ""),
-        "exe_path": cfg.get("exe_path"),
-        "steam_app_id": cfg.get("steam_app_id", paths.STEAM_APP_ID),
+        "exe_path": game_exe_path(cfg, profile.id),
+        "steam_app_id": app_id,
+        "game": profile.id,
+        "patterns": list(profile.patterns) if profile.patterns is not None else None,
+        "mirror": profile.mirror,
+        "process_names": list(profile.process_names),
     }
 
 
