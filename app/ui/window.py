@@ -158,7 +158,14 @@ class MainWindow(QWidget):
         c.feedback_prompt.connect(lambda gid: self._after_note(
             lambda: self.report_overlay.ask_feedback(gid, games.get(gid).short)))
         c.tip_prompt.connect(self._notify_tip)
-        self.tray.tip_clicked.connect(self._open_tip)
+        self.tray.tip_clicked.connect(lambda: self._open_tip("notification"))
+        for page in (self.main_page, self.library_page, self.about_page):
+            page.tip_clicked.connect(self._open_tip)
+        self.addgame_page.request_clicked.connect(lambda: c.report("game_requested"))
+        self.invite_page.code_generated.connect(lambda gid: c.report("invite_created", gid))
+        self.onboarding_page.step_reached.connect(
+            lambda step, gid: c.report("onboarding", gid or None, step=step))
+        self.settings_page.forget_reports_requested.connect(self._forget_reports)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
         # (the grimoire deliberately has no menu entry - see _awaken_secret)
@@ -301,13 +308,23 @@ class MainWindow(QWidget):
                                            f"Enjoying WorldSync? There's a coffee link "
                                            f"at the bottom of the screen.")
 
-    def _open_tip(self):
+    def _open_tip(self, source="link"):
         import webbrowser
         from .library_page import TIP_URL
         if TIP_URL:
+            self.controller.report("tip_clicked", source=source)
             webbrowser.open(TIP_URL)
 
+    def _forget_reports(self):
+        if self.confirm.ask(
+                "Delete your reports?",
+                "Everything this PC has sent is erased from the report server, and it "
+                "gets a fresh anonymous id. Reports stay on unless you untick the box.",
+                danger_label="Delete reports", safe_label="Keep them"):
+            self.controller.forget_reports()
+
     def _open_guide(self, game_id: str):
+        self.controller.report("guide_opened", game_id)
         self._guide_return = self.pages.currentWidget()
         save_dir = config.game_save_dir(self.controller.cfg or {}, game_id)
         self.guide_page.load(games.get(game_id), save_dir)
@@ -329,6 +346,7 @@ class MainWindow(QWidget):
 
     def _on_name_chosen(self, name):
         self._pending_name = name
+        self.controller.report("onboarding", step="name_done")
         self._open_add_game(first_run=True)
 
     def _player_for_flow(self) -> str:
@@ -343,6 +361,7 @@ class MainWindow(QWidget):
         self._show_page(self.onboarding_page)
 
     def _on_game_chosen(self, game_id):
+        self.controller.report("onboarding", game_id, step="game_picked")
         self._start_game_flow(game_id, back_to=self.addgame_page)
 
     def _join_from_library(self):
@@ -444,6 +463,9 @@ class MainWindow(QWidget):
             except Exception:
                 log.exception("Preflight failed")
                 checks = []
+            if checks:
+                self.controller.report("preflight", config.world_game(world).id,
+                                       worst=preflight.worst(checks))
             # widgets are rebuilt on the GUI thread, never from this worker
             self.controller.run_on_ui.emit(
                 lambda: self.preflight_page.show_results(checks))
@@ -825,6 +847,8 @@ class MainWindow(QWidget):
                     info.path, ctx["save_dir"], ctx["match"], ctx["root"],
                     patterns=ctx.get("patterns"), mirror=ctx.get("mirror", False))
                 if count:
+                    self.controller.report("restore", self.controller.active_game().id,
+                                           kind=ctx["kind"])
                     self.controller.toast.emit(
                         "success", "Backup restored to this PC."
                         + (" Share it with “Save my progress now” if the group "

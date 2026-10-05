@@ -190,6 +190,7 @@ class MainPage(QWidget):
     characters_clicked = Signal()
     saga_clicked = Signal()
     guide_clicked = Signal()
+    tip_clicked = Signal(str)
     library_clicked = Signal()
 
     def __init__(self, parent=None):
@@ -319,7 +320,7 @@ class MainPage(QWidget):
         self.coffee_btn.setFlat(True)
         self.coffee_btn.setToolTip("WorldSync is free. A coffee keeps new games coming.")
         self.coffee_btn.setVisible(bool(TIP_URL))
-        self.coffee_btn.clicked.connect(lambda: __import__("webbrowser").open(TIP_URL))
+        self.coffee_btn.clicked.connect(lambda: self.tip_clicked.emit("game_page"))
         version = QLabel(f"v{__version__}")
         version.setObjectName("FooterText")
         footer.addWidget(self.conn_dot)

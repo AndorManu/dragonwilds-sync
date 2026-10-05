@@ -83,13 +83,24 @@ class Controller(QObject):
         self._poll.timeout.connect(self._poll_tick)
         if self.cfg and telemetry.ensure_id(self.cfg):
             storage.save_config(self.cfg)
+        # first-run reports need an id before a config exists; it moves into the
+        # config when setup finishes
+        self._pre_cfg = {"telemetry": True}
+        new_install = False
         if self.cfg and telemetry.ensure_id(self.cfg):
             storage.save_config(self.cfg)
+            new_install = True
+        if not self.cfg:
+            telemetry.ensure_id(self._pre_cfg)
+            new_install = True
+        telemetry.set_context(self.cfg or self._pre_cfg, __version__)
+        if new_install:
+            self.report("first_run", locale=telemetry.locale_label())
         if self.cfg:
             self._prime_seen_versions()
             self._poll.start()
             self.check_updates()
-            self.report("app_start")
+            self.report("app_start", locale=telemetry.locale_label())
 
     # -- config & worlds --------------------------------------------------------
     @property
@@ -127,8 +138,11 @@ class Controller(QObject):
         base["worlds"] = config.worlds(base) + [world]
         base["active_world"] = world["id"]
         base["last_view"] = game_id
+        if not base.get("install_id") and self._pre_cfg.get("install_id"):
+            base["install_id"] = self._pre_cfg["install_id"]
         telemetry.ensure_id(base)
         self.cfg = base
+        telemetry.set_context(self.cfg, __version__)
         self._save_all()
         self._prime_seen_versions()
         self._poll.start()
@@ -162,7 +176,7 @@ class Controller(QObject):
     # -- anonymous reports (opt-in) --------------------------------------------------
     def report(self, event, game=None, **props):
         try:
-            telemetry.send(self.cfg, event, game, __version__, **props)
+            telemetry.send(self.cfg or self._pre_cfg, event, game, __version__, **props)
         except Exception:
             log.debug("report failed", exc_info=True)
 
@@ -174,6 +188,36 @@ class Controller(QObject):
         self._save_all()
         if on:
             self.report("app_start")
+
+    def forget_reports(self, done=None):
+        def worker():
+            ok = telemetry.forget(self.cfg)
+            self._save_all()
+            self.toast.emit("success" if ok else "warning",
+                            "Your reports are erased and this PC has a fresh anonymous id."
+                            if ok else "Couldn't reach the report server - try again when online.")
+            if done:
+                self.run_on_ui.emit(done)
+        threading.Thread(target=worker, daemon=True, name="forget").start()
+
+    def _push_extras(self, world, flat, duration_s) -> dict:
+        """Size, players and cloud kind for a share report. Never names or paths."""
+        extras = {"cloud": telemetry.cloud_label(world.get("sync_dir", ""))}
+        try:
+            files = world_files(Path(flat["local_save_dir"]), flat["world_name"], flat["patterns"])
+            extras["files"] = len(files)
+            extras["size_mb"] = round(sum(f.stat().st_size for f in files) / 1048576, 1)
+        except OSError:
+            pass
+        try:
+            manifest = sync.get_shared_manifest(world["sync_dir"]) or {}
+            extras["group_size"] = len({h.get("editor") for h in manifest.get("history", [])
+                                        if h.get("editor")})
+        except Exception:
+            pass
+        if duration_s:
+            extras["duration_min"] = int(duration_s // 60)
+        return extras
 
     def send_feedback(self, game_id, rating, comment):
         self.report("feedback", game_id, rating=rating, comment=comment)
@@ -386,6 +430,7 @@ class Controller(QObject):
     def apply_update(self, info):
         try:
             if update.apply_update(info, paths.APP_DIR / "update"):
+                self.report("update_applied")
                 self.quit_for_update.emit()
             else:
                 self.toast.emit("info", "Updates apply from the installed app - "
@@ -905,10 +950,12 @@ class Controller(QObject):
                 self.toast.emit("warning", "The shared folder is still downloading the "
                                            "latest save - launching your current copy for now.")
             else:
+                t0 = time.monotonic()
                 result, wstate = sync.do_pull(flat, wstate, self._log, self._confirm,
                                               self._backup_root(world))
                 storage.save_state(self.state)
-                self.report("pull", profile.id, result=result.name.lower())
+                self.report("pull", profile.id, result=result.name.lower(),
+                            sync_ms=int((time.monotonic() - t0) * 1000))
                 if result == SyncResult.PULLED:
                     self.toast.emit("success", "Latest save pulled in - you're starting "
                                                "fresh off your friends' progress.")
@@ -1031,10 +1078,13 @@ class Controller(QObject):
                                            f"it - that protects everyone from a bad file. "
                                            f"Your friends keep the last good save.")
                 return
+        t0 = time.monotonic()
         result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
                                       self._backup_root(world))
         storage.save_state(self.state)
-        self.report("push", flat.get("game"), result=result.name.lower())
+        extras = self._push_extras(world, flat, duration_s) if result == SyncResult.PUSHED else {}
+        self.report("push", flat.get("game"), result=result.name.lower(),
+                    sync_ms=int((time.monotonic() - t0) * 1000), **extras)
         self._after_push(world, result, duration_s, played_char)
 
     def _after_push(self, world, result, duration_s, played_char=None):
@@ -1120,6 +1170,7 @@ class Controller(QObject):
                 else:
                     presence.claim_next(world["sync_dir"], self.player_name,
                                         self.cfg.get("player_emoji", ""))
+                    self.report("turn", config.world_game(world).id, kind="claim")
                     self.toast.emit("success", "Next turn is yours - friends will "
                                                "see it before they hit Play.")
                 self._write_status(world)
@@ -1150,6 +1201,7 @@ class Controller(QObject):
             try:
                 presence.send_nudge(world["sync_dir"], self.player_name, to_player,
                                     self.cfg.get("player_emoji", ""))
+                self.report("turn", config.world_game(world).id, kind="pass")
                 self.toast.emit("success", f"Nudged {to_player} - they'll get a ping "
                                            f"that it's their turn.")
                 if world.get("webhook_url"):
@@ -1176,6 +1228,7 @@ class Controller(QObject):
             except Exception:
                 log.exception("Checkpoint failed")
             if info:
+                self.report("checkpoint", config.world_game(world).id)
                 self.toast.emit("success", f"Checkpoint “{info.name}” saved. Restore it "
                                            f"any time from Backups.")
             else:

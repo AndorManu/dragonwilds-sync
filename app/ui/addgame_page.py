@@ -103,6 +103,7 @@ class AddGamePage(QWidget):
     game_chosen = Signal(str)
     back_requested = Signal()
     installed_ready = Signal(object)
+    request_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -160,7 +161,7 @@ class AddGamePage(QWidget):
         foot = QHBoxLayout()
         foot.addStretch(1)
         req = widgets.make_button("Missing a game? Ask for it", "subtle", "external", height=28)
-        req.clicked.connect(lambda: webbrowser.open(REQUEST_URL))
+        req.clicked.connect(lambda: (self.request_clicked.emit(), webbrowser.open(REQUEST_URL)))
         foot.addWidget(req)
         root.addLayout(foot)
 

@@ -11,6 +11,10 @@
   Windows notification after your fifth share. No pop-ups.
 - Reports go to a small database that only accepts new rows; nothing can be
   read back with the key inside the app.
+- PRIVACY.md, automatic deletion after 12 months, and Settings → "Delete my
+  reports" to erase everything a PC has sent.
+- Crash reports (error type and function only) and timing numbers, so problems
+  show up before anyone has to file an issue.
 
 ## 2.0.0 - 2026-10-05
 

@@ -16,6 +16,7 @@ class SettingsPage(QWidget):
     saved = Signal(dict, dict)     # global fields, world fields (active world)
     cancelled = Signal()
     remove_world_requested = Signal(str)   # world_id
+    forget_reports_requested = Signal()
     about_requested = Signal()
     preflight_requested = Signal()
     publish_update_requested = Signal()
@@ -165,6 +166,20 @@ class SettingsPage(QWidget):
             "Which game, whether a share or pull worked, the app version. Never names, "
             "world names, folders or saves.")
         form.addWidget(self.reports_check)
+        reports_row = QHBoxLayout()
+        self.forget_btn_reports = widgets.make_button("Delete my reports", "subtle", "trash",
+                                                      height=28)
+        self.forget_btn_reports.setToolTip("Erase everything this PC has sent and start over "
+                                           "with a new anonymous id.")
+        self.forget_btn_reports.clicked.connect(self.forget_reports_requested.emit)
+        reports_row.addWidget(self.forget_btn_reports)
+        privacy = QLabel('<a href="https://github.com/AndorManu/worldsync/blob/master/PRIVACY.md" '
+                         f'style="color:{theme.TEXT_DIM}">What is sent?</a>')
+        privacy.setOpenExternalLinks(True)
+        privacy.setProperty("role", "hint")
+        reports_row.addWidget(privacy)
+        reports_row.addStretch(1)
+        form.addLayout(reports_row)
 
         self.discord_field = widgets.FormField(
             "Discord application ID (optional)",
@@ -268,6 +283,7 @@ class SettingsPage(QWidget):
         self.chime_check.setChecked(bool(cfg.get("play_chime", True)))
         from ..core import telemetry
         self.reports_check.setVisible(telemetry.available())
+        self.forget_btn_reports.setVisible(telemetry.available())
         self.reports_check.setChecked(cfg.get("telemetry") is not False)
         self.discord_field.edit.setText(cfg.get("discord_app_id") or "")
 

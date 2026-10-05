@@ -1,5 +1,7 @@
 """Anonymous reports: on by default, off with one setting, never anything personal."""
 
+import json
+
 import pytest
 
 from app.core import telemetry
@@ -81,3 +83,46 @@ def test_opt_out_stops_sending(backend):
     telemetry.opt_in(cfg)
     telemetry.opt_out(cfg)
     assert telemetry.send(cfg, "push") is None
+
+
+def test_crash_report_has_type_and_function_but_no_message(backend):
+    cfg = {}
+    telemetry.opt_in(cfg)
+    telemetry.set_context(cfg, "2.1.0")
+
+    def load_world():
+        raise KeyError("C:/Users/andor/secret/World.sav")
+    try:
+        load_world()
+    except KeyError as e:
+        payload = telemetry.send_crash(type(e), e.__traceback__)
+    assert payload["event"] == "crash"
+    assert payload["props"]["kind"] == "KeyError"
+    assert "secret" not in repr(payload) and "andor" not in repr(payload)
+    telemetry.set_context(None, "")
+
+
+def test_forget_erases_and_gives_a_new_id(monkeypatch, backend):
+    calls = []
+
+    class Resp:
+        def close(self):
+            pass
+    monkeypatch.setattr(telemetry.urllib.request, "urlopen",
+                        lambda req, timeout: calls.append(json.loads(req.data)) or Resp())
+    cfg = {}
+    telemetry.opt_in(cfg)
+    old = cfg["install_id"]
+    assert telemetry.forget(cfg)
+    assert calls == [{"p_install_id": old}]
+    assert cfg["install_id"] != old and len(cfg["install_id"]) == 32
+
+
+def test_new_numbers_and_labels_pass_the_whitelist(backend):
+    cfg = {}
+    telemetry.opt_in(cfg)
+    p = telemetry.send(cfg, "push", "valheim", "2.1.0", result="pushed", sync_ms=812,
+                       size_mb=12.345, files=3, group_size=4, duration_min=95,
+                       cloud="google drive", world_name="Midgard")
+    assert p["props"] == {"result": "pushed", "sync_ms": 812, "size_mb": 12.3, "files": 3,
+                          "group_size": 4, "duration_min": 95, "cloud": "google drive"}

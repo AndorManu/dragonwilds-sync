@@ -39,7 +39,9 @@ from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap  # noqa: E402
 from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QWidget  # noqa: E402
 
-from app.core import config, games, presence, steam, storage  # noqa: E402
+from app.core import config, games, presence, steam, storage, telemetry  # noqa: E402
+
+telemetry.ENDPOINT = ""   # screenshots must never send reports
 from app.core.logs import setup_logging  # noqa: E402
 from app.core.sync import _backup_files  # noqa: E402
 from app.controller import Controller  # noqa: E402

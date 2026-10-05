@@ -73,6 +73,7 @@ CHANGELOG = [
 
 class AboutPage(QWidget):
     back_requested = Signal()
+    tip_clicked = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -113,7 +114,7 @@ class AboutPage(QWidget):
             root.addSpacing(10)
             tip = widgets.make_button("Buy me a coffee", "ghost", "heart", height=32)
             tip.setToolTip("WorldSync stays free. Tips keep new games coming.")
-            tip.clicked.connect(lambda: webbrowser.open(TIP_URL))
+            tip.clicked.connect(lambda: self.tip_clicked.emit("about"))
             root.addWidget(tip, 0, Qt.AlignHCenter)
         root.addSpacing(16)
 

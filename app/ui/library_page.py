@@ -177,6 +177,7 @@ class LibraryPage(QWidget):
     game_opened = Signal(str)
     add_game_clicked = Signal()
     join_clicked = Signal()
+    tip_clicked = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -252,7 +253,7 @@ class LibraryPage(QWidget):
         self.tip_btn = widgets.make_button("Buy me a coffee", "subtle", "heart", height=26)
         self.tip_btn.setToolTip("WorldSync is free. If it saved your group a server bill, "
                                 "a tip keeps it going.")
-        self.tip_btn.clicked.connect(lambda: webbrowser.open(TIP_URL))
+        self.tip_btn.clicked.connect(lambda: self.tip_clicked.emit("library"))
         self.tip_btn.setVisible(bool(TIP_URL))
         footer.addWidget(self.tip_btn)
         footer.addStretch(1)

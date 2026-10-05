@@ -21,6 +21,7 @@ from . import theme, widgets
 class InvitePage(QWidget):
     back_requested = Signal()
     share_link_saved = Signal(str, str)      # world_id, link
+    code_generated = Signal(str)             # game id
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -144,6 +145,7 @@ class InvitePage(QWidget):
                              game=self._world.get("game", "dragonwilds"),
                              label=self._world.get("label"))
         self.code_box.setPlainText(code)
+        self.code_generated.emit(self._world.get("game", "dragonwilds"))
         self.code_box.setVisible(True)
         self.copy_btn.setVisible(True)
         self.outro.setVisible(True)

@@ -27,6 +27,11 @@ def setup_logging():
 
     def excepthook(exc_type, exc, tb):
         root.critical("Unhandled exception", exc_info=(exc_type, exc, tb))
+        try:
+            from . import telemetry
+            telemetry.send_crash(exc_type, tb)
+        except Exception:
+            pass
         sys.__excepthook__(exc_type, exc, tb)
 
     sys.excepthook = excepthook

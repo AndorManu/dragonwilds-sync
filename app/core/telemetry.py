@@ -9,16 +9,24 @@ What a report contains, and nothing else:
   install_id   a random id made on this PC (not your Steam id,
                not your name, not tied to anything)
   app_version, os (e.g. "Windows 11"), game id, event name
-  props        only whitelisted keys below: a result code, counts, a rating,
-               and for feedback an optional comment you typed yourself
+  props        only whitelisted keys below: a result code, a setup step, counts
+               and timings (session minutes, world size in MB, sync time), how
+               many players share the world, which kind of cloud drive (Google
+               Drive / Dropbox / OneDrive / other), the system language (e.g.
+               nl_NL), a rating, and for feedback a comment you typed yourself.
+               For a crash: the error's type and the function it happened in,
+               never the message (messages can contain file paths).
 
 Never sent: player names, world names, file paths, shared-folder names,
-invite codes or save contents. Sending is fire-and-forget on a background
+invite codes, IP-derived location or save contents. Reports are deleted
+after 12 months, and Settings → "Delete my reports" erases this PC's rows.
+See PRIVACY.md. Sending is fire-and-forget on a background
 thread with a short timeout; a failure is silently dropped and can never
 affect a sync.
 """
 
 import json
+import locale
 import logging
 import platform
 import threading
@@ -34,11 +42,19 @@ API_KEY = "sb_publishable_HBviDO2TiQkI4npN7ACZOQ_8b-iCBlF"
 TIMEOUT_S = 4
 
 EVENTS = {
-    "app_start", "game_added", "world_created", "world_joined", "push", "pull",
-    "conflict", "game_launch", "feedback", "error",
+    "app_start", "first_run", "game_added", "world_created", "world_joined", "push",
+    "pull", "conflict", "game_launch", "feedback", "error", "crash", "onboarding",
+    "invite_created", "checkpoint", "restore", "guide_opened", "preflight",
+    "update_applied", "tip_clicked", "game_requested", "turn",
 }
 PROP_KEYS = {"result", "found_folder", "worlds_found", "rating", "comment",
-             "direction", "kind", "first_time"}
+             "direction", "kind", "first_time", "step", "duration_min", "size_mb",
+             "files", "sync_ms", "group_size", "cloud", "locale", "worst", "where",
+             "source"}
+FORGET_ENDPOINT = "https://gqlcpgosdkwfgmiqcymy.supabase.co/rest/v1/rpc/worldsync_forget"
+
+# set by the controller so a crash anywhere can still be reported
+_CTX = {"cfg": None, "version": ""}
 COMMENT_MAX = 500
 
 
@@ -69,6 +85,63 @@ def opt_out(cfg: dict):
     cfg["telemetry"] = False
 
 
+def set_context(cfg: dict | None, version: str):
+    _CTX["cfg"], _CTX["version"] = cfg, version
+
+
+def locale_label() -> str:
+    try:
+        name = locale.getlocale()[0] or ""
+    except ValueError:
+        name = ""
+    return (name or "unknown")[:20]
+
+
+def cloud_label(sync_dir: str) -> str:
+    """Which kind of cloud drive holds the shared folder - never the path."""
+    try:
+        from . import clouds
+        low = str(sync_dir).lower()
+        for label, root in clouds.detect_cloud_roots():
+            if low.startswith(str(root).lower()):
+                return label.lower()
+    except Exception:
+        pass
+    return "other"
+
+
+def send_crash(exc_type, tb):
+    """Report an unhandled error by its type and the app function it hit."""
+    where = "?"
+    while tb is not None:
+        code = tb.tb_frame.f_code
+        if "app" in code.co_filename.replace("\\", "/").split("/"):
+            where = code.co_name
+        tb = tb.tb_next
+    return send(_CTX["cfg"], "crash", None, _CTX["version"],
+                kind=getattr(exc_type, "__name__", "Exception"), where=where)
+
+
+def forget(cfg: dict) -> bool:
+    """Erase every report this PC sent, then start over with a fresh random id."""
+    install_id = cfg.get("install_id")
+    ok = True
+    if install_id and API_KEY:
+        try:
+            req = urllib.request.Request(
+                FORGET_ENDPOINT, data=json.dumps({"p_install_id": install_id}).encode("utf-8"),
+                method="POST", headers={"Content-Type": "application/json", "apikey": API_KEY,
+                                        "Authorization": f"Bearer {API_KEY}",
+                                        "User-Agent": "WorldSync"})
+            urllib.request.urlopen(req, timeout=8).close()
+        except Exception as e:
+            log.warning("could not erase reports: %s", e)
+            ok = False
+    if ok:
+        cfg["install_id"] = uuid.uuid4().hex
+    return ok
+
+
 def os_label() -> str:
     if platform.system() != "Windows":
         return platform.system() or "unknown"
@@ -89,8 +162,10 @@ def build_payload(cfg: dict, event: str, game: str | None, version: str, **props
             value = str(value).strip()[:COMMENT_MAX]
             if not value:
                 continue
-        elif isinstance(value, (int, float, bool)):
+        elif isinstance(value, bool):
             pass
+        elif isinstance(value, (int, float)):
+            value = round(value, 1) if isinstance(value, float) else value
         else:
             value = str(value)[:40]
         clean[key] = value

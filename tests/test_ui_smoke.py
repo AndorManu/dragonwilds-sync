@@ -172,3 +172,22 @@ def test_reports_on_by_default_with_a_random_id(qapp, sandbox):
     assert c.cfg["telemetry"] is True and len(c.cfg["install_id"]) == 32
     assert not win.report_overlay.isVisible()        # nothing pops up
     win.close()
+
+
+def test_first_run_reports_keep_one_id_after_setup(qapp, sandbox):
+    home, _ = sandbox
+    vh = home / "AppData" / "LocalLow" / "IronGate" / "Valheim" / "worlds_local"
+    vh.mkdir(parents=True)
+    (vh / "Midgard.fwl").write_bytes(b"x" * 100)
+    (vh / "Midgard.db").write_bytes(b"x" * 5000)
+    c, win = make_window()
+    pre_id = c._pre_cfg["install_id"]
+    win.onboarding_page.name_field.edit.setText("Andor")
+    win.onboarding_page._submit_name()
+    win.addgame_page.game_chosen.emit("valheim")
+    ob = win.onboarding_page
+    ob._submit_world()
+    ob.shared_field.edit.setText(str(home / "Drive" / "Valheim - Midgard"))
+    ob._submit_create()
+    assert c.cfg["install_id"] == pre_id
+    win.close()

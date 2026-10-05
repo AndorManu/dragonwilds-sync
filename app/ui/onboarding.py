@@ -62,6 +62,7 @@ class OnboardingPage(QWidget):
     cancelled = Signal()      # Back out of a game's flow
     name_chosen = Signal(str)  # first run: the name step is done, pick a game
     guide_requested = Signal(str)  # game id: open that game's setup guide
+    step_reached = Signal(str, str)  # step, game id - for the anonymous setup funnel
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -310,6 +311,7 @@ class OnboardingPage(QWidget):
         return page
 
     def _back_from_choice(self):
+        self.step_reached.emit("abandoned_choice", self.profile.id)
         self.cancelled.emit()
 
     # -- step 3: create - world --------------------------------------------------------
@@ -347,6 +349,8 @@ class OnboardingPage(QWidget):
     def _rescan_worlds(self):
         word = self.profile.world_word
         names = self.world_field.refresh(self.save_dir_field.value(), profile=self.profile)
+        if not names and self.isVisible():
+            self.step_reached.emit("no_worlds_found", self.profile.id)
         if names:
             self.world_field.note.setText(
                 f"Found {len(names)} {word}{'s' if len(names) != 1 else ''}, most recently "
@@ -372,6 +376,7 @@ class OnboardingPage(QWidget):
             ok = False
         if ok:
             self.world_field.clear_error()
+            self.step_reached.emit("world_picked", self.profile.id)
             self._suggest_shared_names()
             self._go(STEP_CREATE_SHARED)
 
@@ -480,6 +485,7 @@ class OnboardingPage(QWidget):
             self._join_info = invite.decode(self.code_field.value())
         except invite.InviteError as e:
             self.code_field.set_error(str(e))
+            self.step_reached.emit("join_code_bad", "")
             return
         if self._join_info["game"] not in games.BY_ID:
             self.code_field.set_error("That invite is for a game this version of WorldSync "

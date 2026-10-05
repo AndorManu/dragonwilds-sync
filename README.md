@@ -220,7 +220,8 @@ originals are kept as `config.v1.bak` / `config.v2.bak`.
   under a random id made on your PC. Never your name, world names, folders,
   invite codes or saves. It's how beta games get fixed and marked tested. The
   exact list of fields is in [`app/core/telemetry.py`](app/core/telemetry.py),
-  and a test checks that nothing else gets through. No accounts. Webhooks and
+  and a test checks that nothing else gets through. Plain-language details,
+  retention (12 months) and how to erase your reports: [PRIVACY.md](PRIVACY.md). No accounts. Webhooks and
   Discord presence are off unless you turn them on.
 - **The shared folder is the trust boundary.** Anyone who can write to it can
   change the world save, and - because updates travel through the same
