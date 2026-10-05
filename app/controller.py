@@ -20,7 +20,7 @@ import re
 from . import __version__
 from .core import (backups, characters, chime, config, discordrp, game, games,
                    health, paths, presence, saga, statuspage, storage, sync,
-                   update, webhook, worldhistory)
+                   telemetry, update, webhook, worldhistory)
 from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
 
 
@@ -62,6 +62,8 @@ class Controller(QObject):
     nudge_received = Signal(str, str)           # from_player, world_name
     quit_for_update = Signal()
     library_summary = Signal(object)            # {game_id: {...}} for the library cards
+    feedback_prompt = Signal(str)               # game id: ask "did it work?"
+    tip_prompt = Signal(int)                    # shares so far: maybe ask for a tip
     # Worker threads must never touch widgets. Emitting a callable through
     # this signal marshals it onto the GUI thread (queued connection).
     run_on_ui = Signal(object)
@@ -83,6 +85,7 @@ class Controller(QObject):
             self._prime_seen_versions()
             self._poll.start()
             self.check_updates()
+            self.report("app_start")
 
     # -- config & worlds --------------------------------------------------------
     @property
@@ -150,6 +153,47 @@ class Controller(QObject):
         self._save_all()
         self.worlds_changed.emit()
         self.refresh_status()
+
+    # -- anonymous reports (opt-in) --------------------------------------------------
+    def report(self, event, game=None, **props):
+        try:
+            telemetry.send(self.cfg, event, game, __version__, **props)
+        except Exception:
+            log.debug("report failed", exc_info=True)
+
+    def set_telemetry(self, on: bool):
+        if on:
+            telemetry.opt_in(self.cfg)
+        else:
+            telemetry.opt_out(self.cfg)
+        self._save_all()
+        if on:
+            self.report("app_start")
+
+    def send_feedback(self, game_id, rating, comment):
+        self.report("feedback", game_id, rating=rating, comment=comment)
+        self.toast.emit("success", "Thanks - that goes straight into making it better.")
+
+    def answer_tip(self, answer: str):
+        if answer == "never":
+            self.cfg["tip_next_at"] = None
+        else:
+            self.cfg["tip_next_at"] = self.cfg.get("shares_count", 0) + 25
+        self._save_all()
+
+    def _count_share(self, world):
+        """After a successful share: feedback once per game, a tip now and then."""
+        self.cfg["shares_count"] = self.cfg.get("shares_count", 0) + 1
+        gid = config.world_game(world).id
+        asked = self.cfg.setdefault("feedback_asked", [])
+        if telemetry.enabled(self.cfg) and gid not in asked:
+            asked.append(gid)
+            self.feedback_prompt.emit(gid)
+        else:
+            next_at = self.cfg.get("tip_next_at", 5)
+            if next_at is not None and self.cfg["shares_count"] >= next_at:
+                self.tip_prompt.emit(self.cfg["shares_count"])
+        self._save_all()
 
     # -- library ------------------------------------------------------------------
     def active_game(self) -> games.GameProfile:
@@ -866,6 +910,7 @@ class Controller(QObject):
                 result, wstate = sync.do_pull(flat, wstate, self._log, self._confirm,
                                               self._backup_root(world))
                 storage.save_state(self.state)
+                self.report("pull", profile.id, result=result.name.lower())
                 if result == SyncResult.PULLED:
                     self.toast.emit("success", "Latest save pulled in - you're starting "
                                                "fresh off your friends' progress.")
@@ -915,11 +960,13 @@ class Controller(QObject):
                 presence.stop_playing(sync_dir, self.player_name)
                 self._write_status(world)
                 self._set_phase("idle")
+                self.report("game_launch", profile.id, result="never_started")
                 self.toast.emit("warning", "Never saw the game start. If you are playing, "
                                            "use “Save my progress now” when you're done.")
                 return
 
             self._set_phase("ingame")
+            self.report("game_launch", profile.id, result="started")
             try:
                 self._rp.set_playing(config.world_label(world),
                                      recent.name if recent else "",
@@ -940,6 +987,7 @@ class Controller(QObject):
             self._do_push_guarded(world, flat, wstate, duration, played_char)
         except Exception:
             log.exception("Play flow failed")
+            self.report("error", config.world_game(world).id, kind="play_flow")
             self.toast.emit("error", "Something went wrong during the session. Your save "
                                      "is still on this PC - try “Save my progress now”.")
         finally:
@@ -965,6 +1013,7 @@ class Controller(QObject):
             self._do_push_guarded(world, self._flat_cfg(world), self._wstate(world), None)
         except Exception:
             log.exception("Manual push failed")
+            self.report("error", config.world_game(world).id, kind="push_flow")
             self.toast.emit("error", "Couldn't share your save. Check that your cloud "
                                      "folder is reachable, then try again.")
         finally:
@@ -979,6 +1028,7 @@ class Controller(QObject):
         if world_files(save_dir, world_name, flat["patterns"]):
             hp = health.check_local_save(save_dir, world_name, flat["patterns"])
             if not hp.ok:
+                self.report("push", flat.get("game"), result="unhealthy_save")
                 self.toast.emit("warning", f"Your save looks {hp.reason}, so I didn't share "
                                            f"it - that protects everyone from a bad file. "
                                            f"Your friends keep the last good save.")
@@ -986,6 +1036,7 @@ class Controller(QObject):
         result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
                                       self._backup_root(world))
         storage.save_state(self.state)
+        self.report("push", flat.get("game"), result=result.name.lower())
         self._after_push(world, result, duration_s, played_char)
 
     def _after_push(self, world, result, duration_s, played_char=None):
@@ -1025,6 +1076,7 @@ class Controller(QObject):
                         "warning", "Save shared fine, but the webhook didn't go "
                                    "through - check the URL in Settings."))
             self.note_prompt.emit(world["id"], version)
+            self._count_share(world)
         elif result == SyncResult.NOTHING_TO_PUSH:
             self.toast.emit("warning", "No save files found for this world yet, so "
                                        "there was nothing to share.")

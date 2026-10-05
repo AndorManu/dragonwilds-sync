@@ -25,6 +25,7 @@ from .note_overlay import NoteOverlay
 from .onboarding import OnboardingPage
 from .overlay import ConfirmOverlay
 from .preflight_page import PreflightPage
+from .report_overlay import ReportOverlay
 from .saga_page import SagaPage
 from .settings import SettingsPage
 from . import icons, theme
@@ -102,6 +103,7 @@ class MainWindow(QWidget):
         self.toasts = ToastHost(self.chrome)
         self.confirm = ConfirmOverlay(self.chrome)
         self.note_overlay = NoteOverlay(self.chrome)
+        self.report_overlay = ReportOverlay(self.chrome)
 
         self.tray = TrayManager(app_icon, self)
 
@@ -113,6 +115,8 @@ class MainWindow(QWidget):
                 self._open_game(view)
             else:
                 self._go_library()
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(2500, self._maybe_ask_consent)   # upgraders are asked once too
         else:
             self.titlebar.settings_btn.hide()
             self.onboarding_page.start_fresh()
@@ -150,6 +154,14 @@ class MainWindow(QWidget):
         self.addgame_page.game_chosen.connect(self._on_game_chosen)
         self.addgame_page.back_requested.connect(self._addgame_back)
         c.library_summary.connect(self.library_page.set_summary)
+
+        # opt-in reports, "did it work?", the tip jar
+        self.report_overlay.consent_given.connect(c.set_telemetry)
+        self.report_overlay.feedback_given.connect(c.send_feedback)
+        self.report_overlay.tip_answer.connect(self._on_tip_answer)
+        c.feedback_prompt.connect(lambda gid: self._after_note(
+            lambda: self.report_overlay.ask_feedback(gid, games.get(gid).short)))
+        c.tip_prompt.connect(self._maybe_ask_tip)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
         # (the grimoire deliberately has no menu entry - see _awaken_secret)
@@ -268,6 +280,35 @@ class MainWindow(QWidget):
         self._sync_world_header()
         self._show_page(self.main_page)
         c.refresh_status()
+
+    # -- reports & tips -------------------------------------------------------------
+    def _after_note(self, fn, tries=60):
+        """Wait for the session-note card to close before showing another card."""
+        from PySide6.QtCore import QTimer
+        if self.note_overlay.isVisible() or self.confirm.isVisible():
+            if tries:
+                QTimer.singleShot(1000, lambda: self._after_note(fn, tries - 1))
+            return
+        if self.isVisible() and not self.isMinimized():
+            fn()
+
+    def _maybe_ask_consent(self):
+        from ..core import telemetry
+        cfg = self.controller.cfg or {}
+        if telemetry.available() and cfg.get("telemetry") is None and self.controller.has_config:
+            self._after_note(self.report_overlay.ask_consent)
+
+    def _maybe_ask_tip(self, shares):
+        from .library_page import TIP_URL
+        if TIP_URL:
+            self._after_note(lambda: self.report_overlay.ask_tip(shares))
+
+    def _on_tip_answer(self, answer):
+        if answer == "tip":
+            import webbrowser
+            from .library_page import TIP_URL
+            webbrowser.open(TIP_URL)
+        self.controller.answer_tip(answer)
 
     def _open_guide(self, game_id: str):
         self._guide_return = self.pages.currentWidget()
@@ -470,6 +511,13 @@ class MainWindow(QWidget):
         self._first_run = False
         self.titlebar.settings_btn.show()
         self._open_game(game_id)
+        profile = games.get(game_id)
+        found = games.default_save_dir(profile)
+        c.report("world_created" if payload["kind"] == "create" else "world_joined", game_id,
+                 found_folder=bool(found),
+                 worlds_found=len(games.discover_worlds(profile, found)) if found else 0)
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(1500, self._maybe_ask_consent)
         if payload["kind"] == "join":
             self.toasts.show_toast("success",
                                    f"Welcome to {shown}. Hit Play - "
@@ -525,6 +573,9 @@ class MainWindow(QWidget):
     def _save_settings(self, global_fields, world_fields):
         c = self.controller
         game_fields = global_fields.pop("_game", None)
+        reports = global_fields.pop("_reports", None)
+        if reports is not None and bool(reports) != bool(c.cfg.get("telemetry")):
+            c.set_telemetry(bool(reports))
         if game_fields:
             c.update_game(game_fields["id"], game_fields["save_dir"], game_fields["exe_path"])
         c.update_globals(global_fields)

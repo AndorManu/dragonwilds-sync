@@ -135,6 +135,8 @@ in place on confirm. Worlds and settings are kept.
 
 - **Test my setup** (Settings) - a checklist for folders, cloud sync and
   game launch, so setup problems are obvious, not mysterious.
+- **"Did it work?"** - after a game's first share, one click tells the
+  maintainer whether it worked for you (only with reports switched on).
 - **Checkpoints** (world menu → Backups) - name a snapshot before something
   risky; restore it any time.
 - **Group history** - the last few shared versions stay in the shared
@@ -211,9 +213,15 @@ originals are kept as `config.v1.bak` / `config.v2.bak`.
 
 ## Security notes, honestly
 
-- **Nothing leaves your PC except into the shared folder you chose.** No
-  telemetry, no accounts, no calls to any server of mine (there isn't one).
-  Webhooks and Discord presence are off unless you turn them on.
+- **Nothing leaves your PC except into the shared folder you chose**, unless
+  you say yes to anonymous reports. WorldSync asks once; "No thanks" is just as
+  easy, and it's a checkbox in Settings afterwards. A report says which game,
+  whether a share, pull or launch worked, the app version and Windows version,
+  under a random id made on your PC. Never your name, world names, folders,
+  invite codes or saves. It's how beta games get fixed and marked tested. The
+  exact list of fields is in [`app/core/telemetry.py`](app/core/telemetry.py),
+  and a test checks that nothing else gets through. No accounts. Webhooks and
+  Discord presence are off unless you turn them on.
 - **The shared folder is the trust boundary.** Anyone who can write to it can
   change the world save, and - because updates travel through the same
   folder - can publish an app update that everyone else's app will offer to
