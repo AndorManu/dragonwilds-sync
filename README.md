@@ -6,7 +6,6 @@
 
 <a href="https://github.com/AndorManu/worldsync/releases/latest"><img src="https://img.shields.io/github/v/release/AndorManu/worldsync?style=for-the-badge&label=Download&color=7a9bff&labelColor=0b0f1e&logo=windows&logoColor=white" alt="Download the latest release"></a>
 <a href="#supported-games"><img src="https://img.shields.io/badge/games-10-5cd6c9?style=for-the-badge&labelColor=0b0f1e" alt="10 supported games"></a>
-<a href="https://github.com/AndorManu/worldsync/releases"><img src="https://img.shields.io/github/downloads/AndorManu/worldsync/total?style=for-the-badge&color=f2b66b&labelColor=0b0f1e" alt="Downloads"></a>
 <a href="https://github.com/AndorManu/worldsync/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/AndorManu/worldsync/tests.yml?branch=master&style=for-the-badge&label=tests&labelColor=0b0f1e" alt="Tests"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-b88cff?style=for-the-badge&labelColor=0b0f1e" alt="MIT license"></a>
 
@@ -101,10 +100,10 @@ The full step-by-step guide is in [docs/GAMES.md](docs/GAMES.md), and the same g
 
 <table>
   <tr>
-    <td align="center" width="25%"><h3>1</h3><b>Add a game</b><br><sub>The picker lists your Steam games first.</sub></td>
-    <td align="center" width="25%"><h3>2</h3><b>Pick the world</b><br><sub>Found in the game's save folder, newest first. No digging in AppData.</sub></td>
-    <td align="center" width="25%"><h3>3</h3><b>Pick a shared folder</b><br><sub>Inside Google Drive, Dropbox or OneDrive. Any of them works.</sub></td>
-    <td align="center" width="25%"><h3>4</h3><b>Invite friends</b><br><sub>One code carries the game, the world and the folder.</sub></td>
+    <td align="center" valign="top" width="25%"><h3>1</h3><b>Add a game</b><br><sub>The picker lists your Steam games first.</sub></td>
+    <td align="center" valign="top" width="25%"><h3>2</h3><b>Pick the world</b><br><sub>Found in the game's save folder, newest first. No digging in AppData.</sub></td>
+    <td align="center" valign="top" width="25%"><h3>3</h3><b>Pick a shared folder</b><br><sub>Inside Google Drive, Dropbox or OneDrive. Any of them works.</sub></td>
+    <td align="center" valign="top" width="25%"><h3>4</h3><b>Invite friends</b><br><sub>One code carries the game, the world and the folder.</sub></td>
   </tr>
 </table>
 
