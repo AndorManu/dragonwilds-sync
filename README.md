@@ -163,6 +163,8 @@ get a clear warning before anything is overwritten, in **both** directions.
 
 <sub>One file. No install, no Python, no account. Windows 10 and 11.</sub>
 
+<sub>Also on <a href="https://andy69987.itch.io/worldsync">itch.io</a>.</sub>
+
 </div>
 
 SmartScreen will warn the first time because the exe isn't code-signed:
