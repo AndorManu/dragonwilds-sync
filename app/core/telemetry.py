@@ -27,9 +27,10 @@ import uuid
 
 log = logging.getLogger("dwsync.telemetry")
 
-# Filled in when the reporting backend exists; while empty nothing is ever sent.
-ENDPOINT = ""          # e.g. https://<project>.supabase.co/rest/v1/events
-API_KEY = ""           # insert-only public key (it can't read anything back)
+# The reporting backend (Supabase). The key is the public "publishable" key: the
+# database only lets it add rows to the events table, it can't read anything back.
+ENDPOINT = "https://gqlcpgosdkwfgmiqcymy.supabase.co/rest/v1/events"
+API_KEY = "sb_publishable_HBviDO2TiQkI4npN7ACZOQ_8b-iCBlF"
 TIMEOUT_S = 4
 
 EVENTS = {
