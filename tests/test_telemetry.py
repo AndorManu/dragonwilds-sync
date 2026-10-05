@@ -1,4 +1,4 @@
-"""Opt-in reports: nothing leaves the PC without a yes, and never anything personal."""
+"""Anonymous reports: on by default, off with one setting, never anything personal."""
 
 import pytest
 
@@ -22,9 +22,15 @@ def backend(monkeypatch):
     return sent
 
 
-def test_nothing_is_sent_without_consent(backend):
-    assert telemetry.send({}, "push", "valheim", "2.0.0", result="pushed") is None
-    assert telemetry.send({"telemetry": False, "install_id": "x"}, "push") is None
+def test_on_by_default_once_the_pc_has_an_id(backend):
+    cfg = {}
+    assert telemetry.send(cfg, "push", "valheim", "2.1.0", result="pushed") is None  # no id yet
+    assert telemetry.ensure_id(cfg) and not telemetry.ensure_id(cfg)
+    assert telemetry.send(cfg, "push", "valheim", "2.1.0", result="pushed") is not None
+
+
+def test_nothing_is_sent_when_switched_off(backend):
+    assert telemetry.send({"telemetry": False, "install_id": "a" * 32}, "push") is None
     assert backend == []
 
 

@@ -250,7 +250,8 @@ class OnboardingPage(QWidget):
         btn.clicked.connect(lambda: self._go(STEP_NAME))
         box.addWidget(btn, 0, Qt.AlignHCenter)
 
-        cap = QLabel("Free  ·  No account  ·  Your own cloud drive")
+        cap = QLabel("Free  ·  No account  ·  Your own cloud drive\n"
+                     "Sends anonymous reports to help fix games - switch off in Settings")
         cap.setAlignment(Qt.AlignHCenter)
         cap.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 11px;")
         box.addSpacing(12)

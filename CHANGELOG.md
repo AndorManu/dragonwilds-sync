@@ -4,11 +4,11 @@
 
 **Find out what actually works.**
 
-- Optional anonymous reports (asked once, off unless you say yes) and a
-  "did it work?" after each game's first share, so beta games can be fixed
-  and marked tested. Never names, world names, folders or saves.
-- One gentle tip-jar ask after your fifth share, with "Maybe later" and
-  "Don't ask again".
+- Anonymous reports, on by default and switched off with one checkbox in
+  Settings, plus a "did it work?" after each game's first share, so beta games
+  can be fixed and marked tested. Never names, world names, folders or saves.
+- A small "Buy me a coffee" link at the bottom of every screen, and one
+  Windows notification after your fifth share. No pop-ups.
 - Reports go to a small database that only accepts new rows; nothing can be
   read back with the key inside the app.
 

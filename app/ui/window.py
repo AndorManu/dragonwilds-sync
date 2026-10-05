@@ -115,8 +115,6 @@ class MainWindow(QWidget):
                 self._open_game(view)
             else:
                 self._go_library()
-            from PySide6.QtCore import QTimer
-            QTimer.singleShot(2500, self._maybe_ask_consent)   # upgraders are asked once too
         else:
             self.titlebar.settings_btn.hide()
             self.onboarding_page.start_fresh()
@@ -156,12 +154,11 @@ class MainWindow(QWidget):
         c.library_summary.connect(self.library_page.set_summary)
 
         # opt-in reports, "did it work?", the tip jar
-        self.report_overlay.consent_given.connect(c.set_telemetry)
         self.report_overlay.feedback_given.connect(c.send_feedback)
-        self.report_overlay.tip_answer.connect(self._on_tip_answer)
         c.feedback_prompt.connect(lambda gid: self._after_note(
             lambda: self.report_overlay.ask_feedback(gid, games.get(gid).short)))
-        c.tip_prompt.connect(self._maybe_ask_tip)
+        c.tip_prompt.connect(self._notify_tip)
+        self.tray.tip_clicked.connect(self._open_tip)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
         # (the grimoire deliberately has no menu entry - see _awaken_secret)
@@ -292,23 +289,23 @@ class MainWindow(QWidget):
         if self.isVisible() and not self.isMinimized():
             fn()
 
-    def _maybe_ask_consent(self):
-        from ..core import telemetry
-        cfg = self.controller.cfg or {}
-        if telemetry.available() and cfg.get("telemetry") is None and self.controller.has_config:
-            self._after_note(self.report_overlay.ask_consent)
+    def _notify_tip(self, shares):
+        """One Windows notification after the fifth share; nothing ever pops up in the app."""
+        from .library_page import TIP_URL
+        if not TIP_URL:
+            return
+        if self.tray.available:
+            self.tray.notify_tip(shares)
+        else:
+            self.toasts.show_toast("info", f"{shares} sessions shared without a server. "
+                                           f"Enjoying WorldSync? There's a coffee link "
+                                           f"at the bottom of the screen.")
 
-    def _maybe_ask_tip(self, shares):
+    def _open_tip(self):
+        import webbrowser
         from .library_page import TIP_URL
         if TIP_URL:
-            self._after_note(lambda: self.report_overlay.ask_tip(shares))
-
-    def _on_tip_answer(self, answer):
-        if answer == "tip":
-            import webbrowser
-            from .library_page import TIP_URL
             webbrowser.open(TIP_URL)
-        self.controller.answer_tip(answer)
 
     def _open_guide(self, game_id: str):
         self._guide_return = self.pages.currentWidget()
@@ -516,8 +513,7 @@ class MainWindow(QWidget):
         c.report("world_created" if payload["kind"] == "create" else "world_joined", game_id,
                  found_folder=bool(found),
                  worlds_found=len(games.discover_worlds(profile, found)) if found else 0)
-        from PySide6.QtCore import QTimer
-        QTimer.singleShot(1500, self._maybe_ask_consent)
+
         if payload["kind"] == "join":
             self.toasts.show_toast("success",
                                    f"Welcome to {shown}. Hit Play - "
@@ -574,7 +570,7 @@ class MainWindow(QWidget):
         c = self.controller
         game_fields = global_fields.pop("_game", None)
         reports = global_fields.pop("_reports", None)
-        if reports is not None and bool(reports) != bool(c.cfg.get("telemetry")):
+        if reports is not None and bool(reports) != (c.cfg.get("telemetry") is not False):
             c.set_telemetry(bool(reports))
         if game_fields:
             c.update_game(game_fields["id"], game_fields["save_dir"], game_fields["exe_path"])

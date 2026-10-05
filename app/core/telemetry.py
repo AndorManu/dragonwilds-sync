@@ -1,12 +1,12 @@
-"""Opt-in, anonymous reports: does WorldSync actually work for each game?
+"""Anonymous reports: does WorldSync actually work for each game?
 
-Off until the player says yes (asked once, changeable in Settings). When on,
-the app sends small events such as "valheim: shared OK" or "palworld: pull
+On by default, switched off with one checkbox in Settings (and said so on the
+welcome screen and in the README). When on, the app sends small events such as "valheim: shared OK" or "palworld: pull
 failed" plus an optional thumbs up/down after a game's first share. That's
 how beta games earn "tested" from real groups instead of guesses.
 
 What a report contains, and nothing else:
-  install_id   a random id made on this PC when you opt in (not your Steam id,
+  install_id   a random id made on this PC (not your Steam id,
                not your name, not tied to anything)
   app_version, os (e.g. "Windows 11"), game id, event name
   props        only whitelisted keys below: a result code, counts, a rating,
@@ -47,13 +47,22 @@ def available() -> bool:
 
 
 def enabled(cfg: dict | None) -> bool:
-    return available() and bool((cfg or {}).get("telemetry")) and bool((cfg or {}).get("install_id"))
+    """On unless the player switched it off (None = never touched = on)."""
+    cfg = cfg or {}
+    return available() and cfg.get("telemetry") is not False and bool(cfg.get("install_id"))
+
+
+def ensure_id(cfg: dict) -> bool:
+    """Give this PC its random id. Returns True when the config changed."""
+    if cfg.get("install_id"):
+        return False
+    cfg["install_id"] = uuid.uuid4().hex
+    return True
 
 
 def opt_in(cfg: dict):
     cfg["telemetry"] = True
-    if not cfg.get("install_id"):
-        cfg["install_id"] = uuid.uuid4().hex
+    ensure_id(cfg)
 
 
 def opt_out(cfg: dict):
@@ -109,7 +118,7 @@ def _post(payload: dict):
 
 def send(cfg: dict | None, event: str, game: str | None = None, version: str = "",
          **props) -> dict | None:
-    """Queue one report if the player opted in. Returns the payload (for tests)."""
+    """Queue one report unless reports are switched off. Returns the payload (for tests)."""
     if event not in EVENTS or not enabled(cfg):
         return None
     payload = build_payload(cfg, event, game, version, **props)

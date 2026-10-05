@@ -312,11 +312,21 @@ class MainPage(QWidget):
         self.conn_dot.setStyleSheet(f"color: {theme.TEXT_FAINT}; font-size: 9px;")
         self.conn_text = QLabel("")
         self.conn_text.setObjectName("FooterText")
+        from .library_page import TIP_URL
+        self.coffee_btn = QPushButton("☕ Buy me a coffee")
+        self.coffee_btn.setObjectName("CoffeeLink")
+        self.coffee_btn.setCursor(Qt.PointingHandCursor)
+        self.coffee_btn.setFlat(True)
+        self.coffee_btn.setToolTip("WorldSync is free. A coffee keeps new games coming.")
+        self.coffee_btn.setVisible(bool(TIP_URL))
+        self.coffee_btn.clicked.connect(lambda: __import__("webbrowser").open(TIP_URL))
         version = QLabel(f"v{__version__}")
         version.setObjectName("FooterText")
         footer.addWidget(self.conn_dot)
         footer.addWidget(self.conn_text)
         footer.addStretch(1)
+        footer.addWidget(self.coffee_btn)
+        footer.addSpacing(6)
         footer.addWidget(version)
         body_box.addLayout(footer)
 
@@ -342,6 +352,10 @@ class MainPage(QWidget):
         self.play_btn.setIcon(icons.icon("play", theme.ON_ACCENT, 20))
         self.play_btn.retheme()
         self.feed_title.setText(theme.caps("Recent sessions"))
+        self.coffee_btn.setStyleSheet(
+            "QPushButton#CoffeeLink { background: transparent; border: none; padding: 0;"
+            f"color: {theme.TEXT_FAINT}; font-size: 11px; }}"
+            f"QPushButton#CoffeeLink:hover {{ color: {theme.EMBER}; }}")
 
     def set_game(self, name: str, has_characters: bool):
         self._game_name = name

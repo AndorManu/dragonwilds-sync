@@ -137,3 +137,38 @@ def test_every_theme_applies_and_every_scene_paints(qapp):
         pm = scenes.render(gamethemes.get(tid).scene, 160, 60, theme.ACCENT, theme.EMBER)
         assert not pm.isNull()
     theme.apply_game("dragonwilds")
+
+
+def test_coffee_notification_fires_once_at_the_fifth_share(qapp, sandbox):
+    _, data = sandbox
+    data.mkdir(parents=True)
+    (data / "config.json").write_text(json.dumps({
+        "schema": 3, "player_name": "Andor", "library": ["raft"], "last_view": "raft",
+        "telemetry": False,
+        "worlds": [{"id": "w_1", "game": "raft", "world_name": "Sea", "sync_dir": "C:/none"}],
+        "active_world": "w_1",
+    }))
+    c, win = make_window()
+    tips, asks = [], []
+    c.tip_prompt.connect(tips.append)
+    c.feedback_prompt.connect(asks.append)
+    for _ in range(8):
+        c._count_share(c.active_world())
+    assert tips == [5]
+    assert asks == []                    # reports off: no "did it work?" either
+    assert win.main_page.coffee_btn.isVisibleTo(win.main_page)
+    win.close()
+
+
+def test_reports_on_by_default_with_a_random_id(qapp, sandbox):
+    _, data = sandbox
+    data.mkdir(parents=True)
+    (data / "config.json").write_text(json.dumps({
+        "schema": 2, "player_name": "Andor",
+        "worlds": [{"id": "w_1", "world_name": "Ash", "sync_dir": "C:/none"}],
+        "active_world": "w_1",
+    }))
+    c, win = make_window()
+    assert c.cfg["telemetry"] is True and len(c.cfg["install_id"]) == 32
+    assert not win.report_overlay.isVisible()        # nothing pops up
+    win.close()

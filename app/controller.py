@@ -63,7 +63,7 @@ class Controller(QObject):
     quit_for_update = Signal()
     library_summary = Signal(object)            # {game_id: {...}} for the library cards
     feedback_prompt = Signal(str)               # game id: ask "did it work?"
-    tip_prompt = Signal(int)                    # shares so far: maybe ask for a tip
+    tip_prompt = Signal(int)                    # 5th share: one tip notification
     # Worker threads must never touch widgets. Emitting a callable through
     # this signal marshals it onto the GUI thread (queued connection).
     run_on_ui = Signal(object)
@@ -81,6 +81,10 @@ class Controller(QObject):
         self._poll = QTimer(self)
         self._poll.setInterval(STATUS_POLL_MS)
         self._poll.timeout.connect(self._poll_tick)
+        if self.cfg and telemetry.ensure_id(self.cfg):
+            storage.save_config(self.cfg)
+        if self.cfg and telemetry.ensure_id(self.cfg):
+            storage.save_config(self.cfg)
         if self.cfg:
             self._prime_seen_versions()
             self._poll.start()
@@ -123,6 +127,7 @@ class Controller(QObject):
         base["worlds"] = config.worlds(base) + [world]
         base["active_world"] = world["id"]
         base["last_view"] = game_id
+        telemetry.ensure_id(base)
         self.cfg = base
         self._save_all()
         self._prime_seen_versions()
@@ -174,25 +179,18 @@ class Controller(QObject):
         self.report("feedback", game_id, rating=rating, comment=comment)
         self.toast.emit("success", "Thanks - that goes straight into making it better.")
 
-    def answer_tip(self, answer: str):
-        if answer == "never":
-            self.cfg["tip_next_at"] = None
-        else:
-            self.cfg["tip_next_at"] = self.cfg.get("shares_count", 0) + 25
-        self._save_all()
-
     def _count_share(self, world):
-        """After a successful share: feedback once per game, a tip now and then."""
+        """After a successful share: "did it work?" once per game, and a single
+        tip notification at the fifth share."""
         self.cfg["shares_count"] = self.cfg.get("shares_count", 0) + 1
         gid = config.world_game(world).id
         asked = self.cfg.setdefault("feedback_asked", [])
         if telemetry.enabled(self.cfg) and gid not in asked:
             asked.append(gid)
             self.feedback_prompt.emit(gid)
-        else:
-            next_at = self.cfg.get("tip_next_at", 5)
-            if next_at is not None and self.cfg["shares_count"] >= next_at:
-                self.tip_prompt.emit(self.cfg["shares_count"])
+        if self.cfg["shares_count"] >= 5 and not self.cfg.get("tip_notified"):
+            self.cfg["tip_notified"] = True
+            self.tip_prompt.emit(self.cfg["shares_count"])
         self._save_all()
 
     # -- library ------------------------------------------------------------------

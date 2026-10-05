@@ -136,7 +136,7 @@ in place on confirm. Worlds and settings are kept.
 - **Test my setup** (Settings) - a checklist for folders, cloud sync and
   game launch, so setup problems are obvious, not mysterious.
 - **"Did it work?"** - after a game's first share, one click tells the
-  maintainer whether it worked for you (only with reports switched on).
+  maintainer whether it worked for you (only while reports are on).
 - **Checkpoints** (world menu → Backups) - name a snapshot before something
   risky; restore it any time.
 - **Group history** - the last few shared versions stay in the shared
@@ -213,9 +213,9 @@ originals are kept as `config.v1.bak` / `config.v2.bak`.
 
 ## Security notes, honestly
 
-- **Nothing leaves your PC except into the shared folder you chose**, unless
-  you say yes to anonymous reports. WorldSync asks once; "No thanks" is just as
-  easy, and it's a checkbox in Settings afterwards. A report says which game,
+- **Anonymous reports are on by default, and one checkbox in Settings turns
+  them off.** Apart from those, nothing leaves your PC except into the shared
+  folder you chose. A report says which game,
   whether a share, pull or launch worked, the app version and Windows version,
   under a random id made on your PC. Never your name, world names, folders,
   invite codes or saves. It's how beta games get fixed and marked tested. The

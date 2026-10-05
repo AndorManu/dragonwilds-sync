@@ -12,11 +12,13 @@ log = logging.getLogger("dwsync.tray")
 class TrayManager(QObject):
     open_requested = Signal()
     quit_requested = Signal()
+    tip_clicked = Signal()
 
     def __init__(self, icon: QIcon, parent=None):
         super().__init__(parent)
         self.available = QSystemTrayIcon.isSystemTrayAvailable()
         self._tip_shown = False
+        self._last_message = None
         if not self.available:
             log.info("No system tray available")
             return
@@ -33,8 +35,24 @@ class TrayManager(QObject):
         self._menu = menu
         self.tray.setContextMenu(menu)
         self.tray.activated.connect(self._on_activated)
-        self.tray.messageClicked.connect(self.open_requested.emit)
+        self.tray.messageClicked.connect(self._on_message_clicked)
         self.tray.show()
+
+    def _on_message_clicked(self):
+        if self._last_message == "tip":
+            self.tip_clicked.emit()
+        else:
+            self.open_requested.emit()
+
+    def _show(self, kind, title, body, ms):
+        self._last_message = kind
+        self.tray.showMessage(title, body, QSystemTrayIcon.Information, ms)
+
+    def notify_tip(self, shares: int):
+        if self.available:
+            self._show("tip", "Enjoying WorldSync? ☕",
+                       f"Your group has shared {shares} sessions without renting a server. "
+                       f"WorldSync is free; click here if you'd like to buy me a coffee.", 10000)
 
     def _on_activated(self, reason):
         if reason in (QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick):
@@ -42,30 +60,22 @@ class TrayManager(QObject):
 
     def notify_friend_push(self, world_name: str, editor: str, version: int):
         if self.available:
-            self.tray.showMessage(
-                f"Your turn in {world_name}?",
-                f"{editor} shared v{version} - the wilds await.",
-                QSystemTrayIcon.Information, 8000)
+            self._show("open", f"Your turn in {world_name}?",
+                       f"{editor} shared v{version} - the newest save is waiting for you.", 8000)
 
     def notify_nudge(self, from_player: str, world_name: str):
         if self.available:
-            self.tray.showMessage(
-                f"It's your turn in {world_name}",
-                f"{from_player} passed you the world - jump in when you're ready.",
-                QSystemTrayIcon.Information, 8000)
+            self._show("open", f"It's your turn in {world_name}",
+                       f"{from_player} passed you the world - jump in when you're ready.", 8000)
 
     def notify_update(self, version: str):
         if self.available:
-            self.tray.showMessage(
-                "Update available",
-                f"Version {version} is ready. Open WorldSync to update.",
-                QSystemTrayIcon.Information, 7000)
+            self._show("open", "Update available",
+                       f"Version {version} is ready. Open WorldSync to update.", 7000)
 
     def show_minimized_tip(self):
         if self.available and not self._tip_shown:
             self._tip_shown = True
-            self.tray.showMessage(
-                "Still keeping watch",
-                "WorldSync lives in the tray now - you'll get a ping "
-                "when a friend shares a save. Right-click the icon to quit.",
-                QSystemTrayIcon.Information, 6000)
+            self._show("open", "Still keeping watch",
+                       "WorldSync lives in the tray now - you'll get a ping "
+                       "when a friend shares a save. Right-click the icon to quit.", 6000)

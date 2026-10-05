@@ -12,9 +12,9 @@ from .library_page import TIP_URL
 
 CHANGELOG = [
     ("2.1.0", [
-        "Optional anonymous reports so new games can be fixed and marked tested",
+        "Anonymous reports so new games can be fixed and marked tested (Settings to switch off)",
         "\"Did it work?\" after each game's first share",
-        "One gentle tip-jar ask after your fifth share",
+        "A small coffee link on every screen, no pop-ups",
     ]),
     ("2.0.0", [
         "Dragonwilds Sync is now WorldSync: one app for every co-op world",

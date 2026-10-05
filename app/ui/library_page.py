@@ -249,7 +249,7 @@ class LibraryPage(QWidget):
         bb.addLayout(actions)
 
         footer = QHBoxLayout()
-        self.tip_btn = widgets.make_button("Support WorldSync", "subtle", "heart", height=26)
+        self.tip_btn = widgets.make_button("Buy me a coffee", "subtle", "heart", height=26)
         self.tip_btn.setToolTip("WorldSync is free. If it saved your group a server bill, "
                                 "a tip keeps it going.")
         self.tip_btn.clicked.connect(lambda: webbrowser.open(TIP_URL))

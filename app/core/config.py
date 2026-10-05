@@ -37,11 +37,11 @@ GLOBAL_DEFAULTS = {
     "characters_dir": None,        # None -> derived beside the save folder
     "travel_characters": [],       # character file stems that follow you across PCs
     "play_chime": True,
-    "telemetry": None,      # None = not asked yet; True/False = the player's answer
-    "install_id": None,     # random, made only on opt-in (see core/telemetry.py)
+    "telemetry": True,      # anonymous reports, on unless switched off in Settings
+    "install_id": None,     # random id for reports, made on first start (core/telemetry.py)
     "feedback_asked": [],   # games we already asked "did it work?" about
     "shares_count": 0,      # successful shares on this PC, for the tip jar timing
-    "tip_next_at": 5,       # ask for a tip after this many shares; None = never
+    "tip_notified": False,  # the one "buy me a coffee" notification after 5 shares
     "discord_app_id": "",
     "active_world": None,
     "worlds": [],

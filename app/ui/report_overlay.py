@@ -1,9 +1,7 @@
-"""Two small asks about anonymous reports.
+"""After a game's first successful share: "did it work?"
 
-Consent: asked once, both answers equally easy, nothing is sent before a yes.
-Feedback: after a game's first successful share, "did it work?" with a thumbs
-up or down and an optional line. That's the signal that moves a beta game to
-tested.
+A thumbs up or down and an optional line, only while anonymous reports are
+on. That's the signal that moves a beta game to tested.
 """
 
 from PySide6.QtCore import Qt, Signal
@@ -15,9 +13,7 @@ from . import theme, widgets
 
 
 class ReportOverlay(QWidget):
-    consent_given = Signal(bool)
     feedback_given = Signal(str, str, str)     # game_id, "up"|"down", comment
-    tip_answer = Signal(str)                   # "tip" | "later" | "never"
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -68,17 +64,14 @@ class ReportOverlay(QWidget):
 
         buttons = QHBoxLayout()
         buttons.addStretch(1)
-        self.no_btn = widgets.make_button("No thanks", "ghost", height=36)
-        self.yes_btn = widgets.make_button("Share anonymous reports", "primary", height=36)
+        self.no_btn = widgets.make_button("Skip", "ghost", height=36)
+        self.yes_btn = widgets.make_button("Send", "primary", height=36)
         self.no_btn.clicked.connect(lambda: self._finish(False))
         self.yes_btn.clicked.connect(lambda: self._finish(True))
         buttons.addWidget(self.no_btn)
         buttons.addSpacing(8)
         buttons.addWidget(self.yes_btn)
         box.addLayout(buttons)
-        self.never_btn = widgets.make_button("Don't ask again", "subtle", height=26)
-        self.never_btn.clicked.connect(self._never)
-        box.addWidget(self.never_btn, 0, Qt.AlignRight)
 
         outer.addWidget(self.card)
         outer.addStretch(1)
@@ -112,24 +105,6 @@ class ReportOverlay(QWidget):
         self.raise_()
 
     # -- the two asks ------------------------------------------------------------
-    def ask_consent(self):
-        self._mode = "consent"
-        self.title.setText("Help WorldSync work for every game?")
-        self.body.setText(
-            "If you say yes, WorldSync sends short anonymous reports: which game, whether "
-            "a share or pull worked, and the app version. That's how new games get "
-            "fixed and marked as tested.\n\n"
-            "Never sent: your name, world names, folders, invite codes or saves. "
-            "You can switch it off any time in Settings.")
-        self.thumbs.hide()
-        self.comment.hide()
-        self.never_btn.hide()
-        self.no_btn.setText("No thanks")
-        self.yes_btn.setText("Share anonymous reports")
-        self.yes_btn.show()
-        self._show()
-        self.no_btn.setFocus()
-
     def ask_feedback(self, game_id: str, game_name: str):
         self._mode = "feedback"
         self._game_id = game_id
@@ -138,7 +113,6 @@ class ReportOverlay(QWidget):
         self.body.setText("Your first share went through. One click tells me whether "
                           "the whole thing worked the way it should.")
         self.thumbs.show()
-        self.never_btn.hide()
         self.comment.clear()
         self.comment.show()
         for b in (self.up_btn, self.down_btn):
@@ -147,25 +121,6 @@ class ReportOverlay(QWidget):
         self.yes_btn.setText("Send")
         self.yes_btn.setEnabled(False)
         self._show()
-
-    def ask_tip(self, shares: int):
-        self._mode = "tip"
-        self.title.setText("Enjoying WorldSync?")
-        self.body.setText(
-            f"Your group has shared {shares} sessions without renting a server. WorldSync "
-            "is free and stays free, it's built by one person in their spare time. If it "
-            "saved you a server bill, a coffee keeps new games coming.")
-        self.thumbs.hide()
-        self.comment.hide()
-        self.never_btn.show()
-        self.no_btn.setText("Maybe later")
-        self.yes_btn.setText("Buy me a coffee")
-        self._show()
-        self.no_btn.setFocus()
-
-    def _never(self):
-        self.hide()
-        self.tip_answer.emit("never")
 
     def _pick(self, rating):
         self._rating = rating
@@ -179,9 +134,5 @@ class ReportOverlay(QWidget):
         mode = self._mode
         self.hide()
         self.yes_btn.setEnabled(True)
-        if mode == "consent":
-            self.consent_given.emit(yes)
-        elif mode == "tip":
-            self.tip_answer.emit("tip" if yes else "later")
-        elif mode == "feedback" and yes and self._rating:
+        if mode == "feedback" and yes and self._rating:
             self.feedback_given.emit(self._game_id, self._rating, self.comment.text().strip())
