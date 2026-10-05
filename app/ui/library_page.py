@@ -19,8 +19,8 @@ from . import format as fmt
 from . import gamethemes, icons, scenes, theme, widgets
 from .banner import WorldBanner
 
-# Set to a Ko-fi / GitHub Sponsors URL to show the tip jar; hidden while empty.
-TIP_URL = ""
+# The tip jar. Set to "" to hide the button.
+TIP_URL = "https://ko-fi.com/andormanu"
 
 CARD_W, CARD_H = 204, 124   # two columns plus a scrollbar fit the 512px window
 _THUMBS: dict[tuple, object] = {}

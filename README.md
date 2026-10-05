@@ -14,7 +14,7 @@ world into a shared cloud folder instead, so **anyone in the group can
 host**: tonight you, tomorrow a friend, next week you alone for an hour.
 Whoever presses Play gets the newest save, and their progress goes back to
 the group when they quit. No server, no subscription, nothing to keep
-running. Free and open source.
+running. Free and open source ([tips welcome](https://ko-fi.com/andormanu)).
 
 <p align="center">
   <img src="docs/screenshots/04_library.png" width="32%" alt="The game library">
@@ -247,6 +247,12 @@ sync core (`app/core/sync.py`) boring: any change there needs a test in
 readable by older versions (it's plain JSON on purpose). Run
 `python -m pytest tests` before opening a PR - CI runs the same suite on
 Windows and Linux.
+
+## Support
+
+WorldSync is free and stays free. If it saved your group a server bill,
+you can [buy me a coffee on Ko-fi](https://ko-fi.com/andormanu). It goes
+straight into adding the next game.
 
 ## Credits & license
 
