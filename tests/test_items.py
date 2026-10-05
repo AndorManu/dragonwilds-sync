@@ -14,7 +14,7 @@ def test_catalogue_loads_and_is_substantial():
 
 
 def test_known_items_resolve():
-    # Ash logs — a stable, low-tier resource present since launch
+    # Ash logs - a stable, low-tier resource present since launch
     ash = "2rxJ495rm0GDn4h5OWKiyQ"
     assert items.known(ash)
     assert "ash" in items.name(ash).lower()

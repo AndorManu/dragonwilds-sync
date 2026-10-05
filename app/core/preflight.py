@@ -1,4 +1,4 @@
-"""'Test my setup' — one pass that catches the things that trip up friends.
+"""'Test my setup' - one pass that catches the things that trip up friends.
 
 Pure checks, no side effects beyond writing (and deleting) a probe file to
 confirm the shared folder is writable. Returns a list of results the UI can
@@ -44,7 +44,7 @@ def run(cfg: dict, world: dict) -> list[Check]:
         checks.append(Check("Game save folder", OK, str(save_dir)))
     else:
         checks.append(Check("Game save folder", FAIL,
-                            "Not found — set it in Settings."))
+                            "Not found - set it in Settings."))
 
     # 2. The world save itself
     hp = health.check_local_save(save_dir, world_name)
@@ -56,16 +56,16 @@ def run(cfg: dict, world: dict) -> list[Check]:
                             "Can't check until the save folder is set."))
     else:
         checks.append(Check(f"World save “{world_name}”", WARN,
-                            "Not on this PC yet — that's fine if a friend has "
+                            "Not on this PC yet - that's fine if a friend has "
                             "the latest. Hit Play to pull it in."))
 
     # 3. Shared folder present + writable
     if not sync_dir.exists():
         checks.append(Check("Shared folder", FAIL,
-                            "Not found — is your cloud drive running?"))
+                            "Not found - is your cloud drive running?"))
     elif not _writable(sync_dir):
         checks.append(Check("Shared folder", FAIL,
-                            "Found, but can't write to it — check folder permissions."))
+                            "Found, but can't write to it - check folder permissions."))
     else:
         checks.append(Check("Shared folder", OK, str(sync_dir)))
 
@@ -82,10 +82,10 @@ def run(cfg: dict, world: dict) -> list[Check]:
         else:
             checks.append(Check("Cloud drive", WARN,
                                 "A cloud drive is running, but the shared folder "
-                                "isn't inside it — friends may not receive your saves."))
+                                "isn't inside it - friends may not receive your saves."))
     else:
         checks.append(Check("Cloud drive", WARN,
-                            "None detected — saves won't reach friends without one."))
+                            "None detected - saves won't reach friends without one."))
 
     # 5. Still-syncing check
     if sync_dir.exists() and health.shared_still_syncing(sync_dir, world_name):

@@ -1,4 +1,4 @@
-"""Reading — and carefully editing — Dragonwilds character files.
+"""Reading - and carefully editing - Dragonwilds character files.
 
 Characters live beside the world saves (``Saved\\SaveCharacters``) as
 pretty-printed JSON with a ``.backup`` twin, mirroring the world pattern.
@@ -19,7 +19,7 @@ Verified structure (game Version 75):
 Editing philosophy: modify only the exact values asked for, leave every
 other field (including ``Backup``) untouched, always checkpoint first,
 always verify the result re-parses to exactly the intended structure before
-replacing the file. The ``.backup`` twin is never modified — it's the game's
+replacing the file. The ``.backup`` twin is never modified - it's the game's
 own second safety net and doubles as ours.
 """
 
@@ -43,7 +43,7 @@ DEFAULT_CHARACTERS_DIR = (
 # The canonical skill-GUID -> name mapping, cracked 2026-07-08 by matching
 # in-game skill-panel XP values against the file, all 11 exact and unique.
 # The Ids are identical across characters, so this holds game-wide (until a
-# game update adds skills — the identify ritual covers that day).
+# game update adds skills - the identify ritual covers that day).
 DEFAULT_SKILL_LABELS = {
     "4pefO9k1lUqfA6mvHNi1SA": "Attack",
     "0hreSMRVXUihq9qjDO2CFA": "Magic",
@@ -179,7 +179,7 @@ def portrait_descriptor(info: CharacterInfo) -> str:
 
 
 # ---------------------------------------------------------------------------
-# knowledge — the Scroll of Knowledge
+# knowledge - the Scroll of Knowledge
 # ---------------------------------------------------------------------------
 
 # Category -> path inside the character JSON. All are lists of opaque ids
@@ -233,7 +233,7 @@ def extract_knowledge(data: dict) -> dict:
 
 
 def diff_knowledge(data: dict, scroll: dict) -> dict:
-    """{category: how much is new} — what absorbing the scroll would add."""
+    """{category: how much is new} - what absorbing the scroll would add."""
     gains = {}
     for name, path in KNOWLEDGE_PATHS.items():
         incoming = scroll.get(name) or []
@@ -288,7 +288,7 @@ def absorb_knowledge(path, scroll: dict, backup_root) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# completing the codex — grant everything a max character would have unlocked
+# completing the codex - grant everything a max character would have unlocked
 # ---------------------------------------------------------------------------
 
 # Which grant catalogue feeds which save list. Editing skill XP directly does
@@ -442,7 +442,7 @@ def fill_spell_bar(path, backup_root) -> int:
 def grant_all_unlocks(path, catalogs: dict, backup_root) -> dict:
     """Union the full unlock catalogues into a character; sync the spell bar.
 
-    Append-only (never removes), checkpoint-first, atomic verified write —
+    Append-only (never removes), checkpoint-first, atomic verified write -
     the same contract as every bargain. Returns the per-category gains.
     """
     path = Path(path)
@@ -510,7 +510,7 @@ def read_scroll(path) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# the bag — inventory + Gift Across the Void
+# the bag - inventory + Gift Across the Void
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -665,7 +665,7 @@ def spawn_item(char_path, item_data: str, count: int, backup_root,
     """Conjure a catalogue item into the first free bag slot.
 
     Stackable items get a Count clamped to their real max stack; non-stackable
-    items (gear, tools) get Durability instead — matching how the game stores
+    items (gear, tools) get Durability instead - matching how the game stores
     each. Same safety contract as every bargain: checkpoint first, fresh GUID,
     respects MaxSlotIndex, atomic verified write. Returns the slot index or
     None if the bag is full.
@@ -725,7 +725,7 @@ def _write_character(path: Path, data: dict):
 
 
 # ---------------------------------------------------------------------------
-# editing — The Dragon's Bargain
+# editing - The Dragon's Bargain
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -800,7 +800,7 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
     inventory = progress.get("Inventory") or {}
     loadout = progress.get("Loadout") or {}
 
-    # tier swaps — transmute an item into another material tier, in place. Done
+    # tier swaps - transmute an item into another material tier, in place. Done
     # before counts so a stackable's Count clamps to the new item's cap. The slot
     # (and its GUID) is kept; only the ItemData and its storage shape change.
     if plan.item_swaps:
@@ -899,7 +899,7 @@ def apply_edits(path, plan: EditPlan, backup_root) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# skill labelling — the identify ritual
+# skill labelling - the identify ritual
 # ---------------------------------------------------------------------------
 
 def load_skill_labels(app_dir) -> dict:

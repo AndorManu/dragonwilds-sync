@@ -1,9 +1,9 @@
 """Live presence and turn reservation via tiny files in the shared folder.
 
-``playing.json`` — written when someone starts a session, removed when their
-save is shared. ``next.json`` — an "I've got next" claim. Both are advisory:
+``playing.json`` - written when someone starts a session, removed when their
+save is shared. ``next.json`` - an "I've got next" claim. Both are advisory:
 they warn people up front, while the sync core's conflict checks remain the
-actual safety net. Every function here fails soft — a cloud hiccup must
+actual safety net. Every function here fails soft - a cloud hiccup must
 never break a session.
 """
 

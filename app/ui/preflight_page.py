@@ -1,4 +1,4 @@
-"""'Test my setup' — a friendly checklist that catches setup snags."""
+"""'Test my setup' - a friendly checklist that catches setup snags."""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QScrollArea,
@@ -108,7 +108,7 @@ class PreflightPage(QWidget):
             self.summary.setText("✓  Everything's ready. You're good to play.")
             self.summary.setStyleSheet(f"color: {theme.ACCENT}; font-size: 13px; font-weight: 600;")
         elif worst == preflight.WARN:
-            self.summary.setText("Mostly good — a couple of things worth a look below.")
+            self.summary.setText("Mostly good - a couple of things worth a look below.")
             self.summary.setStyleSheet(f"color: {theme.AMBER}; font-size: 13px; font-weight: 600;")
         else:
             self.summary.setText("Something needs fixing before your saves will sync.")

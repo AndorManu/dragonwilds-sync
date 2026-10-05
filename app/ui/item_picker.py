@@ -1,4 +1,4 @@
-"""The catalogue of conjuring — search, filter by category and rarity, and
+"""The catalogue of conjuring - search, filter by category and rarity, and
 summon any item in the game into the bag."""
 
 from PySide6.QtCore import QSize, Qt, Signal
@@ -33,7 +33,7 @@ class ItemPicker(QDialog):
             f"font-weight: 650; color: {theme.GOLD_TEXT};")
         root.addWidget(title)
         sub = QLabel("Every item in the wilds. It appears in the first free bag "
-                     "slot — a checkpoint is taken first.")
+                     "slot - a checkpoint is taken first.")
         sub.setWordWrap(True)
         sub.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12px;")
         root.addWidget(sub)
@@ -121,7 +121,7 @@ class ItemPicker(QDialog):
             item.setToolTip(f"{label} · {row['category']} · stacks to {row['max']}")
             self.list.addItem(item)
         shown = min(len(rows), 400)
-        more = f"  (showing first 400 — refine to see the rest)" if len(rows) > 400 else ""
+        more = f"  (showing first 400 - refine to see the rest)" if len(rows) > 400 else ""
         self.count_label.setText(f"{len(rows)} item{'s' if len(rows) != 1 else ''} match"
                                  f"{more}")
 

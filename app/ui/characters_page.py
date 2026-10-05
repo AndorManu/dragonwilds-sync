@@ -1,4 +1,4 @@
-"""Characters: every hero on this PC — portraits, playtime, vault, travel."""
+"""Characters: every hero on this PC - portraits, playtime, vault, travel."""
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (QCheckBox, QFrame, QHBoxLayout, QInputDialog,
@@ -35,7 +35,7 @@ class CharactersPage(QWidget):
         root.addSpacing(6)
 
         intro = QLabel("Everyone who calls this PC home. Their progress lives in "
-                       "their own file — the app keeps safety copies after every "
+                       "their own file - the app keeps safety copies after every "
                        "session, and can carry a character between your PCs.")
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
@@ -68,7 +68,7 @@ class CharactersPage(QWidget):
                 item.widget().deleteLater()
 
         if not infos:
-            empty = QLabel("No characters found yet — create one in the game and "
+            empty = QLabel("No characters found yet - create one in the game and "
                            "they'll show up here.")
             empty.setWordWrap(True)
             empty.setAlignment(Qt.AlignCenter)

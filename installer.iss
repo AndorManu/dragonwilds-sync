@@ -1,4 +1,4 @@
-; Optional Inno Setup script — turns dist\DragonwildsSync.exe into a proper
+; Optional Inno Setup script - turns dist\DragonwildsSync.exe into a proper
 ; installer with Start Menu + Desktop shortcuts.
 ;
 ; 1. Install Inno Setup:  winget install JRSoftware.InnoSetup
@@ -7,7 +7,7 @@
 
 [Setup]
 AppName=Dragonwilds Sync
-AppVersion=1.3.1
+AppVersion=1.3.2
 AppPublisher=Andor & friends
 DefaultDirName={autopf}\Dragonwilds Sync
 DefaultGroupName=Dragonwilds Sync

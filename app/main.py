@@ -42,7 +42,7 @@ def main():
     lock.setStaleLockTime(0)
     if not lock.tryLock(1):
         QMessageBox.information(None, APP_NAME,
-                                "Dragonwilds Sync is already running — check your taskbar.")
+                                "Dragonwilds Sync is already running - check your taskbar.")
         return 0
 
     theme.apply(app)

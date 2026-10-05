@@ -124,7 +124,7 @@ class MainWindow(QWidget):
         self.main_page.saga_clicked.connect(self._open_saga)
         self.saga_page.back_requested.connect(lambda: self._show_page(self.main_page))
         self.saga_page.export_requested.connect(c.export_saga)
-        # (the grimoire deliberately has no menu entry — see _awaken_secret)
+        # (the grimoire deliberately has no menu entry - see _awaken_secret)
 
         # characters
         self.characters_page.back_requested.connect(lambda: self._show_page(self.main_page))
@@ -204,7 +204,7 @@ class MainWindow(QWidget):
     def _on_friend_pushed(self, world_name, editor, version):
         if self.isVisible() and not self.isMinimized():
             self.toasts.show_toast(
-                "info", f"{editor} shared v{version} of {world_name} — your turn?")
+                "info", f"{editor} shared v{version} of {world_name} - your turn?")
         else:
             self.tray.notify_friend_push(world_name, editor, version)
 
@@ -248,7 +248,7 @@ class MainWindow(QWidget):
     def _pass_turn(self):
         players = self.controller.known_players()
         if not players:
-            self.toasts.show_toast("info", "No friends have played this world yet — "
+            self.toasts.show_toast("info", "No friends have played this world yet - "
                                            "once they do, you can pass them the turn.")
             return
         menu = QMenu(self)
@@ -341,7 +341,7 @@ class MainWindow(QWidget):
         self._show_page(self.main_page)
         if payload["kind"] == "join":
             self.toasts.show_toast("success",
-                                   f"Welcome to {payload['world_name']}. Hit Play — "
+                                   f"Welcome to {payload['world_name']}. Hit Play - "
                                    f"the latest save comes to you.")
         else:
             self.toasts.show_toast("success",
@@ -358,7 +358,7 @@ class MainWindow(QWidget):
         if self.confirm.ask(
                 f"Forget {name}?",
                 "This only removes it from the app on this PC. The shared folder, "
-                "the saves, and your friends' setups are untouched — you can "
+                "the saves, and your friends' setups are untouched - you can "
                 "rejoin with an invite code any time.",
                 danger_label="Forget world", safe_label="Keep it"):
             self.controller.remove_world(world_id)
@@ -409,7 +409,7 @@ class MainWindow(QWidget):
 
     # -- the secret --------------------------------------------------------------------
     def _awaken_secret(self):
-        """The eye is the only door. No menu entry, no trace — five quick
+        """The eye is the only door. No menu entry, no trace - five quick
         clicks on the titlebar mark, every time."""
         if not self.controller.has_config:
             return
@@ -429,7 +429,7 @@ class MainWindow(QWidget):
         if self.confirm.ask(
                 f"Absorb the knowledge of {source}?",
                 f"This character gains: {summary}.\n\n"
-                f"Knowledge is only ever added — nothing is forgotten or "
+                f"Knowledge is only ever added - nothing is forgotten or "
                 f"removed, and a checkpoint is taken first.",
                 danger_label="Absorb", safe_label="Not now"):
             self.controller.absorb_knowledge(char_path, knowledge, source,
@@ -481,7 +481,7 @@ class MainWindow(QWidget):
         from PySide6.QtWidgets import QInputDialog
         offerings = self.controller.list_offerings()
         if not offerings:
-            self.toasts.show_toast("info", "No offerings in the shared folder yet — "
+            self.toasts.show_toast("info", "No offerings in the shared folder yet - "
                                            "a friend must “Offer my bag” first.")
             return
         offer_labels = [f"{o.get('author', '?')} · {len(o.get('items', []))} items"
@@ -508,7 +508,7 @@ class MainWindow(QWidget):
         item_labels = [describe(e) for e in items]
         pick, ok = QInputDialog.getItem(
             self, "Gifts across the void",
-            "Item names live inside the game — match by their bag layout:",
+            "Item names live inside the game - match by their bag layout:",
             item_labels, 0, False)
         if not ok:
             return
@@ -550,7 +550,7 @@ class MainWindow(QWidget):
                 "Seal the bargain?",
                 "The dragon will " + ", ".join(wants) + ".\n\n"
                 "A checkpoint of the current character is taken first. This is "
-                "experimental — if the game refuses the changed file, restore "
+                "experimental - if the game refuses the changed file, restore "
                 "the checkpoint from Characters → Backups.",
                 danger_label="Seal it", safe_label="Not yet"):
             return
@@ -566,7 +566,7 @@ class MainWindow(QWidget):
     def _finish_ritual(self):
         _char, gains = self.controller.finish_ritual()
         if not gains:
-            self.toasts.show_toast("info", "The ritual saw nothing change — "
+            self.toasts.show_toast("info", "The ritual saw nothing change - "
                                            "train a skill in game first.")
         else:
             self.grimoire_page.offer_ritual_labels(gains)
@@ -629,10 +629,10 @@ class MainWindow(QWidget):
                         + (" Share it with “Save my progress now” if the group "
                            "should use it." if ctx["kind"] == "world" else ""))
                 else:
-                    self.controller.toast.emit("warning", "That backup was empty — nothing changed.")
+                    self.controller.toast.emit("warning", "That backup was empty - nothing changed.")
             except Exception:
                 log.exception("Restore failed")
-                self.controller.toast.emit("error", "The restore didn't complete — "
+                self.controller.toast.emit("error", "The restore didn't complete - "
                                                     "nothing was changed.")
 
         threading.Thread(target=worker, daemon=True, name="restore").start()
@@ -710,7 +710,7 @@ class MainWindow(QWidget):
             self.tray.show_minimized_tip()
             return
 
-        # Actually quitting mid-session means losing the auto-share — confirm.
+        # Actually quitting mid-session means losing the auto-share - confirm.
         if self.controller.phase in ("waiting", "ingame", "pushing"):
             stay = not self.confirm.ask(
                 "The game is still running",

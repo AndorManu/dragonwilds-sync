@@ -14,7 +14,7 @@ def _pretty_label(label: str) -> str:
     if label.startswith("shared_v"):
         return f"A friend's session you replaced (v{label[8:]})"
     if label.startswith("group_v"):
-        return f"v{label[7:]} — kept in the shared folder for everyone"
+        return f"v{label[7:]} - kept in the shared folder for everyone"
     if label == "pre_restore":
         return "Automatic copy taken before a restore"
     if label == "session":
@@ -52,7 +52,7 @@ class BackupsPage(QWidget):
 
         intro = QLabel("Checkpoints are snapshots you name and keep. Auto-backups "
                        "are taken whenever a save would be overwritten. Restoring "
-                       "brings one back to this PC — share it afterwards if the "
+                       "brings one back to this PC - share it afterwards if the "
                        "whole group should return to it.")
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
@@ -84,7 +84,7 @@ class BackupsPage(QWidget):
 
     def load(self, world_name: str, checkpoints: list[BackupInfo],
              backups: list[BackupInfo], group_history: list[BackupInfo] = ()):
-        self.title.setText(f"Backups — {world_name}")
+        self.title.setText(f"Backups - {world_name}")
         while self.box.count():
             item = self.box.takeAt(0)
             if item.widget():

@@ -66,7 +66,7 @@ def _read_checkpoint_meta(folder: Path) -> tuple[str, datetime | None]:
 
 
 def list_checkpoints(backup_root) -> list[BackupInfo]:
-    """Named, pinned snapshots — never auto-pruned. Newest first."""
+    """Named, pinned snapshots - never auto-pruned. Newest first."""
     root = Path(backup_root) / CHECKPOINTS_DIRNAME
     if not root.exists():
         return []

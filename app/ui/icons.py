@@ -200,7 +200,7 @@ _ICONS = {
     "cat-sword": '<path d="M20 4 9 15"/><path d="M15 4h5v5"/><path d="M4 20l4-1 8-8-3-3-8 8z"/>',
     "cat-bow": ('<path d="M5 4c7 4 7 12 0 16"/><line x1="5" y1="4" x2="5" y2="20"/>'
                 '<line x1="5" y1="12" x2="20" y2="12"/><polyline points="16 8 20 12 16 16"/>'),
-    # a single fletched arrow — one head, one tail (the old glyph had a head at
+    # a single fletched arrow - one head, one tail (the old glyph had a head at
     # both ends, so it read as a double-arrow).
     "cat-arrow": ('<line x1="5" y1="19" x2="18" y2="6"/>'
                   '<polyline points="12 6 18 6 18 12"/>'
@@ -240,15 +240,15 @@ _ICONS = {
     # a mage's staff with an orb
     "cat-staff": ('<line x1="6" y1="21" x2="15.5" y2="6.5"/>'
                   '<circle cx="16.6" cy="5" r="2.6"/>'),
-    # a drumstick — meat with a bone handle
+    # a drumstick - meat with a bone handle
     "cat-food": ('<circle cx="15" cy="9" r="5"/>'
                  '<path d="M11.4 12.6l-5.4 5.4"/>'
                  '<path d="M6 18l-1.6-.3-.3-1.6 1.9-1.9 1.9 1.9z" fill="{color}" stroke="none"/>'),
-    # a seedling — stem with two leaves
+    # a seedling - stem with two leaves
     "cat-seed": ('<path d="M12 21v-7"/>'
                  '<path d="M12 14c0-3-2-5-5-5 0 3 2 5 5 5z"/>'
                  '<path d="M12 14c0-3 2-5 5-5 0 3-2 5-5 5z"/>'),
-    # a bone — a shaft knobbed at both ends
+    # a bone - a shaft knobbed at both ends
     "cat-bone": ('<path d="M9 15l6-6"/>'
                  '<circle cx="7.4" cy="16.6" r="1.7"/><circle cx="9.2" cy="17.4" r="1.7"/>'
                  '<circle cx="16.6" cy="7.4" r="1.7"/><circle cx="14.8" cy="6.6" r="1.7"/>'),

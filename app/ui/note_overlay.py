@@ -35,7 +35,7 @@ class NoteOverlay(QWidget):
         title.setStyleSheet("background: transparent; border: none;"
                             "font-size: 15px; font-weight: 650;")
         box.addWidget(title)
-        sub = QLabel("One line for the world's story — your friends see it in the feed.")
+        sub = QLabel("One line for the world's story - your friends see it in the feed.")
         sub.setWordWrap(True)
         sub.setStyleSheet(f"background: transparent; border: none;"
                           f"color: {theme.TEXT_DIM}; font-size: 12px;")

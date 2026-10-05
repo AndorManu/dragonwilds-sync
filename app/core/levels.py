@@ -1,4 +1,4 @@
-"""The Dragonwilds skill level table — the game's own numbers, all 99 levels.
+"""The Dragonwilds skill level table - the game's own numbers, all 99 levels.
 
 Source: the official wiki (dragonwilds.runescape.wiki/w/Experience), fetched
 2026-07-09. Every one of the nine thresholds we independently read off
@@ -27,7 +27,7 @@ MAX_LEVEL = len(REQ_TABLE)   # 99
 
 
 def req_xp(level: int) -> int:
-    """Total XP needed to reach `level` — exact, from the game's table."""
+    """Total XP needed to reach `level` - exact, from the game's table."""
     level = max(1, min(int(level), MAX_LEVEL))
     return REQ_TABLE[level - 1]
 

@@ -1,10 +1,10 @@
-"""Discord Rich Presence over the local IPC pipe — no dependency, no server.
+"""Discord Rich Presence over the local IPC pipe - no dependency, no server.
 
 Discord's desktop app listens on ``\\\\.\\pipe\\discord-ipc-0``; the protocol
 is a 8-byte little-endian header (opcode, length) followed by JSON. Rich
 Presence needs an application id the user creates for free at
 discord.com/developers (Settings explains it). Everything fails soft: no
-Discord, no id, no pipe — no problem.
+Discord, no id, no pipe - no problem.
 """
 
 import json

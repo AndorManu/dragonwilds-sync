@@ -1,4 +1,4 @@
-# PyInstaller build spec — produces a single dist/DragonwildsSync.exe
+# PyInstaller build spec - produces a single dist/DragonwildsSync.exe
 # Build with:  .\.venv\Scripts\python.exe -m PyInstaller --noconfirm DragonwildsSync.spec
 
 a = Analysis(

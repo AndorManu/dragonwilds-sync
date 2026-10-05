@@ -7,26 +7,33 @@ from .. import __version__
 from . import icons, theme, widgets
 
 CHANGELOG = [
+    ("1.3.2", [
+        "Small cleanup: wording, version info and screenshots brought up to date",
+    ]),
+    ("1.3.1", [
+        "First public release, open source under MIT",
+        "Every release is now built automatically from the public source",
+    ]),
     ("1.3.0", [
         "Characters! Portraits in the feed, playtime, per-session vault backups",
         "A character can travel with you between your own PCs",
-        "The Saga — the fellowship's totals and an exportable chronicle",
+        "The Saga - the fellowship's totals and an exportable chronicle",
         "Group history: the last three world versions kept in the shared folder",
         "See who a friend is playing as, live and in the feed",
         "Per-world banner colors, a soft chime on Play, Discord Rich Presence",
         "…and the dragon's eye keeps a secret for the curious",
     ]),
     ("1.2.0", [
-        "A whole new look — a fantasy game-launcher, world-art and all",
+        "A whole new look - a fantasy game-launcher, world-art and all",
         "Update the app in one click, straight from the shared folder",
         "“Test my setup” checks everything's wired up right",
         "Name and keep checkpoints; restore any of them",
         "Pass the turn to a friend with a tray ping",
-        "Won't share a corrupt or half-synced save — the group stays safe",
+        "Won't share a corrupt or half-synced save - the group stays safe",
         "Optional phone-checkable status page in the shared folder",
     ]),
     ("1.1.0", [
-        "Invite codes — friends join a world by pasting one code",
+        "Invite codes - friends join a world by pasting one code",
         "Multiple worlds with a quick switcher",
         "Live presence: see when a friend is mid-session before you play",
         "Runs in the tray; pings you when it's your turn",

@@ -1,6 +1,6 @@
 """A tiny self-contained status page written into the shared folder.
 
-The shared folder is already hosted storage every friend can reach — so a
+The shared folder is already hosted storage every friend can reach - so a
 single ``status.html`` there is a zero-backend way to check, from a phone's
 Google Drive / Dropbox app, who's playing and whether a save is waiting.
 Written on push and on presence changes; entirely optional.

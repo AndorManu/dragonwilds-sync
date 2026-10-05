@@ -1,4 +1,4 @@
-"""The Dragon's Bargain — the hidden save editor. Found, not advertised.
+"""The Dragon's Bargain - the hidden save editor. Found, not advertised.
 
 Three chambers now: Skills (level picker with living XP bars), The Bag
 (a game-style inventory grid), and Scrolls (knowledge shared between
@@ -198,7 +198,7 @@ class TabChip(QPushButton):
 
 
 class ItemPopover(QFrame):
-    """A floating detail card anchored beside a bag slot — name, rarity, live
+    """A floating detail card anchored beside a bag slot - name, rarity, live
     stats and every per-item action (count, repair, tier up/down). Replaces the
     old detail strip that sat awkwardly at the bottom of the bag. The body is
     rebuilt wholesale on each change (small, and dodges stale-widget glitches)."""
@@ -493,7 +493,7 @@ class GrimoirePage(QWidget):
 
     @staticmethod
     def _fresh_body(scroll: QScrollArea):
-        """Replace the tab's whole body — surgical layout clearing inside a
+        """Replace the tab's whole body - surgical layout clearing inside a
         QScrollArea proved glitchy (widgets left with stale geometry)."""
         old = scroll.takeWidget()
         if old is not None:
@@ -643,7 +643,7 @@ class GrimoirePage(QWidget):
         boons_head.setObjectName("SettingsSection")
         boons_head.setStyleSheet("background: transparent;")
         box.addWidget(boons_head)
-        self.heal_check = QCheckBox("Restore vitals — health, stamina, food, water")
+        self.heal_check = QCheckBox("Restore vitals - health, stamina, food, water")
         self.repair_check = QCheckBox("Repair everything carried and worn")
         self.cleanse_check = QCheckBox("Cleanse all status effects (poison, burning, cold…)")
         self.hardcore_check = QCheckBox("Lift the hardcore curse (disable hardcore)")
@@ -726,7 +726,7 @@ class GrimoirePage(QWidget):
         slots, _max = characters.list_inventory(data)
         equipped = characters.list_loadout(data)
         if not slots and not equipped:
-            self._empty_note(box, "The bag is empty — go pick something up first.")
+            self._empty_note(box, "The bag is empty - go pick something up first.")
             return
 
         self.bag_search = QLineEdit()
@@ -742,7 +742,7 @@ class GrimoirePage(QWidget):
         wrap.setContentsMargins(14, 10, 14, 12)
         wrap.setSpacing(8)
 
-        # equipped gear (Loadout container — keyed "L<index>")
+        # equipped gear (Loadout container - keyed "L<index>")
         if equipped:
             self._add_pouch(wrap, "Equipped", [("L", s) for s in equipped])
         # main inventory, grouped into the game's pouches
@@ -1130,7 +1130,7 @@ class GrimoirePage(QWidget):
         counts = characters.knowledge_counts(data)
 
         intro = QLabel("Everything this character has learned. Knowledge can be "
-                       "shared — absorbed from another character, or through "
+                       "shared - absorbed from another character, or through "
                        "scrolls left in the shared folder.")
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12px;"
@@ -1160,7 +1160,7 @@ class GrimoirePage(QWidget):
         box.addWidget(fix_head)
         fix_note = QLabel("Raising a skill's level doesn't replay the game's "
                           "unlock events, so you can end up missing spells, "
-                          "recipes and buildings your level has earned — and "
+                          "recipes and buildings your level has earned - and "
                           "spells that never made it onto your spell bar. This "
                           "grants everything unlockable and fills the bar.")
         fix_note.setWordWrap(True)
@@ -1279,7 +1279,7 @@ class GrimoirePage(QWidget):
         if not scrolls:
             return
         from PySide6.QtWidgets import QInputDialog
-        labels = [f"{s.get('author', '?')} — {s.get('character', '?')}" for s in scrolls]
+        labels = [f"{s.get('author', '?')} - {s.get('character', '?')}" for s in scrolls]
         choice, ok = QInputDialog.getItem(
             self, "Absorb a scroll", "Scrolls left in the shared folder:",
             labels, 0, False)

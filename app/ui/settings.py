@@ -1,4 +1,4 @@
-"""Settings: profile, game, active world, and app behavior — one calm page."""
+"""Settings: profile, game, active world, and app behavior - one calm page."""
 
 import os
 
@@ -91,7 +91,7 @@ class SettingsPage(QWidget):
 
         self.exe_field = widgets.FormField(
             "Game executable (optional)", browse="file",
-            hint="Leave empty to launch through Steam — that's right for almost everyone.")
+            hint="Leave empty to launch through Steam - that's right for almost everyone.")
         form.addWidget(self.exe_field)
         detect_row = QHBoxLayout()
         detect_btn = widgets.make_button("Auto-detect install", "subtle", height=30)
@@ -108,7 +108,7 @@ class SettingsPage(QWidget):
         form.addWidget(self.world_section)
         self.world_field = widgets.WorldField(
             "World to sync",
-            hint="The save filename, without extension — must match on every PC.")
+            hint="The save filename, without extension - must match on every PC.")
         form.addWidget(self.world_field)
         self.shared_field = widgets.FormField(
             "Shared folder", browse="dir",
@@ -116,7 +116,7 @@ class SettingsPage(QWidget):
         form.addWidget(self.shared_field)
         self.webhook_field = widgets.FormField(
             "Webhook for save notifications (optional)",
-            hint="Discord, Slack, or ntfy.sh webhook URL — a short message is "
+            hint="Discord, Slack, or ntfy.sh webhook URL - a short message is "
                  "posted whenever someone shares a save.",
             placeholder="https://discord.com/api/webhooks/…")
         form.addWidget(self.webhook_field)
@@ -284,7 +284,7 @@ class SettingsPage(QWidget):
             self.exe_field.edit.setText(str(found))
             self.detect_result.setText("Found it.")
         else:
-            self.detect_result.setText("Couldn't find it — Steam launch works regardless.")
+            self.detect_result.setText("Couldn't find it - Steam launch works regardless.")
 
     def _open_logs(self):
         paths.LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -311,11 +311,11 @@ class SettingsPage(QWidget):
                 ok = False
         webhook_url = self.webhook_field.value()
         if webhook_url and not webhook_url.startswith(("http://", "https://")):
-            self.webhook_field.set_error("A webhook is a URL — it should start with https://")
+            self.webhook_field.set_error("A webhook is a URL - it should start with https://")
             ok = False
         exe = self.exe_field.value()
         if exe and not os.path.isfile(exe):
-            self.exe_field.set_error("That file doesn't exist — leave empty to use Steam.")
+            self.exe_field.set_error("That file doesn't exist - leave empty to use Steam.")
             ok = False
         if not ok:
             return

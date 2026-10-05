@@ -1,4 +1,4 @@
-"""Synthesize the ember chime — a soft, low two-note swell. Pure stdlib.
+"""Synthesize the ember chime - a soft, low two-note swell. Pure stdlib.
 
 Run once:  .venv\\Scripts\\python.exe tools\\generate_chime.py
 """
@@ -36,7 +36,7 @@ def main():
     n = int(RATE * DURATION)
     for i in range(n):
         t = i / RATE
-        # D3 then A3 — a quiet, resolved fifth
+        # D3 then A3 - a quiet, resolved fifth
         sample = (tone(t, 146.83, 0.30) * envelope(t, 0.00, 0.80)
                   + tone(t, 220.00, 0.24) * envelope(t, 0.12, 0.75))
         sample = max(-1.0, min(1.0, sample))

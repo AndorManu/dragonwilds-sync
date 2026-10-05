@@ -430,7 +430,7 @@ class MainPage(QWidget):
             self.hero_icon.show_pulse(amber=True)
             as_char = f" as {who['character']}" if who.get("character") else ""
             self._say(f"{who['player']} is in the wilds right now",
-                      f"Playing{as_char} — started {since}. Best wait for their "
+                      f"Playing{as_char} - started {since}. Best wait for their "
                       f"save; you'll see it land here.")
             self.header.set_pill(f"{who['player']} playing", theme.AMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
@@ -440,7 +440,7 @@ class MainPage(QWidget):
         if snap.kind == "error":
             self.hero_icon.show_icon("alert", theme.RED_HOVER)
             self._say("Something went wrong",
-                      "Couldn't read the shared folder. Try again in a moment — "
+                      "Couldn't read the shared folder. Try again in a moment - "
                       "details are in Settings → Open log folder.")
             self.header.set_pill("Unreachable", theme.RED_HOVER)
             self._set_conn(theme.RED, "Shared folder unreachable")
@@ -453,14 +453,14 @@ class MainPage(QWidget):
         elif snap.kind == "no_shared":
             self.hero_icon.show_icon("sparkle", theme.EMBER)
             self._say("A fresh world awaits",
-                      "No one has shared a save yet — hit Play and carve the first path.")
+                      "No one has shared a save yet - hit Play and carve the first path.")
             self.header.set_pill("New world", theme.EMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")
         elif snap.kind == "behind":
             editor = self._display_name(snap.last_editor)
             self.hero_icon.show_icon("download-cloud", theme.AMBER)
             self._say(f"New save from {editor}",
-                      f"v{snap.shared_version} · {fmt.humanize(snap.timestamp)} — "
+                      f"v{snap.shared_version} · {fmt.humanize(snap.timestamp)} - "
                       f"Play will pick it up automatically.")
             self.header.set_pill("New save", theme.AMBER)
             self._set_conn(theme.ACCENT, "Shared folder connected")

@@ -1,7 +1,7 @@
 """Generic webhook notifications: one URL field works for Discord, Slack,
 ntfy.sh, or anything that accepts a plain POST.
 
-Fire-and-forget: a webhook failure is logged and toasted at most — it can
+Fire-and-forget: a webhook failure is logged and toasted at most - it can
 never fail a sync.
 """
 

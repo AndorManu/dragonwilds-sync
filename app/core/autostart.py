@@ -1,6 +1,6 @@
 """Launch-with-Windows toggle via the per-user Run registry key.
 
-Only offered in the packaged exe — pointing the Run key at a dev venv would
+Only offered in the packaged exe - pointing the Run key at a dev venv would
 break the moment the folder moves.
 """
 

@@ -18,24 +18,24 @@ keep running.
 
 Around that core: invite codes, live "who's playing", turn-passing with tray
 pings, conflict detection in both directions, automatic backups, one-click
-self-updates through the same folder, and a Characters page — all in a
+self-updates through the same folder, and a Characters page - all in a
 dark-fantasy launcher that fits the game.
 
 ### Isn't this what dedicated servers are for?
 
 Yes, if your group plays together often enough to justify one. A dedicated
-server needs a machine running 24/7 (yours, or ~€5–15/month rented) and
+server needs a machine running 24/7 (yours, or ~€5-15/month rented) and
 someone to keep it updated in step with the game. Dragonwilds Sync is for the
 other kind of group: three to five friends who play a couple of evenings a
 week, rarely all at once, and don't want a bill or a box to maintain. Nothing
 runs when nobody's playing; the world is just files in a folder you already
-have. Steam Cloud doesn't cover this either — it syncs *your* saves between
+have. Steam Cloud doesn't cover this either - it syncs *your* saves between
 *your* PCs, not between friends.
 
 Built against the early-access saves; the 1.0 release (Sept 2026) kept the
 same save layout, so nothing needs migrating. If your version moved something,
 [open an issue](https://github.com/AndorManu/dragonwilds-sync/issues) with the
-log from *Settings → Open log folder*. Windows/Steam only — console saves
+log from *Settings → Open log folder*. Windows/Steam only - console saves
 can't be reached from the file system.
 
 <p align="center">
@@ -49,26 +49,26 @@ can't be reached from the file system.
 Grab `DragonwildsSync.exe` from the **[latest release](https://github.com/AndorManu/dragonwilds-sync/releases/latest)**.
 One file, no install, no Python, no account. Windows only (the game is).
 
-SmartScreen will warn the first time because the exe isn't code-signed —
+SmartScreen will warn the first time because the exe isn't code-signed -
 **More info → Run anyway**. The exe on every release is built by
 [GitHub Actions](.github/workflows/release.yml) from the tagged source on a
 clean runner, not on anyone's laptop; and if you'd rather not trust it at
-all, the whole thing is Python — build it yourself in two commands (see below).
+all, the whole thing is Python - build it yourself in two commands (see below).
 
 ## How it works
 
-Everyone in the group points the app at the **same shared folder** — any
+Everyone in the group points the app at the **same shared folder** - any
 folder inside a cloud drive that each of you syncs to your own PC (Google
 Drive, Dropbox, OneDrive… the app doesn't care which, and nothing ever needs
 a paid server).
 
-- **Play** pulls the newest save, launches the game through Steam, and —
-  once you close the game — shares your progress back automatically.
+- **Play** pulls the newest save, launches the game through Steam, and -
+  once you close the game - shares your progress back automatically.
 - A tiny `version.json` manifest tracks a version number, who played last,
   and when. Every share bumps the version; every pull checks it.
 - If your local save changed without being shared *and* someone else has
   since shared a newer version, you get an unmissable warning before
-  anything is overwritten — in **both** directions. Whatever gets replaced
+  anything is overwritten - in **both** directions. Whatever gets replaced
   is backed up first (browse and restore under *world menu → Backups*).
 - The app shows **who's playing right now**, lets you call **"I've got
   next"**, pings you from the tray when it's your turn, and can post to a
@@ -80,13 +80,13 @@ a paid server).
    and double-click it.
 2. Type your name, pick **“Join with an invite code”**, paste the code your
    friend sent you.
-3. The app opens their share link — sign in to Google and click
+3. The app opens their share link - sign in to Google and click
    **“Add shortcut to Drive”**. That's the one click we can't do for you.
 4. Done. The app spots the folder as soon as Google Drive syncs it and drops
    you on the main screen. Hit **Play**.
 
 You do need [Google Drive for desktop](https://www.google.com/drive/download/)
-(or Dropbox/OneDrive) installed and signed in — the app tells you if it's
+(or Dropbox/OneDrive) installed and signed in - the app tells you if it's
 missing.
 
 ## Hosting a world & inviting friends
@@ -97,7 +97,7 @@ missing.
    Drive UI (right-click → Share → *Anyone with the link* → Copy link),
    paste the link, and copy the generated invite code into your group chat.
 3. Each friend follows the three steps above. New invites for the same world
-   are one click — the link is remembered.
+   are one click - the link is remembered.
 
 **House rule:** one person plays at a time. The app warns loudly (before
 *and* after the fact) if two sessions collide, but the polite fix is a
@@ -111,18 +111,18 @@ No store, no manual re-sending of the exe:
 2. Settings → **Publish this version to friends**. The app copies itself into
    the shared folder's `_app` subfolder with a version manifest.
 3. Everyone else's app notices the newer build (it's already syncing to their
-   PC), shows an **Update** bar, and swaps itself in place on confirm — worlds
+   PC), shows an **Update** bar, and swaps itself in place on confirm - worlds
    and settings kept.
 
 ## Extras
 
-- **Test my setup** (Settings) — a checklist that verifies folders, cloud
+- **Test my setup** (Settings) - a checklist that verifies folders, cloud
   sync, and game launch so setup problems are obvious, not mysterious.
-- **Checkpoints** (world menu → Backups) — name a snapshot before something
+- **Checkpoints** (world menu → Backups) - name a snapshot before something
   risky; restore it any time. Automatic backups are taken whenever a save
   would be overwritten.
-- **Pass the turn** — hand a specific friend the world; they get a tray ping.
-- **Phone status page** — with the toggle on, a `status.html` is written into
+- **Pass the turn** - hand a specific friend the world; they get a tray ping.
+- **Phone status page** - with the toggle on, a `status.html` is written into
   the shared folder; open it from your phone's cloud-drive app to see who's
   playing without launching anything.
 
@@ -134,7 +134,7 @@ cd dragonwilds-sync
 .\build.ps1        # creates .venv, runs tests, builds dist\DragonwildsSync.exe
 ```
 
-That single `.exe` is the whole distribution — dropping it in the shared
+That single `.exe` is the whole distribution - dropping it in the shared
 folder works great. Optionally compile `installer.iss` with
 [Inno Setup](https://jrsoftware.org/isinfo.php) for a setup wizard.
 
@@ -153,7 +153,7 @@ python -m venv .venv
 ```
 app/
   core/        sync protocol, config schema, invites, presence, webhooks,
-               backups, game launch/watch, cloud/Steam detection — no Qt
+               backups, game launch/watch, cloud/Steam detection - no Qt
   ui/          theme, widgets, screens (PySide6)
   controller.py  worker threads in, Qt signals out
   main.py      entry point (--tray starts quietly in the tray)
@@ -169,7 +169,7 @@ and push. Every overwrite is preceded by a backup, and every manifest write
 is atomic (temp file + rename), so a cloud client dying mid-sync can't leave
 a half-written state. The core has no Qt in it and is tested in isolation;
 everything user-facing lives in a controller layer around it. Cloud drives
-were chosen over a server on purpose — a group of friends already has one,
+were chosen over a server on purpose - a group of friends already has one,
 it's free, and there's nothing to host, patch, or pay for.
 
 Per-user data lives in `%APPDATA%\DragonwildsSync\` (config, per-world state,
@@ -182,8 +182,8 @@ kept as `config.v1.bak` / `state.v1.bak`.
   telemetry, no accounts, no calls to any server of mine (there isn't one).
   Webhooks and Discord presence are off unless you turn them on.
 - **The shared folder is the trust boundary.** Anyone who can write to it can
-  change the world save, and — because updates travel through the same
-  folder — can publish an app update that everyone else's app will offer to
+  change the world save, and - because updates travel through the same
+  folder - can publish an app update that everyone else's app will offer to
   install. Only share the folder with people you'd hand your save to anyway.
   The update bar always asks; it never auto-installs.
 - **The exe isn't code-signed** (certificates cost money; this is a hobby
@@ -194,16 +194,16 @@ kept as `config.v1.bak` / `state.v1.bak`.
 
 ## Troubleshooting
 
-- **“Shared folder not found”** — your cloud client isn't running or the
+- **“Shared folder not found”** - your cloud client isn't running or the
   folder moved; fix the path in Settings.
-- **The newest save “hasn't finished syncing”** — the manifest arrived before
+- **The newest save “hasn't finished syncing”** - the manifest arrived before
   the save files; give the cloud client a few seconds and hit refresh.
-- **Joining: the folder never appears** — make sure you clicked *Add shortcut
+- **Joining: the folder never appears** - make sure you clicked *Add shortcut
   to Drive* (not just opened the link), and that Google Drive for desktop is
   running. “Browse for it manually” always works as a fallback.
-- **Game never detected** — Steam sometimes takes ages; the app waits two
+- **Game never detected** - Steam sometimes takes ages; the app waits two
   minutes, then falls back to the manual save button.
-- **App won't quit** — it lives in the tray by default so it can ping you;
+- **App won't quit** - it lives in the tray by default so it can ping you;
   right-click the tray icon → Quit, or turn it off in Settings.
 - Logs: **Settings → Open log folder**.
 
@@ -212,7 +212,7 @@ kept as `config.v1.bak` / `state.v1.bak`.
 Issues and pull requests are welcome. Keep the sync core (`app/core/sync.py`)
 boring: any change there needs a test in `tests/test_sync.py`, and the
 protocol must stay readable by older versions (the manifest is plain JSON on
-purpose). Run `python -m pytest tests` before opening a PR — CI runs the same
+purpose). Run `python -m pytest tests` before opening a PR - CI runs the same
 suite on Windows and Linux.
 
 ## Credits & license

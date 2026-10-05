@@ -1,4 +1,4 @@
-"""Tiny semantic-version compare — no dependency, just what update checks need."""
+"""Tiny semantic-version compare - no dependency, just what update checks need."""
 
 import re
 

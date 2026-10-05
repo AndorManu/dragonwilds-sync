@@ -1,6 +1,6 @@
 """Tests for the v1.2 feature services: semver, update, health, preflight,
 nudges, checkpoints, and the status page. The sync core is untouched by all
-of these — they wrap it or live beside it."""
+of these - they wrap it or live beside it."""
 
 import json
 from datetime import datetime, timedelta, timezone

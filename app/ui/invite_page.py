@@ -1,7 +1,7 @@
 """Invite friends: three honest steps and a copy-pasteable code.
 
 We can't create the cloud share link for them (that would need a full OAuth
-integration) — so the app makes every step around that one click disappear:
+integration) - so the app makes every step around that one click disappear:
 open the right places, remember the link, generate the code.
 """
 
@@ -51,7 +51,7 @@ class InvitePage(QWidget):
         form.setSpacing(14)
 
         intro = QLabel("Friends need two things: the shared folder, and this "
-                       "world's name. An invite code carries both — you only "
+                       "world's name. An invite code carries both - you only "
                        "have to share the folder once.")
         intro.setWordWrap(True)
         intro.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
@@ -84,7 +84,7 @@ class InvitePage(QWidget):
         form.addWidget(step2)
         self.link_field = widgets.FormField(
             "Share link", "",
-            hint="Remembered for this world — next invites are one click.",
+            hint="Remembered for this world - next invites are one click.",
             placeholder="https://drive.google.com/…")
         form.addWidget(self.link_field)
 
@@ -107,7 +107,7 @@ class InvitePage(QWidget):
         form.addWidget(self.copy_btn)
 
         self.outro = QLabel("Send it over chat. Your friend picks “Join with an "
-                            "invite code” in their app — everything else is automatic.")
+                            "invite code” in their app - everything else is automatic.")
         self.outro.setWordWrap(True)
         self.outro.setProperty("role", "hint")
         self.outro.setVisible(False)
@@ -119,7 +119,7 @@ class InvitePage(QWidget):
 
     def load(self, world: dict):
         self._world = world
-        self.title.setText(f"Invite friends — {world['world_name']}")
+        self.title.setText(f"Invite friends - {world['world_name']}")
         self.link_field.edit.setText(world.get("share_link") or "")
         self.link_field.clear_error()
         self.code_box.setVisible(False)
@@ -133,7 +133,7 @@ class InvitePage(QWidget):
     def _generate(self):
         link = self.link_field.value()
         if link and not (link.startswith("http://") or link.startswith("https://")):
-            self.link_field.set_error("That doesn't look like a link — it should start with https://")
+            self.link_field.set_error("That doesn't look like a link - it should start with https://")
             return
         self.link_field.clear_error()
         if link != (self._world.get("share_link") or ""):
@@ -147,7 +147,7 @@ class InvitePage(QWidget):
         self.outro.setVisible(True)
         if not link:
             self.link_field.set_error(
-                "No link — the code still works, but you'll have to share the "
+                "No link - the code still works, but you'll have to share the "
                 "folder with each friend yourself.")
 
     def _copy(self):

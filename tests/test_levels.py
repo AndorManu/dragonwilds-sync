@@ -5,7 +5,7 @@ import pytest
 
 from app.core import levels
 
-# (current xp, level shown in the game's own panel) — screenshot ground truth.
+# (current xp, level shown in the game's own panel) - screenshot ground truth.
 PANEL_TRUTH = [
     (6439, 31),   # Attack
     (100, 3),     # Magic

@@ -74,7 +74,7 @@ class SagaPage(QWidget):
         root.addWidget(card, 1)
 
     def load(self, world, manifest, stats, all_time, me=""):
-        name = world["world_name"] if world else "—"
+        name = world["world_name"] if world else "-"
         self.title.setText(f"The Saga of {name}")
         history = (manifest or {}).get("history", [])
         scope = "all time" if all_time else f"the last {len(history)} sessions"
@@ -100,7 +100,7 @@ class SagaPage(QWidget):
                 item.widget().deleteLater()
         noted = [e for e in reversed(history) if e.get("note")]
         if not noted:
-            empty = QLabel("No notes in the chronicle yet — they're written after "
+            empty = QLabel("No notes in the chronicle yet - they're written after "
                            "each session.")
             empty.setWordWrap(True)
             empty.setAlignment(Qt.AlignCenter)

@@ -1,6 +1,6 @@
 """Save-file health and cloud-sync-state checks.
 
-These run in the controller *around* the frozen sync core — never inside it —
+These run in the controller *around* the frozen sync core - never inside it -
 so they can't affect the validated push/pull logic. They exist to catch the
 two failure modes the raw protocol can't see:
 

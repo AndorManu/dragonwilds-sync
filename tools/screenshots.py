@@ -1,4 +1,4 @@
-"""Render every app state to PNG for design review — no window flashing.
+"""Render every app state to PNG for design review - no window flashing.
 
 Run:  .venv\\Scripts\\python.exe tools\\screenshots.py
 Writes docs/screenshots/*.png using a throwaway config in a temp folder
@@ -170,7 +170,7 @@ def main():
     window2.main_page.set_phase("idle")
 
     window2.toasts.show_toast("success",
-                              "Shared your progress as v15 — your friends are up to date.")
+                              "Shared your progress as v15 - your friends are up to date.")
     QTest.qWait(400)
     shoot(window2, "11_main_toast")
     clear_toasts(window2)

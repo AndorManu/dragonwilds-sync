@@ -1,8 +1,8 @@
 """Bridges the sync core and the UI: worker threads in, Qt signals out.
 
 Multi-world, and the home of the v1.2 feature glue. Everything that could
-affect save integrity — health gating, sync-state checks, richer conflict
-detail — happens here, *around* the frozen sync core, never inside it.
+affect save integrity - health gating, sync-state checks, richer conflict
+detail - happens here, *around* the frozen sync core, never inside it.
 """
 
 import logging
@@ -256,7 +256,7 @@ class Controller(QObject):
             if update.apply_update(info, paths.APP_DIR / "update"):
                 self.quit_for_update.emit()
             else:
-                self.toast.emit("info", "Updates apply from the installed app — "
+                self.toast.emit("info", "Updates apply from the installed app - "
                                         "grab the new build from the shared folder’s "
                                         "_app folder for now.")
         except Exception:
@@ -431,7 +431,7 @@ class Controller(QObject):
         if travels:
             if any(ch in stem for ch in "[]*?"):
                 self.toast.emit("warning", "That character's name confuses the sync "
-                                           "matcher — rename it in game to enable travel.")
+                                           "matcher - rename it in game to enable travel.")
                 return
             stems.add(stem)
         else:
@@ -461,7 +461,7 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — bargains struck "
+                    self.toast.emit("warning", "Close the game first - bargains struck "
                                                "while it runs are lost when it saves.")
                     return
                 changes = characters.apply_edits(char_path, plan,
@@ -470,10 +470,10 @@ class Controller(QObject):
                     self.toast.emit("success", "The bargain is sealed. A checkpoint of "
                                                "the old self was kept, just in case.")
                 else:
-                    self.toast.emit("info", "Nothing to change — the dragon shrugs.")
+                    self.toast.emit("info", "Nothing to change - the dragon shrugs.")
             except Exception:
                 log.exception("Bargain failed")
-                self.toast.emit("error", "The bargain failed — your character file "
+                self.toast.emit("error", "The bargain failed - your character file "
                                          "was left untouched.")
             finally:
                 if done:
@@ -491,11 +491,11 @@ class Controller(QObject):
                 dest = self._grimoire_dir() / f"{_safe_dirname(self.player_name)}.scroll.json"
                 characters.write_scroll(char_path, dest, self.player_name)
                 self.toast.emit("success", "Your scroll is inscribed in the shared "
-                                           "folder — friends can absorb it from "
+                                           "folder - friends can absorb it from "
                                            "their own grimoire.")
             except Exception:
                 log.exception("Scroll inscription failed")
-                self.toast.emit("error", "The scroll would not take — is the shared "
+                self.toast.emit("error", "The scroll would not take - is the shared "
                                          "folder reachable?")
 
         threading.Thread(target=worker, daemon=True, name="scroll").start()
@@ -517,7 +517,7 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — knowledge "
+                    self.toast.emit("warning", "Close the game first - knowledge "
                                                "absorbed while it runs is lost.")
                     return
                 gains = characters.absorb_knowledge(
@@ -526,11 +526,11 @@ class Controller(QObject):
                     self.toast.emit("success", f"Knowledge of {source} absorbed. "
                                                f"A checkpoint of the old self was kept.")
                 else:
-                    self.toast.emit("info", "Nothing new in it — this one already "
+                    self.toast.emit("info", "Nothing new in it - this one already "
                                             "knows all of that.")
             except Exception:
                 log.exception("Absorb failed")
-                self.toast.emit("error", "The absorption failed — the character "
+                self.toast.emit("error", "The absorption failed - the character "
                                          "file was left untouched.")
             finally:
                 if done:
@@ -557,7 +557,7 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — unlocks granted "
+                    self.toast.emit("warning", "Close the game first - unlocks granted "
                                                "while it runs are lost.")
                     return
                 gains = characters.grant_all_unlocks(
@@ -573,7 +573,7 @@ class Controller(QObject):
                     self.toast.emit("info", "Already known.")
             except Exception:
                 log.exception("Learn failed")
-                self.toast.emit("error", "Couldn't learn that — the character file "
+                self.toast.emit("error", "Couldn't learn that - the character file "
                                          "was left untouched.")
             finally:
                 if done:
@@ -593,21 +593,21 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — unlocks granted "
+                    self.toast.emit("warning", "Close the game first - unlocks granted "
                                                "while it runs are lost.")
                     return
                 gains = characters.grant_all_unlocks(
                     char_path, characters.load_unlock_catalogs(),
                     self._char_backup_root(Path(char_path).stem))
                 if gains:
-                    self.toast.emit("success", "Codex completed — every recipe, spell "
+                    self.toast.emit("success", "Codex completed - every recipe, spell "
                                                "and building learned, and the spell bar "
                                                "filled. Reopen the game to see them.")
                 else:
                     self.toast.emit("info", "This character already knows everything.")
             except Exception:
                 log.exception("Complete codex failed")
-                self.toast.emit("error", "The codex wouldn't complete — the character "
+                self.toast.emit("error", "The codex wouldn't complete - the character "
                                          "file was left untouched.")
             finally:
                 if done:
@@ -621,11 +621,11 @@ class Controller(QObject):
                 dest = self._grimoire_dir() / f"{_safe_dirname(self.player_name)}.gift.json"
                 characters.export_offering(char_path, dest, self.player_name)
                 self.toast.emit("success", "Your bag's catalogue is in the shared "
-                                           "folder — friends can now receive gifts "
+                                           "folder - friends can now receive gifts "
                                            "from it.")
             except Exception:
                 log.exception("Offering export failed")
-                self.toast.emit("error", "The offering would not take — is the "
+                self.toast.emit("error", "The offering would not take - is the "
                                          "shared folder reachable?")
 
         threading.Thread(target=worker, daemon=True, name="offer").start()
@@ -649,7 +649,7 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — items conjured "
+                    self.toast.emit("warning", "Close the game first - items conjured "
                                                "while it runs are lost.")
                     return
                 slot = characters.spawn_item(
@@ -660,14 +660,14 @@ class Controller(QObject):
                     pouch = items_mod.pouch(item_data)
                     where = ("your Equipped/main bag" if pouch == "Gear & Tools"
                              else f"your {pouch} pouch")
-                    self.toast.emit("success", f"{name} ×{count} conjured — look in "
+                    self.toast.emit("success", f"{name} ×{count} conjured - look in "
                                                f"{where} in-game. If the game rejects "
                                                f"it, restore the checkpoint.")
                 else:
-                    self.toast.emit("warning", "No free bag slot — make room first.")
+                    self.toast.emit("warning", "No free bag slot - make room first.")
             except Exception:
                 log.exception("Conjure failed")
-                self.toast.emit("error", "The conjuring failed — the character file "
+                self.toast.emit("error", "The conjuring failed - the character file "
                                          "was left untouched.")
             finally:
                 if done:
@@ -679,20 +679,20 @@ class Controller(QObject):
         def worker():
             try:
                 if game.find_game_process():
-                    self.toast.emit("warning", "Close the game first — gifts placed "
+                    self.toast.emit("warning", "Close the game first - gifts placed "
                                                "while it runs are lost.")
                     return
                 slot = characters.receive_gift(
                     char_path, item_entry, self._char_backup_root(Path(char_path).stem))
                 if slot is not None:
                     self.toast.emit("success", f"The gift from {source} rests in bag "
-                                               f"slot {slot}. Experimental — if the "
+                                               f"slot {slot}. Experimental - if the "
                                                f"game rejects it, restore the checkpoint.")
                 else:
-                    self.toast.emit("warning", "No free bag slot — make room first.")
+                    self.toast.emit("warning", "No free bag slot - make room first.")
             except Exception:
                 log.exception("Gift failed")
-                self.toast.emit("error", "The gift slipped through — the character "
+                self.toast.emit("error", "The gift slipped through - the character "
                                          "file was left untouched.")
             finally:
                 if done:
@@ -750,7 +750,7 @@ class Controller(QObject):
                         f"{playing['player']} is in this world right now",
                         f"They started about {since} ago. If you both play, one "
                         f"session will end up overwriting the other.\n\n"
-                        f"Best wait for their save — or play at your own risk.",
+                        f"Best wait for their save - or play at your own risk.",
                         danger="Play anyway"):
                     self.toast.emit("info", f"Wise. You'll get a heads-up when "
                                             f"{playing['player']}'s save lands.")
@@ -759,20 +759,20 @@ class Controller(QObject):
             self._set_phase("checking")
             if health.shared_still_syncing(sync_dir, world_name):
                 self.toast.emit("warning", "The shared folder is still downloading the "
-                                           "latest save — launching your current copy for now.")
+                                           "latest save - launching your current copy for now.")
             else:
                 result, wstate = sync.do_pull(flat, wstate, self._log, self._confirm,
                                               self._backup_root(world))
                 storage.save_state(self.state)
                 if result == SyncResult.PULLED:
-                    self.toast.emit("success", "Latest save pulled in — you're starting "
+                    self.toast.emit("success", "Latest save pulled in - you're starting "
                                                "fresh off your friends' progress.")
                 elif result == SyncResult.CONFLICT_CANCELLED:
                     self.toast.emit("info", "Kept your local progress. It'll be shared "
                                             "when you finish this session.")
                 elif result == SyncResult.MISSING_FILES:
                     self.toast.emit("warning", "The newest save hasn't finished syncing to "
-                                               "this PC — you're playing your current local copy.")
+                                               "this PC - you're playing your current local copy.")
 
             self._travel_pull(world)
 
@@ -787,7 +787,7 @@ class Controller(QObject):
             started_at = time.monotonic()
 
             if game.find_game_process():
-                self.toast.emit("info", "Dragonwilds is already running — I'll share "
+                self.toast.emit("info", "Dragonwilds is already running - I'll share "
                                         "your progress when you close it.")
             else:
                 self._set_phase("launching")
@@ -830,7 +830,7 @@ class Controller(QObject):
         except Exception:
             log.exception("Play flow failed")
             self.toast.emit("error", "Something went wrong during the session. Your save "
-                                     "is still on this PC — try “Save my progress now”.")
+                                     "is still on this PC - try “Save my progress now”.")
         finally:
             try:
                 presence.stop_playing(sync_dir, self.player_name)
@@ -869,7 +869,7 @@ class Controller(QObject):
             hp = health.check_local_save(save_dir, world_name)
             if not hp.ok:
                 self.toast.emit("warning", f"Your save looks {hp.reason}, so I didn't share "
-                                           f"it — that protects everyone from a bad file. "
+                                           f"it - that protects everyone from a bad file. "
                                            f"Your friends keep the last good save.")
                 return
         result, wstate = sync.do_push(flat, wstate, self._log, self._confirm,
@@ -901,16 +901,16 @@ class Controller(QObject):
             except Exception:
                 log.exception("Post-push extras failed")
             self._write_status(world)
-            self.toast.emit("success", f"Shared your progress as v{version} — "
+            self.toast.emit("success", f"Shared your progress as v{version} - "
                                        f"your friends are up to date.")
             if world.get("webhook_url"):
                 webhook.send_async(
                     world["webhook_url"],
                     f"🐉 {self.player_name} shared v{version} of "
-                    f"{world['world_name']} — the wilds await.",
+                    f"{world['world_name']} - the wilds await.",
                     on_error=lambda e: self.toast.emit(
                         "warning", "Save shared fine, but the webhook didn't go "
-                                   "through — check the URL in Settings."))
+                                   "through - check the URL in Settings."))
             self.note_prompt.emit(world["id"], version)
         elif result == SyncResult.NOTHING_TO_PUSH:
             self.toast.emit("warning", "No save files found for this world yet, so "
@@ -945,12 +945,12 @@ class Controller(QObject):
                     presence.clear_next(world["sync_dir"], self.player_name)
                     self.toast.emit("info", "Your claim on the next turn is released.")
                 elif claim:
-                    self.toast.emit("info", f"{claim['player']} already has next — "
+                    self.toast.emit("info", f"{claim['player']} already has next - "
                                             f"talk it out in the group chat.")
                 else:
                     presence.claim_next(world["sync_dir"], self.player_name,
                                         self.cfg.get("player_emoji", ""))
-                    self.toast.emit("success", "Next turn is yours — friends will "
+                    self.toast.emit("success", "Next turn is yours - friends will "
                                                "see it before they hit Play.")
                 self._write_status(world)
                 self.status_changed.emit(self._world_status(world))
@@ -960,7 +960,7 @@ class Controller(QObject):
         threading.Thread(target=worker, daemon=True, name="next").start()
 
     def known_players(self) -> list[str]:
-        """Other players seen in the active world's history — for the nudge picker."""
+        """Other players seen in the active world's history - for the nudge picker."""
         world = self.active_world()
         names = []
         try:
@@ -980,7 +980,7 @@ class Controller(QObject):
             try:
                 presence.send_nudge(world["sync_dir"], self.player_name, to_player,
                                     self.cfg.get("player_emoji", ""))
-                self.toast.emit("success", f"Nudged {to_player} — they'll get a ping "
+                self.toast.emit("success", f"Nudged {to_player} - they'll get a ping "
                                            f"that it's their turn.")
                 if world.get("webhook_url"):
                     webhook.send_async(
@@ -1040,7 +1040,7 @@ class Controller(QObject):
                 if path:
                     import os as _os
                     _os.startfile(str(path))  # noqa: S606
-                    self.toast.emit("success", "The chronicle is written — it lives "
+                    self.toast.emit("success", "The chronicle is written - it lives "
                                                "in the shared folder for everyone.")
                 else:
                     self.toast.emit("warning", "Couldn't write the chronicle just now.")

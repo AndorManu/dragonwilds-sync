@@ -49,7 +49,7 @@ class Spinner(QWidget):
 
 
 class PulsingDot(QWidget):
-    """A softly breathing dot — shown while the game is running."""
+    """A softly breathing dot - shown while the game is running."""
 
     def __init__(self, size=14, color=theme.ACCENT, parent=None):
         super().__init__(parent)
@@ -102,7 +102,7 @@ class PulsingDot(QWidget):
 
 # Guessed-but-consistent palettes for portrait rendering. They won't match
 # the game's exact swatches, but every app renders a given character the
-# same way — which is what matters for recognisability.
+# same way - which is what matters for recognisability.
 _SKIN_RAMP = ["#F5DCC0", "#EFD0AC", "#E6BE96", "#D9A87E", "#C79066",
               "#AE7852", "#93613F", "#7A4E31", "#5F3B24", "#4A2C19"]
 _HAIR_RAMP = ["#181310", "#2E2117", "#4A331F", "#6B4A2A", "#8F6A3C",
@@ -452,7 +452,7 @@ class FormField(QWidget):
     """Label + line edit (+ optional Browse) + hint/error line."""
 
     def __init__(self, label, value="", hint="", browse=None, placeholder="", parent=None):
-        """`browse`: None, 'dir', or 'file' — adds a Browse button."""
+        """`browse`: None, 'dir', or 'file' - adds a Browse button."""
         super().__init__(parent)
         box = QVBoxLayout(self)
         box.setContentsMargins(0, 0, 0, 0)

@@ -1,4 +1,4 @@
-"""In-app updates through the shared folder — no server, no store.
+"""In-app updates through the shared folder - no server, no store.
 
 The host publishes a new build into an ``_app`` subfolder of any shared world
 folder: the exe plus an ``update.json`` manifest. Everyone else's app notices

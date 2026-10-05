@@ -161,7 +161,7 @@ def world_state(state: dict, world_id: str) -> dict:
     """Mutable per-world state slice; created on first access.
 
     The sync core mutates this dict in place; persisting the parent `state`
-    afterwards saves it — same contract as v1.
+    afterwards saves it - same contract as v1.
     """
     slot = state.setdefault("worlds", {}).setdefault(world_id, {})
     slot.setdefault("last_applied_version", 0)

@@ -7,7 +7,7 @@
 3. The log: in the app, *Settings → Open log folder*, attach the newest `.log`
 4. Game version (Steam → Dragonwilds → Properties → Updates) and app version (About page)
 
-Saves are never deleted by the app — every overwrite is backed up first under
+Saves are never deleted by the app - every overwrite is backed up first under
 *world menu → Backups*, and the automatic copies live in
 `%APPDATA%\DragonwildsSync\backups\`. If a save looks wrong, restore from
 there before anything else.

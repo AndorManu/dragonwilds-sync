@@ -1,4 +1,4 @@
-"""The item catalogue — names, categories, stack sizes, rarity.
+"""The item catalogue - names, categories, stack sizes, rarity.
 
 The name/id/category/stack facts are datamined game data (community tools
 PEAKEGames/DWCharacterEditor and KevinStillman/dragonwilder); the app draws
@@ -26,7 +26,7 @@ RARITY = {
 }
 
 # Category -> our own icon key (drawn in ui/icons.py). Unmapped -> "gem".
-# Every category gets a distinct item silhouette — earlier versions reused skill
+# Every category gets a distinct item silhouette - earlier versions reused skill
 # emblems (ores drew the mining pickaxe, food the cooking pot), which read as the
 # wrong thing in a bag grid.
 CATEGORY_ICON = {
@@ -46,7 +46,7 @@ CATEGORY_ICON = {
 # a single global rank order; only the *relative* order inside a family matters,
 # and families are homogeneous (all metals, or all woods), so metal and wood
 # ranks can interleave freely. Ties (Copper/Tin, both bronze precursors) are
-# siblings — an upgrade skips to the next strictly-higher rank.
+# siblings - an upgrade skips to the next strictly-higher rank.
 MATERIAL_RANK = {
     "Wooden": 0, "Wood": 0, "Leather": 1, "Hardleather": 2, "Studded": 3,
     "Copper": 4, "Tin": 4, "Bronze": 5, "Oak": 5,

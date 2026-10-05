@@ -3,7 +3,7 @@
 Local backups only save whoever made them. Archiving each pushed version
 into ``_history/v{n}/`` inside the shared folder gives the *whole group* a
 rollback path. Pruned to a small number so cloud quota stays polite.
-Everything here is additive and fail-soft — it runs after the frozen sync
+Everything here is additive and fail-soft - it runs after the frozen sync
 core has already succeeded, and can never affect a push.
 """
 

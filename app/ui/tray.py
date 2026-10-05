@@ -44,14 +44,14 @@ class TrayManager(QObject):
         if self.available:
             self.tray.showMessage(
                 f"Your turn in {world_name}?",
-                f"{editor} shared v{version} — the wilds await.",
+                f"{editor} shared v{version} - the wilds await.",
                 QSystemTrayIcon.Information, 8000)
 
     def notify_nudge(self, from_player: str, world_name: str):
         if self.available:
             self.tray.showMessage(
                 f"It's your turn in {world_name}",
-                f"{from_player} passed you the world — jump in when you're ready.",
+                f"{from_player} passed you the world - jump in when you're ready.",
                 QSystemTrayIcon.Information, 8000)
 
     def notify_update(self, version: str):
@@ -66,6 +66,6 @@ class TrayManager(QObject):
             self._tip_shown = True
             self.tray.showMessage(
                 "Still keeping watch",
-                "Dragonwilds Sync lives in the tray now — you'll get a ping "
+                "Dragonwilds Sync lives in the tray now - you'll get a ping "
                 "when a friend shares a save. Right-click the icon to quit.",
                 QSystemTrayIcon.Information, 6000)

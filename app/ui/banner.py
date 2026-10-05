@@ -1,6 +1,6 @@
 """Procedural world-art hero banner.
 
-No bundled image files — every world's landscape is painted from a seed
+No bundled image files - every world's landscape is painted from a seed
 derived from its name, so each world looks distinct and consistent across
 runs and machines. Layered ridge silhouettes, a moon with a soft halo, mist
 bands, and a few drifting embers, all tinted by the world's accent colour.

@@ -1,4 +1,4 @@
-"""Bundled display typefaces — the biggest single lever away from system-font
+"""Bundled display typefaces - the biggest single lever away from system-font
 blandness. Cinzel (roman caps) for wordmarks and titles, Cinzel Decorative
 for hero world names, EB Garamond for the occasional flavor line.
 

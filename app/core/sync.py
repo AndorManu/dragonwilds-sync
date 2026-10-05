@@ -6,7 +6,7 @@ protocol is unchanged:
 - The shared folder holds the world files plus a ``version.json`` manifest:
   ``{version, last_editor, timestamp, world_name}``. Every push bumps
   ``version`` by 1 and rewrites the manifest.
-- Local state tracks ``{last_applied_version, last_hash}`` — the last version
+- Local state tracks ``{last_applied_version, last_hash}`` - the last version
   this machine pulled/pushed and the hash of the primary save file then.
 - Pull: if shared version > last_applied_version, copy ``{world_name}*`` from
   the shared folder into the local save folder. If the local save's current
@@ -154,7 +154,7 @@ def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
     manifest = get_shared_manifest(sync_dir)
 
     if not manifest:
-        log("No shared save yet — you'll be the first to share one after this session.")
+        log("No shared save yet - you'll be the first to share one after this session.")
         return SyncResult.NO_SHARED, state
 
     shared_version = manifest["version"]
@@ -195,7 +195,7 @@ def do_pull(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
 
     state["last_applied_version"] = shared_version
     state["last_hash"] = sha256_file(save_dir / shared_files[0].name)
-    log(f"Got the latest world — v{shared_version}, last played by {manifest.get('last_editor', 'a friend')}.")
+    log(f"Got the latest world - v{shared_version}, last played by {manifest.get('last_editor', 'a friend')}.")
     return SyncResult.PULLED, state
 
 
@@ -210,7 +210,7 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
 
     local_files = world_files(save_dir, world_name)
     if not local_files:
-        log(f"No save files found for “{world_name}” — nothing to share yet.")
+        log(f"No save files found for “{world_name}” - nothing to share yet.")
         return SyncResult.NOTHING_TO_PUSH, state
 
     manifest = get_shared_manifest(sync_dir)
@@ -225,7 +225,7 @@ def do_push(cfg, state, log, confirm, backup_root: Path = paths.BACKUP_DIR):
             f"Sharing now will replace their session with yours.",
         )
         if not proceed:
-            log("Didn't share. Your progress is still on this machine — hit Play to sync up first.")
+            log("Didn't share. Your progress is still on this machine - hit Play to sync up first.")
             return SyncResult.STALE_CANCELLED, state
         _backup_files(
             world_files(sync_dir, world_name),

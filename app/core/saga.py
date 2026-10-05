@@ -60,7 +60,7 @@ def combined_stats(sync_dir, manifest) -> tuple[dict, bool]:
 
 def _fmt_hours(seconds) -> str:
     hours = (seconds or 0) / 3600
-    return f"{hours:.1f} h" if hours >= 0.1 else "—"
+    return f"{hours:.1f} h" if hours >= 0.1 else "-"
 
 
 def _humanize(ts: str) -> str:

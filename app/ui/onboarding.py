@@ -174,7 +174,7 @@ class OnboardingPage(QWidget):
         box.addWidget(tag)
 
         body = QLabel("Take turns in the same Dragonwilds world without renting a server. "
-                      "Whoever plays next always picks up the newest save — automatically.")
+                      "Whoever plays next always picks up the newest save - automatically.")
         body.setAlignment(Qt.AlignHCenter)
         body.setWordWrap(True)
         body.setStyleSheet(f"color: {theme.TEXT_DIM}; font-size: 12.5px;")
@@ -211,7 +211,7 @@ class OnboardingPage(QWidget):
 
     def _submit_name(self):
         if not self.name_field.value():
-            self.name_field.set_error("Everyone needs a name — even a dragon.")
+            self.name_field.set_error("Everyone needs a name - even a dragon.")
             return
         self.name_field.clear_error()
         self._go(STEP_CHOICE)
@@ -225,14 +225,14 @@ class OnboardingPage(QWidget):
 
         create = widgets.OptionCard(
             "sparkle", "Create a new world",
-            "You have (or will make) the world save — set up the shared folder "
+            "You have (or will make) the world save - set up the shared folder "
             "and invite the others.")
         create.set_on_click(lambda: self._go(STEP_CREATE_WORLD))
         content.addWidget(create)
 
         join = widgets.OptionCard(
             "link", "Join with an invite code",
-            "A friend sent you a code from their app — paste it and you're in.")
+            "A friend sent you a code from their app - paste it and you're in.")
         join.set_on_click(lambda: self._go(STEP_JOIN_CODE))
         content.addWidget(join)
         return page
@@ -248,7 +248,7 @@ class OnboardingPage(QWidget):
         page, box, content = self._step_scaffold(
             2, "Where does your world live?",
             "This is the game's save folder on this PC. We've already found "
-            "the usual spot — just pick the world you all share.",
+            "the usual spot - just pick the world you all share.",
             back_to=lambda: self._go(STEP_CHOICE))
         self.save_dir_field = widgets.FormField(
             "Dragonwilds save folder", str(paths.DEFAULT_SAVE_DIR), browse="dir")
@@ -270,7 +270,7 @@ class OnboardingPage(QWidget):
             self.world_field.note.setVisible(True)
         else:
             self.world_field.note.setText(
-                "No saves found here yet — fine if the world lives on a friend's PC. "
+                "No saves found here yet - fine if the world lives on a friend's PC. "
                 "Type its name exactly as they see it.")
             self.world_field.note.setVisible(True)
 
@@ -291,7 +291,7 @@ class OnboardingPage(QWidget):
         page, box, content = self._step_scaffold(
             3, "Pick the shared folder",
             "A folder inside a cloud drive that every friend syncs to their "
-            "own PC — Google Drive, Dropbox, OneDrive… Everyone must point "
+            "own PC - Google Drive, Dropbox, OneDrive… Everyone must point "
             "at the same one.",
             back_to=lambda: self._go(STEP_CREATE_WORLD))
 
@@ -318,7 +318,7 @@ class OnboardingPage(QWidget):
             chip_row.addStretch(1)
             content.addLayout(chip_row)
         else:
-            warn = QLabel("No cloud drive found on this PC — you'll need one "
+            warn = QLabel("No cloud drive found on this PC - you'll need one "
                           "(free) to link everyone's saves together.")
             warn.setWordWrap(True)
             warn.setStyleSheet(f"color: {theme.AMBER}; font-size: 12.5px;")
@@ -344,7 +344,7 @@ class OnboardingPage(QWidget):
         try:
             Path(shared).mkdir(parents=True, exist_ok=True)
         except OSError:
-            self.shared_field.set_error("Couldn't create that folder — check the path.")
+            self.shared_field.set_error("Couldn't create that folder - check the path.")
             return
         self.shared_field.clear_error()
         self.finished.emit({
@@ -385,7 +385,7 @@ class OnboardingPage(QWidget):
         page, box, content = self._step_scaffold(
             3, "Add the folder to your Drive",
             "One click on your friend's share link, then this screen finishes "
-            "itself — no digging through folders.",
+            "itself - no digging through folders.",
             back_to=lambda: self._go(STEP_JOIN_CODE))
 
         self.join_summary = QLabel("")
@@ -423,7 +423,7 @@ class OnboardingPage(QWidget):
         nc = QVBoxLayout(self.no_cloud_panel)
         nc.setContentsMargins(0, 6, 0, 0)
         nc.setSpacing(8)
-        nc_label = QLabel("Google Drive doesn't seem to be set up on this PC — "
+        nc_label = QLabel("Google Drive doesn't seem to be set up on this PC - "
                           "the folder can't sync here without it.")
         nc_label.setWordWrap(True)
         nc_label.setStyleSheet(f"color: {theme.AMBER}; font-size: 12.5px;")
@@ -433,7 +433,7 @@ class OnboardingPage(QWidget):
         dl_btn.clicked.connect(lambda: webbrowser.open(clouds.GOOGLE_DRIVE_DOWNLOAD_URL))
         nc.addWidget(dl_btn)
         nc_alt = QLabel("Using Dropbox or OneDrive instead? Their shared folders "
-                        "work too — browse to it below once it syncs.")
+                        "work too - browse to it below once it syncs.")
         nc_alt.setWordWrap(True)
         nc_alt.setProperty("role", "hint")
         nc.addWidget(nc_alt)
@@ -450,7 +450,7 @@ class OnboardingPage(QWidget):
     def _start_watching(self):
         info = self._join_info
         link_note = "" if info.get("share_link") else (
-            "\nThis code has no link in it — ask your friend to share the "
+            "\nThis code has no link in it - ask your friend to share the "
             "folder with you in their cloud drive.")
         self.join_summary.setText(
             f"World:  {info['world_name']}\nFolder:  {info['folder_name']}{link_note}")
@@ -465,7 +465,7 @@ class OnboardingPage(QWidget):
             webbrowser.open(self._join_info["share_link"])
             self.watch_label.setText(
                 "Browser opened. Once you add the folder to your Drive, "
-                "I'll spot it here automatically — usually within a minute.")
+                "I'll spot it here automatically - usually within a minute.")
 
     def _watch_tick(self):
         info = self._join_info
