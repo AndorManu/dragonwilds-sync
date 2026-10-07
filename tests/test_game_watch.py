@@ -83,6 +83,7 @@ def test_v_rising_cloud_saves_are_found(tmp_path):
     (old / "ServerHostSettings.json").write_text('{"Name": "Old"}')
     past = time.time() - 86400 * 30
     os.utime(old / "ServerHostSettings.json", (past, past))
+    os.utime(old, (past, past))
     cloud = locallow / "Stunlock Studios" / "VRising" / "CloudSaves" / "v3" / "76561198000000000"
     game_dir = cloud / "f3c1a2b4-castle"
     game_dir.mkdir(parents=True)

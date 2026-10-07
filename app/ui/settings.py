@@ -161,6 +161,11 @@ class SettingsPage(QWidget):
         form.addWidget(self.statuspage_check)
         self.chime_check = QCheckBox("A soft chime when the wilds open")
         form.addWidget(self.chime_check)
+        self.update_check = QCheckBox("Check GitHub for new versions")
+        self.update_check.setToolTip(
+            "Every few hours. A new version downloads in the background and you "
+            "choose when to restart into it.")
+        form.addWidget(self.update_check)
         self.reports_check = QCheckBox("Send anonymous reports to help fix games")
         self.reports_check.setToolTip(
             "Which game, whether a share or pull worked, the app version. Never names, "
@@ -281,6 +286,8 @@ class SettingsPage(QWidget):
         self.startup_check.setChecked(autostart.is_enabled())
         self.statuspage_check.setChecked(bool(cfg.get("publish_status_page", True)))
         self.chime_check.setChecked(bool(cfg.get("play_chime", True)))
+        from .. import channel
+        self.update_check.setChecked(bool(cfg.get("auto_update", channel.UPDATES_ON_BY_DEFAULT)))
         from ..core import telemetry
         self.reports_check.setVisible(telemetry.available())
         self.forget_btn_reports.setVisible(telemetry.available())
@@ -367,6 +374,7 @@ class SettingsPage(QWidget):
             "launch_on_startup": self.startup_check.isChecked(),
             "publish_status_page": self.statuspage_check.isChecked(),
             "play_chime": self.chime_check.isChecked(),
+            "auto_update": self.update_check.isChecked(),
             "_reports": self.reports_check.isChecked(),
             "discord_app_id": self.discord_field.value(),
         }

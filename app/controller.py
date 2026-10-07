@@ -21,6 +21,8 @@ from . import __version__
 from .core import (backups, characters, chime, config, discordrp, game, games,
                    health, paths, presence, saga, statuspage, storage, sync,
                    telemetry, update, webhook, worldhistory)
+from . import channel
+from .core import github_update
 from .core.sync import MANIFEST_SCHEMA, SyncResult, world_files
 
 
@@ -75,6 +77,7 @@ class Controller(QObject):
         self._busy = threading.Lock()
         self._seen_versions: dict[str, int] = {}
         self._update_offered = False
+        self._gh_updates = github_update.Checker()
         self._rp = discordrp.RichPresence(
             (self.cfg or {}).get("discord_app_id", ""))
 
@@ -424,8 +427,25 @@ class Controller(QObject):
                     self._update_offered = True
                     self.update_available.emit(info, config.world_label(w))
                     return
+            self._check_github()
 
         threading.Thread(target=worker, daemon=True, name="update-check").start()
+
+    def _check_github(self):
+        """Every few hours, look for a newer release on GitHub (packaged app only)."""
+        if not update.is_frozen() or not (self.cfg or {}).get("auto_update", channel.UPDATES_ON_BY_DEFAULT):
+            return
+        if not self._gh_updates.due():
+            return
+        folder = paths.APP_DIR / "update" / "github"
+        try:
+            info = self._gh_updates.check(__version__, folder)
+        except Exception as e:
+            log.info("GitHub update check failed: %s", e)
+            return
+        if info and not self._update_offered:
+            self._update_offered = True
+            self.update_available.emit(info, "")
 
     def apply_update(self, info):
         try:
@@ -433,9 +453,7 @@ class Controller(QObject):
                 self.report("update_applied")
                 self.quit_for_update.emit()
             else:
-                self.toast.emit("info", "Updates apply from the installed app - "
-                                        "grab the new build from the shared folder’s "
-                                        "_app folder for now.")
+                self.toast.emit("info", "Updates apply from the installed app (the .exe).")
         except Exception:
             log.exception("apply_update failed")
             self.toast.emit("error", "Couldn't apply the update. You can copy the new "

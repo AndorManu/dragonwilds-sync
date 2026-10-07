@@ -55,3 +55,11 @@ Only the maintainer ([AndorManu](https://github.com/AndorManu)) can see the
 results, and only as totals and anonymous lists. Nothing is sold or shared.
 
 Questions: open an [issue](https://github.com/AndorManu/worldsync/issues).
+
+## Update checks
+
+Every few hours the app asks GitHub (api.github.com) whether there is a newer
+release, and downloads it from GitHub if so. That request carries no id or
+report data; GitHub sees your IP address as it would for any download. Untick
+**Settings → Check GitHub for new versions** to stop it. It starts off in the
+Nexus Mods download.

@@ -409,7 +409,8 @@ class MainWindow(QWidget):
             return
         if self.confirm.ask(
                 f"Update to v{info.version}?",
-                f"{info.published_by} published a new version"
+                ("A new version is out" if info.published_by == "WorldSync on GitHub"
+                 else f"{info.published_by} published a new version")
                 + (f":\n\n“{info.notes}”" if info.notes else ".")
                 + "\n\nThe app will close, update itself, and reopen. Your worlds "
                   "and settings are kept.",

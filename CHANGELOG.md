@@ -2,6 +2,12 @@
 
 ## 2.1.2 - 2026-10-07
 
+**Updates itself.** From this version on, WorldSync checks the GitHub
+releases page every few hours, downloads a new version in the background,
+checks it against the SHA-256 GitHub publishes, and offers "Update & restart".
+Nothing installs until you click. One checkbox in Settings turns it off (it
+starts off in the Nexus download). This one time, grab 2.1.2 by hand.
+
 Fixes from the first real groups:
 
 - When a game restarts itself through Steam right after launch (Valheim does
