@@ -123,6 +123,7 @@ WorldSync calls one of these a *save*. Multiplayer saves are numbered folders. P
 **Where the saves live**
 
 - `%USERPROFILE%\AppData\LocalLow\Stunlock Studios\VRising\Saves\v3`
+- `%USERPROFILE%\AppData\LocalLow\Stunlock Studios\VRising\CloudSaves\v3\<account number>`
 
 WorldSync calls one of these a *world*. Each private game is a folder with a long code name.
 

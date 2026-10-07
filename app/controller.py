@@ -1018,7 +1018,7 @@ class Controller(QObject):
                                      "" if dragonwilds else profile.name)
             except Exception:
                 log.debug("Rich presence failed", exc_info=True)
-            game.wait_for_game_exit(proc)
+            game.wait_for_game_exit(proc, procs)
             self._rp.clear()
 
             self._set_phase("pushing")
@@ -1030,9 +1030,10 @@ class Controller(QObject):
                 self._travel_push(world)
                 played_char = played[0] if played else self._recent_character()
             self._do_push_guarded(world, flat, wstate, duration, played_char)
-        except Exception:
+        except Exception as e:
             log.exception("Play flow failed")
-            self.report("error", config.world_game(world).id, kind="play_flow")
+            self.report("error", config.world_game(world).id, kind="play_flow",
+                        where=type(e).__name__)
             self.toast.emit("error", "Something went wrong during the session. Your save "
                                      "is still on this PC - try “Save my progress now”.")
         finally:
@@ -1056,9 +1057,10 @@ class Controller(QObject):
         try:
             self._set_phase("pushing")
             self._do_push_guarded(world, self._flat_cfg(world), self._wstate(world), None)
-        except Exception:
+        except Exception as e:
             log.exception("Manual push failed")
-            self.report("error", config.world_game(world).id, kind="push_flow")
+            self.report("error", config.world_game(world).id, kind="push_flow",
+                        where=type(e).__name__)
             self.toast.emit("error", "Couldn't share your save. Check that your cloud "
                                      "folder is reachable, then try again.")
         finally:

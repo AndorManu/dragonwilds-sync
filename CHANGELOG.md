@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.2 - 2026-10-07
+
+Fixes from the first real groups:
+
+- When a game restarts itself through Steam right after launch (Valheim does
+  this when started from its exe), WorldSync thought the session was over and
+  tried to share straight away. It now waits for the restarted game and shares
+  when you actually quit.
+- Copying a save waits out short file locks (the game still writing, the cloud
+  client uploading, a virus scanner) instead of failing on the first try.
+- V Rising: private games with cloud saving on (under `CloudSaves`) are found
+  now, not only local ones.
+- When a game keeps saves in two places, the folder with your most recently
+  played world is picked, not just the first one that exists.
+
 ## 2.1.1 - 2026-10-05
 
 - A second download, `WorldSync-Nexus.exe`, for Nexus Mods: identical, except

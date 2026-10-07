@@ -19,6 +19,7 @@ START_TIMEOUT_S = 120   # how long Steam may take to actually start the game
 START_POLL_S = 1.0
 EXIT_POLL_S = 3.0
 SAVE_FLUSH_GRACE_S = 3.0  # let the game finish writing its save after exit
+RELAUNCH_WINDOW_S = 20.0  # a game that restarts itself through Steam comes back within this
 
 
 def process_watch_available() -> bool:
@@ -71,8 +72,26 @@ def wait_for_game_start(names=None, timeout_s: float = START_TIMEOUT_S):
     return None
 
 
-def wait_for_game_exit(proc):
-    """Block until the game process ends, then give it a moment to flush saves."""
-    while proc.is_running():
-        time.sleep(EXIT_POLL_S)
+def wait_for_game_exit(proc, names=None, relaunch_s: float = RELAUNCH_WINDOW_S):
+    """Block until the game is really gone, then give it a moment to flush saves.
+
+    Many Steam games started from their exe quit straight away and get started
+    again by Steam (the DRM restart), and some launchers hand over to the real
+    game. So after the process ends, watch `relaunch_s` seconds for the game to
+    come back and keep waiting on the new process if it does.
+    """
+    while True:
+        while proc.is_running():
+            time.sleep(EXIT_POLL_S)
+        deadline = time.monotonic() + relaunch_s
+        again = None
+        while time.monotonic() < deadline:
+            again = find_game_process(names)
+            if again:
+                break
+            time.sleep(START_POLL_S)
+        if again is None:
+            break
+        log.info("Game restarted itself (pid %s); still waiting.", again.pid)
+        proc = again
     time.sleep(SAVE_FLUSH_GRACE_S)

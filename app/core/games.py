@@ -190,7 +190,8 @@ V_RISING = GameProfile(
     name="V Rising",
     steam_app_id="1604030",
     process_names=("VRising.exe",),
-    save_roots=("{LOCALLOW}/Stunlock Studios/VRising/Saves/v*",),
+    save_roots=("{LOCALLOW}/Stunlock Studios/VRising/Saves/v*",
+                "{LOCALLOW}/Stunlock Studios/VRising/CloudSaves/v*/*"),
     discover=(Discover("*", r"^(?P<w>[^/]+)$", dirs=True),),
     patterns=("{world}/**/*",),
     mirror=True,
@@ -315,11 +316,21 @@ def expand(template: str, tokens: dict[str, str] | None = None) -> Path | None:
 
 
 def default_save_dir(profile: GameProfile, tokens: dict[str, str] | None = None) -> Path | None:
-    for template in profile.save_roots:
-        found = expand(template, tokens)
-        if found:
-            return found
-    return None
+    """The save folder to suggest: the one holding the most recently played world.
+
+    A game can keep saves in more than one place (V Rising's local and cloud
+    saves, Enshrouded's own folder and Steam's), and an old or empty folder
+    can exist next to the one in use, so the first folder that exists isn't
+    always the right one.
+    """
+    existing = [d for d in (expand(t, tokens) for t in profile.save_roots) if d]
+    best, best_when = None, None
+    for folder in existing:
+        worlds = discover_worlds(profile, folder) if profile.discover else []
+        when = max((w.modified for w in worlds if w.modified), default=None)
+        if when and (best_when is None or when > best_when):
+            best, best_when = folder, when
+    return best or (existing[0] if existing else None)
 
 
 def fallback_save_dir(profile: GameProfile) -> Path:

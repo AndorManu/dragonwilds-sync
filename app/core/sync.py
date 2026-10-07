@@ -34,6 +34,7 @@ import glob as _glob
 import hashlib
 import logging
 import shutil
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum, auto
@@ -144,11 +145,32 @@ def world_fingerprint(files: list[Path], root: Path, patterns=None) -> str | Non
     return h.hexdigest()
 
 
+COPY_TRIES = 5
+COPY_RETRY_S = 1.5
+
+
 def _copy_world(files: list[Path], src_root: Path, dst_root: Path):
     for f in files:
         dest = Path(dst_root) / _rel(f, src_root)
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(f, dest)
+        _copy_retrying(f, dest)
+
+
+def _copy_retrying(src: Path, dest: Path):
+    """Copy one file, waiting out short locks.
+
+    A game that is still writing its save, a cloud client that is uploading,
+    or a virus scanner can hold a file for a second or two on Windows.
+    """
+    for attempt in range(1, COPY_TRIES + 1):
+        try:
+            shutil.copy2(src, dest)
+            return
+        except PermissionError:
+            if attempt == COPY_TRIES:
+                raise
+            logger.info("%s is busy, retrying (%d/%d)", src.name, attempt, COPY_TRIES)
+            time.sleep(COPY_RETRY_S)
 
 
 def _remove_stale(dst_root: Path, world_name: str, patterns, keep: set[str]):

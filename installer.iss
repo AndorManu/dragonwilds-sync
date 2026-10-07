@@ -7,7 +7,7 @@
 
 [Setup]
 AppName=WorldSync
-AppVersion=2.1.1
+AppVersion=2.1.2
 AppPublisher=AndorManu
 DefaultDirName={autopf}\WorldSync
 DefaultGroupName=WorldSync
